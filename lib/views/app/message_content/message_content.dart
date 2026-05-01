@@ -118,6 +118,10 @@ class _MessageInputState extends State<MessageInput> {
       }
       if (!_focusNode.hasFocus) {
         _focusNode.requestFocus();
+        final previousSelection = _controller.selection;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _controller.selection = previousSelection;
+        });
         Future.delayed(const Duration(milliseconds: 50), () {
           if (!_isScrolling) {
             ignoreNextFocusChange = true;
