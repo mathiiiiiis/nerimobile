@@ -31,10 +31,6 @@ class MessageTile extends StatelessWidget {
     final hideExtraDetails =
         prevSameCreator && isUnderFiveMinutes && !hasMessageReplies;
 
-    final member =
-        serverStore.currentServerMembers.value?[message.createdBy.id];
-    final topcolorAndIcon = serverStore.memberTopColorAndIcon(member);
-
     final clan = message.createdBy.profile?.clan;
 
     final isImageEmbedOnly =
@@ -69,19 +65,32 @@ class MessageTile extends StatelessWidget {
 
                       children: [
                         if (!hideExtraDetails)
-                          Row(
-                            spacing: 4,
-                            children: [
-                              buildColoredName(
-                                hexColor: topcolorAndIcon?.hexColor,
-                                member?.nickname ?? message.createdBy.username,
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                              if (clan != null) ServerClanTag(clan: clan),
-                              if (topcolorAndIcon?.icon != null)
-                                CdnIcon(path: topcolorAndIcon!.icon, size: 12),
-                            ],
-                          ),
+                          Watch((context) {
+                            final member = serverStore
+                                .currentServerMembers
+                                .value?[message.createdBy.id];
+                            final topcolorAndIcon = serverStore
+                                .memberTopColorAndIcon(member);
+                            return Row(
+                              spacing: 4,
+                              children: [
+                                buildColoredName(
+                                  hexColor: topcolorAndIcon?.hexColor,
+                                  member?.nickname ??
+                                      message.createdBy.username,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                if (clan != null) ServerClanTag(clan: clan),
+                                if (topcolorAndIcon?.icon != null)
+                                  CdnIcon(
+                                    path: topcolorAndIcon!.icon,
+                                    size: 12,
+                                  ),
+                              ],
+                            );
+                          }),
                         if (!isImageEmbedOnly && message.content.isNotEmpty)
                           MarkupView(
                             rawText: message.content,
@@ -157,21 +166,20 @@ class MessageImageEmbed extends StatelessWidget {
     final width = attachment?.width ?? embed?.imageWidth ?? 0;
     final height = attachment?.height ?? embed?.imageHeight ?? 0;
 
-    return Watch((context) {
-      final url = buildImageUrl(
-        path,
-        forceIsAnimated: embed?.animated,
-        animate: isWindowFocused.value,
-      );
-      return LayoutBuilder(
-        builder: (context, constraints) {
-          final size = constrainDimensions(
-            width: width.toDouble(),
-            height: height.toDouble(),
-            maxWidth: constraints.maxWidth.clamp(0, 1920),
-            maxHeight: 600,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final size = constrainDimensions(
+          width: width.toDouble(),
+          height: height.toDouble(),
+          maxWidth: constraints.maxWidth.clamp(0, 1920),
+          maxHeight: 600,
+        );
+        return Watch((context) {
+          final url = buildImageUrl(
+            path,
+            forceIsAnimated: embed?.animated,
+            animate: isWindowFocused.value,
           );
-
           return ClipRRect(
             borderRadius: BorderRadius.circular(8),
             child: Image.network(
@@ -192,9 +200,9 @@ class MessageImageEmbed extends StatelessWidget {
               },
             ),
           );
-        },
-      );
-    });
+        });
+      },
+    );
   }
 }
 
@@ -208,36 +216,43 @@ class MessageReplies extends StatelessWidget {
     return Opacity(
       opacity: 0.8,
       child: Container(
-        padding: EdgeInsets.only(bottom: 8),
-        child: IntrinsicHeight(
-          child: Row(
-            spacing: 8,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Container(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: Stack(
+          children: [
+            // Decorative line — positioned to stretch full height
+            Positioned(
+              left: 18,
+              top: 10,
+              bottom: 0,
+              child: SizedBox(
                 width: AvatarSize.lg.value - 18,
-                margin: EdgeInsets.only(left: 18, top: 10),
-                decoration: BoxDecoration(
-                  border: Border(
-                    top: BorderSide(color: Colors.white30, width: 2),
-                    left: BorderSide(color: Colors.white30, width: 2),
+                child: DecoratedBox(
+                  decoration: const BoxDecoration(
+                    border: Border(
+                      top: BorderSide(color: Colors.white30, width: 2),
+                      left: BorderSide(color: Colors.white30, width: 2),
+                    ),
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(6),
+                    ),
                   ),
-                  borderRadius: BorderRadius.only(topLeft: Radius.circular(6)),
                 ),
               ),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: replies
-                      .map(
-                        (reply) =>
-                            MessageReplyTile(message: reply.replyToMessage),
-                      )
-                      .toList(),
-                ),
+            ),
+            // Replies content — padded to not overlap the line
+            Padding(
+              padding: EdgeInsets.only(left: AvatarSize.lg.value + 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: replies
+                    .map(
+                      (reply) =>
+                          MessageReplyTile(message: reply.replyToMessage),
+                    )
+                    .toList(),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -250,32 +265,32 @@ class MessageReplyTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final member =
-        serverStore.currentServerMembers.value?[message?.createdBy.id];
-
-    final topColor = serverStore.memberTopColor(member);
-
     var content = message?.content ?? "";
     if (message == null) content = "Deleted Message";
     if ((message?.attachments.isNotEmpty ?? false) && content.isEmpty) {
       content = "Attachment Message";
     }
 
-    return Row(
-      spacing: 6,
-      children: [
-        if (message?.createdBy != null)
-          buildColoredName(
-            hexColor: topColor,
-            member?.nickname ?? message!.createdBy.username,
-            style: TextStyle(),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+    return Watch((context) {
+      final member =
+          serverStore.currentServerMembers.value?[message?.createdBy.id];
+      final topColor = serverStore.memberTopColor(member);
+      return Row(
+        spacing: 6,
+        children: [
+          if (message?.createdBy != null)
+            buildColoredName(
+              hexColor: topColor,
+              member?.nickname ?? message!.createdBy.username,
+              style: const TextStyle(),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          Flexible(
+            child: Text(content, maxLines: 1, overflow: TextOverflow.ellipsis),
           ),
-        Flexible(
-          child: Text(content, maxLines: 1, overflow: TextOverflow.ellipsis),
-        ),
-      ],
-    );
+        ],
+      );
+    });
   }
 }
