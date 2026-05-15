@@ -1,3 +1,4 @@
-# nerimity_desktop_flutter
+# Nerimobile
 
-A new Flutter project.
+A custom mobile client for Nerimity.
+Not official.
