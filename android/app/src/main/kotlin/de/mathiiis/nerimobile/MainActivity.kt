@@ -1,4 +1,4 @@
-package com.example.nerimity_desktop_flutter
+package de.mathiiis.nerimobile
 
 import io.flutter.embedding.android.FlutterActivity
 
