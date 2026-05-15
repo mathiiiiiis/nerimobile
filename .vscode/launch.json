@@ -6,18 +6,18 @@
   "configurations": [
   
     {
-      "name": "nerimity_desktop_flutter",
+      "name": "nerimobile",
       "request": "launch",
       "type": "dart"
     },
     {
-      "name": "nerimity_desktop_flutter (profile mode)",
+      "name": "nerimobile (profile mode)",
       "request": "launch",
       "type": "dart",
       "flutterMode": "profile"
     },
     {
-      "name": "nerimity_desktop_flutter (release mode)",
+      "name": "nerimobile (release mode)",
       "request": "launch",
       "type": "dart",
       "flutterMode": "release"

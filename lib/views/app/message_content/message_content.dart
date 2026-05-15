@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:nerimity_desktop_flutter/services/channel_service.dart';
-import 'package:nerimity_desktop_flutter/stores/channel_store.dart';
-import 'package:nerimity_desktop_flutter/stores/message_store.dart';
-import 'package:nerimity_desktop_flutter/stores/pane_size_store.dart';
-import 'package:nerimity_desktop_flutter/views/app/message_content/message_tile.dart';
-import 'package:nerimity_desktop_flutter/views/app_text_field.dart';
+import 'package:nerimobile/services/channel_service.dart';
+import 'package:nerimobile/stores/channel_store.dart';
+import 'package:nerimobile/stores/message_store.dart';
+import 'package:nerimobile/stores/pane_size_store.dart';
+import 'package:nerimobile/views/app/message_content/message_tile.dart';
+import 'package:nerimobile/views/app_text_field.dart';
 import 'package:signals/signals_flutter.dart';
 
 Offset? _pointerDownPosition;

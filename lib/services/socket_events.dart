@@ -1,20 +1,20 @@
 import 'package:flutter/foundation.dart';
-import 'package:nerimity_desktop_flutter/models/channel.dart';
-import 'package:nerimity_desktop_flutter/models/message.dart';
-import 'package:nerimity_desktop_flutter/models/message_mention.dart';
-import 'package:nerimity_desktop_flutter/models/raw_server_member.dart';
-import 'package:nerimity_desktop_flutter/models/server.dart';
-import 'package:nerimity_desktop_flutter/models/server_role.dart';
-import 'package:nerimity_desktop_flutter/models/user.dart';
-import 'package:nerimity_desktop_flutter/models/user_presence.dart';
-import 'package:nerimity_desktop_flutter/stores/channel_store.dart';
-import 'package:nerimity_desktop_flutter/stores/message_mention_store.dart';
-import 'package:nerimity_desktop_flutter/stores/message_store.dart';
-import 'package:nerimity_desktop_flutter/stores/server_member_store.dart';
-import 'package:nerimity_desktop_flutter/stores/server_roles_store.dart';
-import 'package:nerimity_desktop_flutter/stores/server_store.dart';
-import 'package:nerimity_desktop_flutter/stores/user_presence_store.dart';
-import 'package:nerimity_desktop_flutter/stores/user_store.dart';
+import 'package:nerimobile/models/channel.dart';
+import 'package:nerimobile/models/message.dart';
+import 'package:nerimobile/models/message_mention.dart';
+import 'package:nerimobile/models/raw_server_member.dart';
+import 'package:nerimobile/models/server.dart';
+import 'package:nerimobile/models/server_role.dart';
+import 'package:nerimobile/models/user.dart';
+import 'package:nerimobile/models/user_presence.dart';
+import 'package:nerimobile/stores/channel_store.dart';
+import 'package:nerimobile/stores/message_mention_store.dart';
+import 'package:nerimobile/stores/message_store.dart';
+import 'package:nerimobile/stores/server_member_store.dart';
+import 'package:nerimobile/stores/server_roles_store.dart';
+import 'package:nerimobile/stores/server_store.dart';
+import 'package:nerimobile/stores/user_presence_store.dart';
+import 'package:nerimobile/stores/user_store.dart';
 
 void handleSocketEvent(String event, dynamic payload) {
   switch (event) {

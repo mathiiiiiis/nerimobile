@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:nerimity_desktop_flutter/utils/theme_notifier.dart';
-import 'package:nerimity_desktop_flutter/views/media_query_observer.dart';
-import 'package:nerimity_desktop_flutter/views/mouse_observer.dart';
-import 'package:nerimity_desktop_flutter/views/window_focus_observer.dart';
+import 'package:nerimobile/utils/theme_notifier.dart';
+import 'package:nerimobile/views/media_query_observer.dart';
+import 'package:nerimobile/views/mouse_observer.dart';
+import 'package:nerimobile/views/window_focus_observer.dart';
 import 'theme/app_theme.dart';
 import './router.dart';
 

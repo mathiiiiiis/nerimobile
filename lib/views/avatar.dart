@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:nerimity_desktop_flutter/models/server.dart';
-import 'package:nerimity_desktop_flutter/models/user.dart';
-import 'package:nerimity_desktop_flutter/utils/colors.dart';
-import 'package:nerimity_desktop_flutter/utils/image.dart';
+import 'package:nerimobile/models/server.dart';
+import 'package:nerimobile/models/user.dart';
+import 'package:nerimobile/utils/colors.dart';
+import 'package:nerimobile/utils/image.dart';
 import 'package:signals/signals_flutter.dart';
 
 enum AvatarSize {

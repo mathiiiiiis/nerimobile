@@ -1,4 +1,4 @@
-import 'package:nerimity_desktop_flutter/models/server_role.dart';
+import 'package:nerimobile/models/server_role.dart';
 import 'package:signals/signals_flutter.dart';
 
 final serverRolesStore = ServerRolesStore();

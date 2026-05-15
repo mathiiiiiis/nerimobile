@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:nerimity_desktop_flutter/models/server_member.dart';
-import 'package:nerimity_desktop_flutter/models/server_role.dart';
-import 'package:nerimity_desktop_flutter/stores/channel_store.dart';
-import 'package:nerimity_desktop_flutter/stores/server_store.dart';
-import 'package:nerimity_desktop_flutter/stores/user_presence_store.dart';
-import 'package:nerimity_desktop_flutter/stores/user_store.dart';
-import 'package:nerimity_desktop_flutter/theme/app_theme.dart';
-import 'package:nerimity_desktop_flutter/utils/bitwise.dart';
-import 'package:nerimity_desktop_flutter/utils/channel_permission_flag.dart';
-import 'package:nerimity_desktop_flutter/utils/colors.dart';
-import 'package:nerimity_desktop_flutter/utils/role_permission_flag.dart';
-import 'package:nerimity_desktop_flutter/views/app/server_clan_tag.dart';
-import 'package:nerimity_desktop_flutter/views/app/user_presence.dart';
-import 'package:nerimity_desktop_flutter/views/avatar.dart';
-import 'package:nerimity_desktop_flutter/views/cdn_icon.dart';
+import 'package:nerimobile/models/server_member.dart';
+import 'package:nerimobile/models/server_role.dart';
+import 'package:nerimobile/stores/channel_store.dart';
+import 'package:nerimobile/stores/server_store.dart';
+import 'package:nerimobile/stores/user_presence_store.dart';
+import 'package:nerimobile/stores/user_store.dart';
+import 'package:nerimobile/theme/app_theme.dart';
+import 'package:nerimobile/utils/bitwise.dart';
+import 'package:nerimobile/utils/channel_permission_flag.dart';
+import 'package:nerimobile/utils/colors.dart';
+import 'package:nerimobile/utils/role_permission_flag.dart';
+import 'package:nerimobile/views/app/server_clan_tag.dart';
+import 'package:nerimobile/views/app/user_presence.dart';
+import 'package:nerimobile/views/avatar.dart';
+import 'package:nerimobile/views/cdn_icon.dart';
 import 'package:signals/signals_flutter.dart';
 
 final _offlineRole = ServerRole(

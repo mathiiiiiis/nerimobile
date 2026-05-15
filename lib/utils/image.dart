@@ -1,4 +1,4 @@
-import 'package:nerimity_desktop_flutter/config.dart';
+import 'package:nerimobile/config.dart';
 
 String buildImageUrl(
   String url, {

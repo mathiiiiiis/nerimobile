@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:nerimity_desktop_flutter/theme/app_theme.dart';
-// import 'package:nerimity_desktop_flutter/utils/theme_notifier.dart';
+import 'package:nerimobile/theme/app_theme.dart';
+// import 'package:nerimobile/utils/theme_notifier.dart';
 import 'package:signals/signals_flutter.dart';
 import '../../avatar.dart';
-import 'package:nerimity_desktop_flutter/stores/server_store.dart';
+import 'package:nerimobile/stores/server_store.dart';
 
 class ServerList extends StatefulWidget {
   const ServerList({super.key});

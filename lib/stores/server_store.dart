@@ -1,10 +1,10 @@
-import 'package:nerimity_desktop_flutter/models/channel.dart';
-import 'package:nerimity_desktop_flutter/models/server.dart';
-import 'package:nerimity_desktop_flutter/models/server_member.dart';
-import 'package:nerimity_desktop_flutter/models/server_role.dart';
-import 'package:nerimity_desktop_flutter/stores/channel_store.dart';
-import 'package:nerimity_desktop_flutter/stores/server_member_store.dart';
-import 'package:nerimity_desktop_flutter/stores/server_roles_store.dart';
+import 'package:nerimobile/models/channel.dart';
+import 'package:nerimobile/models/server.dart';
+import 'package:nerimobile/models/server_member.dart';
+import 'package:nerimobile/models/server_role.dart';
+import 'package:nerimobile/stores/channel_store.dart';
+import 'package:nerimobile/stores/server_member_store.dart';
+import 'package:nerimobile/stores/server_roles_store.dart';
 import 'package:signals/signals_flutter.dart';
 
 final serverStore = ServerStore();

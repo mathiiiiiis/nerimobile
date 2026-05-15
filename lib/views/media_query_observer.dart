@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:nerimity_desktop_flutter/stores/media_query_store.dart';
+import 'package:nerimobile/stores/media_query_store.dart';
 
 class MediaQueryObserver extends StatelessWidget {
   final Widget child;

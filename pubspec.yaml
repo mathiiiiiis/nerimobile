@@ -1,5 +1,5 @@
-name: nerimity_desktop_flutter
-description: "A new Flutter project."
+name: nerimobile
+description: "Non-offical mobile client for Nerimity."
 publish_to: "none"
 version: 0.1.0+1
 

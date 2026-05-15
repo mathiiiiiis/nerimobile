@@ -1,4 +1,4 @@
-import 'package:nerimity_desktop_flutter/models/user_presence.dart';
+import 'package:nerimobile/models/user_presence.dart';
 import 'package:signals/signals_flutter.dart';
 
 final userPresenceStore = UserPresenceStore();

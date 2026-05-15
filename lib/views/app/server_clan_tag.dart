@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:nerimity_desktop_flutter/models/server.dart';
-import 'package:nerimity_desktop_flutter/theme/app_theme.dart';
-import 'package:nerimity_desktop_flutter/views/cdn_icon.dart';
+import 'package:nerimobile/models/server.dart';
+import 'package:nerimobile/theme/app_theme.dart';
+import 'package:nerimobile/views/cdn_icon.dart';
 
 class ServerClanTag extends StatelessWidget {
   final ServerClan clan;

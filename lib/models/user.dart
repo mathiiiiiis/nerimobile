@@ -1,4 +1,4 @@
-import 'package:nerimity_desktop_flutter/models/server.dart';
+import 'package:nerimobile/models/server.dart';
 
 class User {
   final String id;

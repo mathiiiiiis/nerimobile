@@ -1,9 +1,9 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:nerimity_desktop_flutter/services/user_service.dart';
-import 'package:nerimity_desktop_flutter/utils/secure_storage.dart';
-import 'package:nerimity_desktop_flutter/views/app_text_field.dart';
+import 'package:nerimobile/services/user_service.dart';
+import 'package:nerimobile/utils/secure_storage.dart';
+import 'package:nerimobile/views/app_text_field.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});

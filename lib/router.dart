@@ -1,7 +1,7 @@
 import 'package:go_router/go_router.dart';
-import 'package:nerimity_desktop_flutter/views/login/login.dart';
-import 'package:nerimity_desktop_flutter/views/shell/app_shell.dart';
-import 'package:nerimity_desktop_flutter/views/app/message_content/message_content.dart';
+import 'package:nerimobile/views/login/login.dart';
+import 'package:nerimobile/views/shell/app_shell.dart';
+import 'package:nerimobile/views/app/message_content/message_content.dart';
 import 'package:flutter/material.dart';
 
 final router = GoRouter(

@@ -1,5 +1,5 @@
 import 'package:flutter/services.dart';
-import 'package:nerimity_desktop_flutter/theme/app_theme.dart';
+import 'package:nerimobile/theme/app_theme.dart';
 
 enum PresenceStatus {
   offline(0, 'Offline', AppTheme.disabledColor),

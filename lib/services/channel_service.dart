@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
-import 'package:nerimity_desktop_flutter/models/message.dart';
-import 'package:nerimity_desktop_flutter/utils/secure_storage.dart';
+import 'package:nerimobile/models/message.dart';
+import 'package:nerimobile/utils/secure_storage.dart';
 
 import 'api_client.dart';
 

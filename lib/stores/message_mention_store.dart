@@ -1,4 +1,4 @@
-import 'package:nerimity_desktop_flutter/models/message_mention.dart';
+import 'package:nerimobile/models/message_mention.dart';
 import 'package:signals/signals_flutter.dart';
 
 final messageMentionStore = MessageMentionStore();

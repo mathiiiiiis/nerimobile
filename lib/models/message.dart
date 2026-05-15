@@ -1,4 +1,4 @@
-import 'package:nerimity_desktop_flutter/models/user.dart';
+import 'package:nerimobile/models/user.dart';
 
 class Message {
   final String id;

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:nerimity_desktop_flutter/stores/mouse_store.dart';
-import 'package:nerimity_desktop_flutter/stores/window_focus_store.dart';
+import 'package:nerimobile/stores/mouse_store.dart';
+import 'package:nerimobile/stores/window_focus_store.dart';
 
 class MouseObserver extends StatelessWidget {
   final Widget child;

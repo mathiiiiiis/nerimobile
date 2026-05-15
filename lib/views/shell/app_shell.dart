@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/symbols.dart';
-import 'package:nerimity_desktop_flutter/services/socket_service.dart';
-import 'package:nerimity_desktop_flutter/stores/channel_store.dart';
-import 'package:nerimity_desktop_flutter/stores/drawer_store.dart';
-import 'package:nerimity_desktop_flutter/stores/media_query_store.dart';
-import 'package:nerimity_desktop_flutter/stores/server_store.dart';
-import 'package:nerimity_desktop_flutter/utils/secure_storage.dart';
-import 'package:nerimity_desktop_flutter/views/app/server_channel_list/server_channel_list.dart';
-import 'package:nerimity_desktop_flutter/views/app/server_member_list/server_member_list.dart';
+import 'package:nerimobile/services/socket_service.dart';
+import 'package:nerimobile/stores/channel_store.dart';
+import 'package:nerimobile/stores/drawer_store.dart';
+import 'package:nerimobile/stores/media_query_store.dart';
+import 'package:nerimobile/stores/server_store.dart';
+import 'package:nerimobile/utils/secure_storage.dart';
+import 'package:nerimobile/views/app/server_channel_list/server_channel_list.dart';
+import 'package:nerimobile/views/app/server_member_list/server_member_list.dart';
 import 'package:signals/signals_flutter.dart';
 import '../app/server_list/server_list.dart';
 

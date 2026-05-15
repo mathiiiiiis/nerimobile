@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
-import 'package:nerimity_desktop_flutter/models/channel.dart';
-import 'package:nerimity_desktop_flutter/stores/channel_store.dart';
-import 'package:nerimity_desktop_flutter/stores/drawer_store.dart';
-import 'package:nerimity_desktop_flutter/stores/server_store.dart';
-import 'package:nerimity_desktop_flutter/theme/app_theme.dart';
-import 'package:nerimity_desktop_flutter/views/cdn_icon.dart';
+import 'package:nerimobile/models/channel.dart';
+import 'package:nerimobile/stores/channel_store.dart';
+import 'package:nerimobile/stores/drawer_store.dart';
+import 'package:nerimobile/stores/server_store.dart';
+import 'package:nerimobile/theme/app_theme.dart';
+import 'package:nerimobile/views/cdn_icon.dart';
 import 'package:signals/signals_flutter.dart';
 
 class ServerChannelList extends StatefulWidget {

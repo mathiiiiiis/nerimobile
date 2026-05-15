@@ -1,4 +1,4 @@
-import 'package:nerimity_desktop_flutter/stores/message_mention_store.dart';
+import 'package:nerimobile/stores/message_mention_store.dart';
 import 'package:signals/signals_flutter.dart';
 import '../models/channel.dart';
 

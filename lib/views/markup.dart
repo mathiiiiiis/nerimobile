@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
-import 'package:nerimity_desktop_flutter/models/channel.dart';
-import 'package:nerimity_desktop_flutter/models/message.dart';
-import 'package:nerimity_desktop_flutter/models/user.dart';
-import 'package:nerimity_desktop_flutter/stores/channel_store.dart';
-import 'package:nerimity_desktop_flutter/utils/nevula.dart';
-import 'package:nerimity_desktop_flutter/views/avatar.dart';
+import 'package:nerimobile/models/channel.dart';
+import 'package:nerimobile/models/message.dart';
+import 'package:nerimobile/models/user.dart';
+import 'package:nerimobile/stores/channel_store.dart';
+import 'package:nerimobile/utils/nevula.dart';
+import 'package:nerimobile/views/avatar.dart';
 
 TextSpan transformCustomTextSpan(
   Entity entity,

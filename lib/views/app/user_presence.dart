@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:nerimity_desktop_flutter/models/user_presence.dart';
-import 'package:nerimity_desktop_flutter/stores/user_presence_store.dart';
+import 'package:nerimobile/models/user_presence.dart';
+import 'package:nerimobile/stores/user_presence_store.dart';
 
 class UserPresence extends StatelessWidget {
   final String userId;

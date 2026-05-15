@@ -1,4 +1,4 @@
-import 'package:nerimity_desktop_flutter/config.dart';
+import 'package:nerimobile/config.dart';
 
 const _u200d = '\u200D';
 final _uFE0Fg = RegExp('\uFE0F');

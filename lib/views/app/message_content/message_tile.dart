@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:nerimity_desktop_flutter/models/message.dart';
-import 'package:nerimity_desktop_flutter/stores/pane_size_store.dart';
-import 'package:nerimity_desktop_flutter/stores/server_store.dart';
-import 'package:nerimity_desktop_flutter/stores/window_focus_store.dart';
-import 'package:nerimity_desktop_flutter/utils/colors.dart';
-import 'package:nerimity_desktop_flutter/utils/date.dart';
-import 'package:nerimity_desktop_flutter/utils/image.dart';
-import 'package:nerimity_desktop_flutter/utils/url.dart';
-import 'package:nerimity_desktop_flutter/views/app/server_clan_tag.dart';
-import 'package:nerimity_desktop_flutter/views/avatar.dart';
-import 'package:nerimity_desktop_flutter/views/cdn_icon.dart';
-import 'package:nerimity_desktop_flutter/views/markup.dart';
+import 'package:nerimobile/models/message.dart';
+import 'package:nerimobile/stores/pane_size_store.dart';
+import 'package:nerimobile/stores/server_store.dart';
+import 'package:nerimobile/stores/window_focus_store.dart';
+import 'package:nerimobile/utils/colors.dart';
+import 'package:nerimobile/utils/date.dart';
+import 'package:nerimobile/utils/image.dart';
+import 'package:nerimobile/utils/url.dart';
+import 'package:nerimobile/views/app/server_clan_tag.dart';
+import 'package:nerimobile/views/avatar.dart';
+import 'package:nerimobile/views/cdn_icon.dart';
+import 'package:nerimobile/views/markup.dart';
 import 'package:signals/signals_flutter.dart';
 
 class MessageTile extends StatelessWidget {

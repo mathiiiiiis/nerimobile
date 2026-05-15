@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:nerimity_desktop_flutter/models/channel.dart';
-import 'package:nerimity_desktop_flutter/models/server_role.dart';
-import 'package:nerimity_desktop_flutter/utils/emojis.dart';
-import 'package:nerimity_desktop_flutter/utils/image.dart';
+import 'package:nerimobile/models/channel.dart';
+import 'package:nerimobile/models/server_role.dart';
+import 'package:nerimobile/utils/emojis.dart';
+import 'package:nerimobile/utils/image.dart';
 
 class CdnIcon extends StatelessWidget {
   final Channel? channel;
