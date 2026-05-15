@@ -3,7 +3,7 @@ import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:nerimobile/models/channel.dart';
 import 'package:nerimobile/models/message.dart';
 import 'package:nerimobile/models/user.dart';
-import 'package:nerimobile/stores/channel_store.dart';
+import 'package:nerimobile/stores/channel/channel_store.dart';
 import 'package:nerimobile/utils/nevula.dart';
 import 'package:nerimobile/views/avatar.dart';
 

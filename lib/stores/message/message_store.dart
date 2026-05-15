@@ -2,7 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:nerimobile/services/channel_service.dart';
 import 'package:signals/signals_flutter.dart';
-import '../models/message.dart';
+import '../../models/message.dart';
 
 final messageStore = MessageStore();
 

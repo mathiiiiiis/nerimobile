@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:nerimobile/stores/window_focus_store.dart';
+import 'package:nerimobile/stores/window/window_focus_store.dart';
 
 class FocusObserver extends StatefulWidget {
   final Widget child;

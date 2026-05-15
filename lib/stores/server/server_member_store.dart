@@ -1,6 +1,6 @@
 import 'package:nerimobile/models/raw_server_member.dart';
 import 'package:nerimobile/models/server_member.dart';
-import 'package:nerimobile/stores/user_store.dart';
+import 'package:nerimobile/stores/user/user_store.dart';
 import 'package:signals/signals_flutter.dart';
 
 final serverMemberStore = ServerMemberStore();

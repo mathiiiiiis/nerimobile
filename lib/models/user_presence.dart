@@ -1,12 +1,11 @@
 import 'package:flutter/services.dart';
-import 'package:nerimobile/theme/app_theme.dart';
 
 enum PresenceStatus {
-  offline(0, 'Offline', AppTheme.disabledColor),
-  online(1, 'Online', AppTheme.successColor),
-  lookingToPlay(2, 'Looking To Play', AppTheme.primaryColor),
-  awayFromKeyboard(3, 'Away From Keyboard', AppTheme.warnColor),
-  doNotDisturb(4, 'Do Not Disturb', AppTheme.alertColor);
+  offline(0, 'Offline', Color(0xffadadad)),
+  online(1, 'Online', Color(0xff78e380)),
+  lookingToPlay(2, 'Looking To Play', Color(0xff4c93ff)),
+  awayFromKeyboard(3, 'Away From Keyboard', Color(0xffff8f2c)),
+  doNotDisturb(4, 'Do Not Disturb', Color(0xffeb6e6e));
 
   final int value;
   final String name;
