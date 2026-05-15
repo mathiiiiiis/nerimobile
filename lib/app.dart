@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+
 import 'package:nerimobile/utils/theme_notifier.dart';
 import 'package:nerimobile/views/media_query_observer.dart';
-import 'package:nerimobile/views/mouse_observer.dart';
 import 'package:nerimobile/views/window_focus_observer.dart';
 import 'theme/app_theme.dart';
-import './router.dart';
+import 'package:nerimobile/router.dart';
 
 class MainApp extends StatelessWidget {
   const MainApp({super.key});
@@ -21,13 +21,11 @@ class MainApp extends StatelessWidget {
           darkTheme: AppTheme.dark(),
           routerConfig: router,
           builder: (context, child) => FocusObserver(
-            child: MouseObserver(
-              child: MediaQueryObserver(
-                child: Scaffold(
-                  resizeToAvoidBottomInset: true,
-                  backgroundColor: Colors.transparent,
-                  body: child!,
-                ),
+            child: MediaQueryObserver(
+              child: Scaffold(
+                resizeToAvoidBottomInset: true,
+                backgroundColor: Colors.transparent,
+                body: child!,
               ),
             ),
           ),

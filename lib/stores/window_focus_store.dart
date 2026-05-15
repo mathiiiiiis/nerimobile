@@ -1,3 +1,3 @@
 import 'package:signals/signals.dart';
 
-final isWindowFocused = signal(false);
+final isWindowFocused = signal(true);

@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:signals/signals_flutter.dart';
+
 import 'package:nerimobile/services/channel_service.dart';
 import 'package:nerimobile/stores/channel_store.dart';
 import 'package:nerimobile/stores/message_store.dart';
 import 'package:nerimobile/stores/pane_size_store.dart';
 import 'package:nerimobile/views/app/message_content/message_tile.dart';
 import 'package:nerimobile/views/app_text_field.dart';
-import 'package:signals/signals_flutter.dart';
-
-Offset? _pointerDownPosition;
 
 class MessageContent extends StatefulWidget {
   final String serverId;
@@ -69,7 +68,7 @@ class _MessageContentState extends State<MessageContent> {
   }
 }
 
-class MessageLog extends StatelessWidget {
+class MessageLog extends StatefulWidget {
   final String channelId;
   final TextEditingController inputController;
   final FocusNode inputFocusNode;
@@ -81,6 +80,13 @@ class MessageLog extends StatelessWidget {
   });
 
   @override
+  State<MessageLog> createState() => _MessageLogState();
+}
+
+class _MessageLogState extends State<MessageLog> {
+  Offset? _pointerDownPosition;
+
+  @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -89,16 +95,16 @@ class MessageLog extends StatelessWidget {
           paneHeight.value = constraints.maxHeight;
         });
         return Watch((context) {
-          final messages = messageStore.messages[channelId] ?? [];
+          final messages = messageStore.messages[widget.channelId] ?? [];
           return Listener(
             onPointerDown: (e) {
               _pointerDownPosition = e.position;
-              if (!inputFocusNode.hasFocus) return;
+              if (!widget.inputFocusNode.hasFocus) return;
               WidgetsBinding.instance.addPostFrameCallback((_) {
-                inputFocusNode.requestFocus();
-                final previousSelection = inputController.selection;
+                widget.inputFocusNode.requestFocus();
+                final previousSelection = widget.inputController.selection;
                 WidgetsBinding.instance.addPostFrameCallback((_) {
-                  inputController.selection = previousSelection;
+                  widget.inputController.selection = previousSelection;
                 });
               });
             },
@@ -107,7 +113,7 @@ class MessageLog extends StatelessWidget {
               if (_pointerDownPosition == null) return;
               final delta = (e.position - _pointerDownPosition!).distance;
               if (delta < 15) {
-                inputFocusNode.unfocus();
+                widget.inputFocusNode.unfocus();
               }
             },
             child: ListView.builder(

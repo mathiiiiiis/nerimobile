@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+
 import 'package:nerimobile/services/user_service.dart';
 import 'package:nerimobile/utils/secure_storage.dart';
 import 'package:nerimobile/views/app_text_field.dart';
@@ -52,8 +53,8 @@ class _LoginPageState extends State<LoginPage> {
       if (!mounted) return;
       context.go('/app');
     } on DioException catch (e) {
-      print(e.response?.statusCode);
-      print(e.response?.data);
+      debugPrint('${e.response?.statusCode}');
+      debugPrint('${e.response?.data}');
     }
   }
 
