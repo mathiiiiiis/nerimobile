@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:nerimobile/theme/core/resolver.dart';
 import 'package:nerimobile/theme/core/theme_spec.dart';
 import 'package:nerimobile/theme/core/token.dart';
-
-const neriFontFamily = 'GoogleSansFlex';
+import 'package:nerimobile/theme/typography/fonts.dart';
+import 'package:nerimobile/theme/typography/text_styles.dart';
 
 class NeriColors extends ThemeExtension<NeriColors> {
   const NeriColors(this.colors);
@@ -38,24 +38,35 @@ class NeriColors extends ThemeExtension<NeriColors> {
 
 extension NeriTheme on BuildContext {
   NeriColors get neri => Theme.of(this).extension<NeriColors>()!;
+  NeriTypography get neriText => Theme.of(this).extension<NeriTypography>()!;
 }
 
 ThemeData buildNeriTheme({
   required ThemeSpec spec,
   Map<NeriToken, String> overrides = const {},
+  TypographySpec typography = defaultTypography,
+  TypographyOverrides typographyOverrides = const TypographyOverrides(),
 }) {
   final colors = NeriColors(
     ThemeResolver(spec: spec, overrides: overrides).resolveAll(),
+  );
+  final text = NeriTypography(
+    TypographyResolver(
+      spec: typography,
+      overrides: typographyOverrides,
+    ).resolveAll(),
   );
   final brightness = _brightnessOf(colors[NeriToken.background]);
 
   return ThemeData(
     brightness: brightness,
-    fontFamily: neriFontFamily,
+    fontFamily: typographyOverrides.family ?? typography.family,
+    fontFamilyFallback: neriFontFallback,
     scaffoldBackgroundColor: colors[NeriToken.background],
     canvasColor: colors[NeriToken.background],
     dividerColor: colors[NeriToken.divider],
-    extensions: [colors],
+    extensions: [colors, text],
+    textTheme: _textTheme(text, colors[NeriToken.text]),
     colorScheme: ColorScheme(
       brightness: brightness,
       primary: colors[NeriToken.primary],
@@ -69,6 +80,16 @@ ThemeData buildNeriTheme({
     ),
   );
 }
+
+TextTheme _textTheme(NeriTypography text, Color color) => TextTheme(
+  titleLarge: text[NeriTextRole.titleLarge],
+  headlineSmall: text[NeriTextRole.headlineSmall],
+  bodyLarge: text[NeriTextRole.bodyLarge],
+  bodyMedium: text[NeriTextRole.bodyMedium],
+  bodySmall: text[NeriTextRole.bodySmall],
+  labelLarge: text[NeriTextRole.labelLarge],
+  labelSmall: text[NeriTextRole.labelSmall],
+).apply(bodyColor: color, displayColor: color);
 
 Brightness _brightnessOf(Color color) =>
     color.computeLuminance() > 0.45 ? Brightness.light : Brightness.dark;
