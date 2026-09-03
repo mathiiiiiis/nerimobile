@@ -24,3 +24,11 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+fonts:
+  - family: GoogleSansFlex
+    fonts:
+      - asset: assets/fonts/GoogleSansFlex.ttf
+
+assets:
+  - assets/fonts/OFL.text
