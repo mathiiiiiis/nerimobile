@@ -1,10 +1,10 @@
 {
-  description = "dev env for sono";
+  description = "dev env for nerimobile";
 
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
   outputs =
-    { nixpkgs }:
+    { self, nixpkgs }:
     let
       system = "x86_64-linux";
       pkgs = import nixpkgs {
@@ -74,8 +74,8 @@
           export FLUTTER_ROOT="$(dirname "$(dirname "$(readlink -f "$(command -v flutter)")")")"
           flutter config --no-analytics >/dev/null 2>&1 || true
 
-          if [[ $- == *i* && -z ''${IN_LOQUI_SHELL:-} ]]; then
-            export IN_LOQUI_SHELL=1
+          if [[ $- == *i* && -z ''${IN_NERIMOBILE_SHELL:-} ]]; then
+            export IN_NERIMOBILE_SHELL=1
             export SHELL="$(command -v fish)"
             exec fish
           fi
