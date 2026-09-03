@@ -3,7 +3,8 @@
 
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
-  outputs = { self, nixpkgs }:
+  outputs =
+    { nixpkgs }:
     let
       system = "x86_64-linux";
       pkgs = import nixpkgs {
@@ -13,10 +14,14 @@
       };
 
       androidComposition = pkgs.androidenv.composeAndroidPackages {
-        platformVersions = [ "34" "35" "36" ];
+        platformVersions = [
+          "34"
+          "35"
+          "36"
+        ];
         buildToolsVersions = [ "35.0.0" ];
         includeNDK = true;
-        ndkVersions = [ "27.3.13750724" ];
+        ndkVersions = [ "28.2.13676358" ];
         cmakeVersions = [ "3.22.1" ];
         includeEmulator = false;
         includeSystemImages = false;
@@ -31,7 +36,8 @@
         ];
       };
       androidSdk = androidComposition.androidsdk;
-    in {
+    in
+    {
       devShells.${system}.default = pkgs.mkShell {
         buildInputs = [
           pkgs.flutter341
@@ -45,10 +51,10 @@
           pkgs.clang
           pkgs.gtk3
           pkgs.sqlite
-          pkgs.mpv-unwrapped #provides libmpv for media_kit
-          pkgs.libsysprof-capture #provides sysprof-capture-4.pc needed by glib
+          pkgs.mpv-unwrapped # provides libmpv for media_kit
+          pkgs.libsysprof-capture # provides sysprof-capture-4.pc needed by glib
           pkgs.mimalloc
-          pkgs.libsecret #flutter_secure_storage_linux
+          pkgs.libsecret # flutter_secure_storage_linux
           pkgs.pcre2
           pkgs.fish
         ];
@@ -59,7 +65,12 @@
 
         shellHook = ''
           export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$PATH"
-          export LD_LIBRARY_PATH="${pkgs.lib.makeLibraryPath [ pkgs.mpv-unwrapped pkgs.sqlite ]}:$LD_LIBRARY_PATH"
+          export LD_LIBRARY_PATH="${
+            pkgs.lib.makeLibraryPath [
+              pkgs.mpv-unwrapped
+              pkgs.sqlite
+            ]
+          }:$LD_LIBRARY_PATH"
           export FLUTTER_ROOT="$(dirname "$(dirname "$(readlink -f "$(command -v flutter)")")")"
           flutter config --no-analytics >/dev/null 2>&1 || true
 
