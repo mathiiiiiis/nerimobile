@@ -1,7 +1,15 @@
 import 'package:flutter/widgets.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
-enum NeriBranch { dashboard, servers, explore }
+enum NeriBranch {
+  dashboard('Dashboard'),
+  servers('Servers'),
+  explore('Explore');
+
+  const NeriBranch(this.label);
+
+  final String label;
+}
 
 sealed class NeriDestination {
   const NeriDestination({required this.label, required this.icon});

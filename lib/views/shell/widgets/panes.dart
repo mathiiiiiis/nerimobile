@@ -2,9 +2,6 @@ import 'package:flutter/material.dart';
 
 import 'package:nerimobile/theme/core/theme_data.dart';
 import 'package:nerimobile/theme/core/token.dart';
-import 'package:nerimobile/theme/sizing/dimens.dart';
-import 'package:nerimobile/theme/sizing/radius.dart';
-import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/theme/typography/text_styles.dart';
 import 'package:nerimobile/views/shell/destinations.dart';
 
@@ -29,26 +26,12 @@ class PlaceholderPane extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.neri;
-    final sizing = context.neriSize;
 
-    return Padding(
-      padding: EdgeInsets.all(sizing.space(NeriSpacingRole.lg)),
-      child: Container(
-        decoration: BoxDecoration(
-          color: colors[NeriToken.pane],
-          borderRadius: sizing.rounded(NeriRadiusRole.md),
-          border: Border.all(
-            color: colors[NeriToken.border],
-            width: sizing.dimen(NeriDimen.borderWidth),
-          ),
-        ),
-        child: Center(
-          child: Text(
-            label,
-            style: context.neriText[NeriTextRole.bodyLarge].copyWith(
-              color: colors[NeriToken.textTertiary],
-            ),
-          ),
+    return Center(
+      child: Text(
+        label,
+        style: context.neriText[NeriTextRole.bodyLarge].copyWith(
+          color: colors[NeriToken.textTertiary],
         ),
       ),
     );

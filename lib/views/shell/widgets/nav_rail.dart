@@ -7,6 +7,7 @@ import 'package:nerimobile/theme/sizing/dimens.dart';
 import 'package:nerimobile/theme/sizing/radius.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/views/shell/destinations.dart';
+import 'package:nerimobile/views/shell/widgets/scroll_fade.dart';
 
 class NavRail extends StatelessWidget {
   const NavRail({super.key, required this.branch, required this.onSelect});
@@ -22,33 +23,40 @@ class NavRail extends StatelessWidget {
     return Container(
       width: sizing.dimen(NeriDimen.railWidth),
       color: colors[NeriToken.rail],
-      child: SafeArea(
-        right: false,
-        child: Column(
-          children: [
-            Expanded(
+      child: Column(
+        children: [
+          Expanded(
+            child: ScrollFade(
+              color: colors[NeriToken.rail],
               child: ListView.builder(
-                padding: EdgeInsets.symmetric(
-                  vertical: sizing.space(NeriSpacingRole.sm),
+                padding: EdgeInsets.only(
+                  top: sizing.space(NeriSpacingRole.sm),
+                  bottom: sizing.dimen(NeriDimen.fadeHeight),
                 ),
                 itemCount: 12,
                 itemBuilder: (context, _) => const _ServerPlaceholder(),
               ),
             ),
-            if (NeriWindow.of(context).destinationsInRail) ...[
-              for (final destination in neriDestinations)
-                _RailItem(
-                  destination: destination,
-                  selected:
-                      destination is BranchDestination &&
-                      destination.branch == branch,
-                  size: sizing.dimen(NeriDimen.controlSize),
-                  onTap: () => onSelect(destination),
-                ),
-              SizedBox(height: sizing.space(NeriSpacingRole.sm)),
-            ],
-          ],
-        ),
+          ),
+          if (NeriWindow.of(context).destinationsInRail)
+            SafeArea(
+              top: false,
+              right: false,
+              child: Column(
+                children: [
+                  for (final destination in neriDestinations)
+                    _RailItem(
+                      destination: destination,
+                      selected:
+                          destination is BranchDestination &&
+                          destination.branch == branch,
+                      size: sizing.dimen(NeriDimen.controlSize),
+                      onTap: () => onSelect(destination),
+                    ),
+                ],
+              ),
+            ),
+        ],
       ),
     );
   }

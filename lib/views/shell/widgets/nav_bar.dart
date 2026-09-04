@@ -61,16 +61,19 @@ class _NavItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.neri;
+    final sizing = context.neriSize;
 
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
-      child: SizedBox(
+      child: Container(
         width: size,
         height: size,
+        alignment: Alignment.center,
         child: Icon(
           destination.icon,
           fill: selected ? 1 : 0,
+          size: sizing.dimen(NeriDimen.iconMd),
           color: selected
               ? colors[NeriToken.text]
               : colors[NeriToken.textTertiary],

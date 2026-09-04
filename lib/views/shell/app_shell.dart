@@ -5,6 +5,7 @@ import 'package:nerimobile/theme/core/theme_data.dart';
 import 'package:nerimobile/theme/core/token.dart';
 import 'package:nerimobile/theme/sizing/breakpoints.dart';
 import 'package:nerimobile/theme/sizing/dimens.dart';
+import 'package:nerimobile/theme/sizing/radius.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/theme/typography/text_styles.dart';
 import 'package:nerimobile/views/shell/destinations.dart';
@@ -25,17 +26,25 @@ class AppShell extends StatelessWidget {
 
     return Column(
       children: [
-        _Header(label: branch.name, height: windowClass.headerHeight),
+        _Header(label: branch.label, height: windowClass.headerHeight),
         Expanded(
           child: Row(
             children: [
               NavRail(branch: branch, onSelect: (d) => _select(context, d)),
-              if (windowClass.isDualPane)
-                SizedBox(
-                  width: sizing.dimen(NeriDimen.listPaneWidth),
-                  child: ListPane(branch: branch),
+              Expanded(
+                child: _ContentSurface(
+                  child: Row(
+                    children: [
+                      if (windowClass.isDualPane)
+                        SizedBox(
+                          width: sizing.dimen(NeriDimen.listPaneWidth),
+                          child: ListPane(branch: branch),
+                        ),
+                      Expanded(child: navigationShell),
+                    ],
+                  ),
                 ),
-              Expanded(child: navigationShell),
+              ),
             ],
           ),
         ),
@@ -72,7 +81,7 @@ class _Header extends StatelessWidget {
     final sizing = context.neriSize;
 
     return ColoredBox(
-      color: colors[NeriToken.headerBlurDisabled],
+      color: colors[NeriToken.background],
       child: SafeArea(
         bottom: false,
         child: SizedBox(
@@ -93,6 +102,22 @@ class _Header extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _ContentSurface extends StatelessWidget {
+  const _ContentSurface({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final radius = Radius.circular(context.neriSize.radius(NeriRadiusRole.xl));
+
+    return ClipRRect(
+      borderRadius: BorderRadius.only(topLeft: radius, bottomLeft: radius),
+      child: ColoredBox(color: context.neri[NeriToken.pane], child: child),
     );
   }
 }

@@ -28,7 +28,7 @@ class TextRoleSpec {
 }
 
 const _defaults = <NeriTextRole, TextRoleSpec>{
-  NeriTextRole.titleLarge: TextRoleSpec(size: 22, weight: 600, height: 1.25),
+  NeriTextRole.titleLarge: TextRoleSpec(size: 22, weight: 500, height: 1.25),
   NeriTextRole.headlineSmall: TextRoleSpec(size: 18, weight: 600, height: 1.3),
   NeriTextRole.bodyLarge: TextRoleSpec(size: 16, weight: 400, height: 1.4),
   NeriTextRole.bodyMedium: TextRoleSpec(size: 15, weight: 400, height: 1.45),
