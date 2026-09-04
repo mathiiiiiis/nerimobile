@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:nerimobile/theme/core/theme_data.dart';
 import 'package:nerimobile/theme/presets/presets.dart';
+import 'package:nerimobile/theme/sizing/breakpoints.dart';
 
 import 'package:nerimobile/utils/theme_notifier.dart';
 import 'package:nerimobile/views/window_focus_observer.dart';
@@ -24,7 +25,9 @@ class MainApp extends StatelessWidget {
           themeMode: mode,
           routerConfig: router,
           builder: (context, child) => FocusObserver(
-            child: Scaffold(resizeToAvoidBottomInset: true, body: child!),
+            child: NeriWindowScope(
+              child: Scaffold(resizeToAvoidBottomInset: true, body: child!),
+            ),
           ),
         );
       },

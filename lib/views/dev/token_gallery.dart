@@ -4,6 +4,7 @@ import 'package:nerimobile/theme/core/theme_data.dart';
 import 'package:nerimobile/theme/core/theme_spec.dart';
 import 'package:nerimobile/theme/core/token.dart';
 import 'package:nerimobile/theme/presets/presets.dart';
+import 'package:nerimobile/theme/sizing/breakpoints.dart';
 import 'package:nerimobile/theme/sizing/dimens.dart';
 import 'package:nerimobile/theme/sizing/radius.dart';
 import 'package:nerimobile/theme/sizing/sizing.dart';
@@ -11,7 +12,7 @@ import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/theme/typography/fonts.dart';
 import 'package:nerimobile/theme/typography/text_styles.dart';
 
-enum _Tab { colors, type, sizing }
+enum _Tab { colors, type, sizing, layout }
 
 class TokenGallery extends StatefulWidget {
   const TokenGallery({super.key});
@@ -70,6 +71,7 @@ class _TokenGalleryState extends State<TokenGallery> {
                       radiusScale: _radiusScale,
                       onRadiusScale: (v) => setState(() => _radiusScale = v),
                     ),
+                    _Tab.layout => const _LayoutList(),
                   },
                 ),
               ],
@@ -416,6 +418,91 @@ class _ValueRow extends StatelessWidget {
             value.toStringAsFixed(1),
             style: context.neriText[NeriTextRole.labelSmall].copyWith(
               color: colors[NeriToken.textTertiary],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _LayoutList extends StatelessWidget {
+  const _LayoutList();
+
+  @override
+  Widget build(BuildContext context) {
+    final windowClass = NeriWindow.of(context);
+    final width = MediaQuery.sizeOf(context).width;
+
+    return ListView(
+      padding: const EdgeInsets.only(bottom: 32),
+      children: [
+        _SectionLabel(label: 'current'),
+        _TextRow(label: 'width', value: width.toStringAsFixed(0)),
+        _TextRow(label: 'class', value: windowClass.name),
+        _SectionLabel(label: 'derived'),
+        _TextRow(
+          label: 'chrome',
+          value: windowClass.usesRail ? 'rail' : 'bottom nav',
+        ),
+        _TextRow(
+          label: 'panes',
+          value: windowClass.isDualPane ? 'list + content' : 'one',
+        ),
+        _ValueRow(label: 'headerHeight', value: windowClass.headerHeight),
+        _SectionLabel(label: 'thresholds'),
+        for (final value in NeriWindowClass.values)
+          _TextRow(
+            label: value.name,
+            value: switch (value) {
+              NeriWindowClass.compact => '< ${neriMediumMinWidth.toInt()}',
+              NeriWindowClass.medium =>
+                '${neriMediumMinWidth.toInt()} .. '
+                    '${neriExpandedMinWidth.toInt() - 1}',
+              NeriWindowClass.expanded => '>= ${neriExpandedMinWidth.toInt()}',
+            },
+            highlight: value == windowClass,
+          ),
+      ],
+    );
+  }
+}
+
+class _TextRow extends StatelessWidget {
+  const _TextRow({
+    required this.label,
+    required this.value,
+    this.highlight = false,
+  });
+
+  final String label;
+  final String value;
+  final bool highlight;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.neri;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: context.neriText[NeriTextRole.bodySmall].copyWith(
+                color: highlight
+                    ? colors[NeriToken.primary]
+                    : colors[NeriToken.text],
+              ),
+            ),
+          ),
+          Text(
+            value,
+            style: context.neriText[NeriTextRole.labelSmall].copyWith(
+              color: highlight
+                  ? colors[NeriToken.primary]
+                  : colors[NeriToken.textTertiary],
             ),
           ),
         ],
