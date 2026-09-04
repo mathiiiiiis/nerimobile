@@ -443,7 +443,7 @@ class _LayoutList extends StatelessWidget {
         _SectionLabel(label: 'derived'),
         _TextRow(
           label: 'chrome',
-          value: windowClass.usesRail ? 'rail' : 'bottom nav',
+          value: windowClass.destinationsInRail ? 'rail' : 'bottom nav',
         ),
         _TextRow(
           label: 'panes',

@@ -11,9 +11,9 @@ enum NeriWindowClass {
   medium,
   expanded;
 
-  bool get usesBottomNav => this == NeriWindowClass.compact;
+  bool get destinationsInBottomBar => this == NeriWindowClass.compact;
 
-  bool get usesRail => this != NeriWindowClass.compact;
+  bool get destinationsInRail => this != NeriWindowClass.compact;
 
   bool get isDualPane => this == NeriWindowClass.expanded;
 
