@@ -4,10 +4,14 @@ import 'package:nerimobile/theme/core/theme_data.dart';
 import 'package:nerimobile/theme/core/theme_spec.dart';
 import 'package:nerimobile/theme/core/token.dart';
 import 'package:nerimobile/theme/presets/presets.dart';
+import 'package:nerimobile/theme/sizing/dimens.dart';
+import 'package:nerimobile/theme/sizing/radius.dart';
+import 'package:nerimobile/theme/sizing/sizing.dart';
+import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/theme/typography/fonts.dart';
 import 'package:nerimobile/theme/typography/text_styles.dart';
 
-enum _Tab { colors, type }
+enum _Tab { colors, type, sizing }
 
 class TokenGallery extends StatefulWidget {
   const TokenGallery({super.key});
@@ -22,6 +26,7 @@ class _TokenGalleryState extends State<TokenGallery> {
   double _scale = 1;
   double _roundness = 0;
   double _grade = 0;
+  double _radiusScale = 1;
 
   @override
   Widget build(BuildContext context) {
@@ -35,6 +40,7 @@ class _TokenGalleryState extends State<TokenGallery> {
           roundness: _roundness,
           grade: _grade,
         ),
+        sizingOverrides: SizingOverrides(radiusScale: _radiusScale),
       ),
       child: Builder(
         builder: (context) => ColoredBox(
@@ -59,6 +65,10 @@ class _TokenGalleryState extends State<TokenGallery> {
                       onScale: (v) => setState(() => _scale = v),
                       onRoundness: (v) => setState(() => _roundness = v),
                       onGrade: (v) => setState(() => _grade = v),
+                    ),
+                    _Tab.sizing => _SizingList(
+                      radiusScale: _radiusScale,
+                      onRadiusScale: (v) => setState(() => _radiusScale = v),
                     ),
                   },
                 ),
@@ -254,6 +264,162 @@ class _TypeList extends StatelessWidget {
             ),
           ),
       ],
+    );
+  }
+}
+
+class _SizingList extends StatelessWidget {
+  const _SizingList({required this.radiusScale, required this.onRadiusScale});
+
+  final double radiusScale;
+  final ValueChanged<double> onRadiusScale;
+
+  @override
+  Widget build(BuildContext context) {
+    final sizing = context.neriSize;
+
+    return ListView(
+      padding: const EdgeInsets.only(bottom: 32),
+      children: [
+        _SectionLabel(label: 'radius scale'),
+        _AxisSlider(
+          label: 'scale',
+          value: radiusScale,
+          min: neriRadiusScaleRange.min,
+          max: neriRadiusScaleRange.max,
+          onChanged: onRadiusScale,
+        ),
+        _SectionLabel(label: 'radius'),
+        for (final role in NeriRadiusRole.values)
+          _RadiusSample(role: role, sizing: sizing),
+        _SectionLabel(label: 'spacing'),
+        for (final role in NeriSpacingRole.values)
+          _SpacingSample(role: role, sizing: sizing),
+        _SectionLabel(label: 'dimens'),
+        for (final dimen in NeriDimen.values)
+          _ValueRow(label: dimen.name, value: sizing.dimen(dimen)),
+      ],
+    );
+  }
+}
+
+class _RadiusSample extends StatelessWidget {
+  const _RadiusSample({required this.role, required this.sizing});
+
+  final NeriRadiusRole role;
+  final NeriSizing sizing;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.neri;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      child: Row(
+        children: [
+          Container(
+            width: 72,
+            height: 48,
+            decoration: BoxDecoration(
+              color: colors[NeriToken.card],
+              border: Border.all(
+                color: colors[NeriToken.border],
+                width: sizing.dimen(NeriDimen.borderWidth),
+              ),
+              borderRadius: sizing.rounded(role),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              role.name,
+              style: context.neriText[NeriTextRole.bodySmall].copyWith(
+                color: colors[NeriToken.text],
+              ),
+            ),
+          ),
+          Text(
+            sizing.radius(role).toStringAsFixed(1),
+            style: context.neriText[NeriTextRole.labelSmall].copyWith(
+              color: colors[NeriToken.textTertiary],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SpacingSample extends StatelessWidget {
+  const _SpacingSample({required this.role, required this.sizing});
+
+  final NeriSpacingRole role;
+  final NeriSizing sizing;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.neri;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      child: Row(
+        children: [
+          Container(
+            width: sizing.space(role),
+            height: 16,
+            color: colors[NeriToken.primary],
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              role.name,
+              style: context.neriText[NeriTextRole.bodySmall].copyWith(
+                color: colors[NeriToken.text],
+              ),
+            ),
+          ),
+          Text(
+            sizing.space(role).toStringAsFixed(0),
+            style: context.neriText[NeriTextRole.labelSmall].copyWith(
+              color: colors[NeriToken.textTertiary],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ValueRow extends StatelessWidget {
+  const _ValueRow({required this.label, required this.value});
+
+  final String label;
+  final double value;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.neri;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: context.neriText[NeriTextRole.bodySmall].copyWith(
+                color: colors[NeriToken.text],
+              ),
+            ),
+          ),
+          Text(
+            value.toStringAsFixed(1),
+            style: context.neriText[NeriTextRole.labelSmall].copyWith(
+              color: colors[NeriToken.textTertiary],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

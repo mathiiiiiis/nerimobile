@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:nerimobile/theme/core/resolver.dart';
 import 'package:nerimobile/theme/core/theme_spec.dart';
 import 'package:nerimobile/theme/core/token.dart';
+import 'package:nerimobile/theme/sizing/sizing.dart';
 import 'package:nerimobile/theme/typography/fonts.dart';
 import 'package:nerimobile/theme/typography/text_styles.dart';
 
@@ -39,6 +40,7 @@ class NeriColors extends ThemeExtension<NeriColors> {
 extension NeriTheme on BuildContext {
   NeriColors get neri => Theme.of(this).extension<NeriColors>()!;
   NeriTypography get neriText => Theme.of(this).extension<NeriTypography>()!;
+  NeriSizing get neriSize => Theme.of(this).extension<NeriSizing>()!;
 }
 
 ThemeData buildNeriTheme({
@@ -46,6 +48,8 @@ ThemeData buildNeriTheme({
   Map<NeriToken, String> overrides = const {},
   TypographySpec typography = defaultTypography,
   TypographyOverrides typographyOverrides = const TypographyOverrides(),
+  SizingSpec sizing = defaultSizing,
+  SizingOverrides sizingOverrides = const SizingOverrides(),
 }) {
   final colors = NeriColors(
     ThemeResolver(spec: spec, overrides: overrides).resolveAll(),
@@ -56,6 +60,10 @@ ThemeData buildNeriTheme({
       overrides: typographyOverrides,
     ).resolveAll(),
   );
+  final size = SizingResolver(
+    spec: sizing,
+    overrides: sizingOverrides,
+  ).resolve();
   final brightness = _brightnessOf(colors[NeriToken.background]);
 
   return ThemeData(
@@ -65,7 +73,7 @@ ThemeData buildNeriTheme({
     scaffoldBackgroundColor: colors[NeriToken.background],
     canvasColor: colors[NeriToken.background],
     dividerColor: colors[NeriToken.divider],
-    extensions: [colors, text],
+    extensions: [colors, text, size],
     textTheme: _textTheme(text, colors[NeriToken.text]),
     colorScheme: ColorScheme(
       brightness: brightness,
