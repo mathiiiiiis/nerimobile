@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:nerimobile/stores/auth/auth_store.dart';
+import 'package:nerimobile/views/auth/login_page.dart';
 import 'package:nerimobile/views/shell/app_shell.dart';
 import 'package:nerimobile/views/shell/widgets/panes.dart';
 
@@ -17,10 +18,7 @@ final routerProvider = Provider<GoRouter>((ref) {
     redirect: (_, state) => _redirect(ref, state.matchedLocation),
     routes: [
       GoRoute(path: '/', builder: (_, _) => const SizedBox.shrink()),
-      GoRoute(
-        path: '/login',
-        builder: (_, _) => const Scaffold(body: Center(child: Text('login'))),
-      ),
+      GoRoute(path: '/login', builder: (_, _) => const LoginPage()),
       GoRoute(
         path: '/app/settings',
         builder: (_, _) => const PlaceholderPane(label: 'Settings'),

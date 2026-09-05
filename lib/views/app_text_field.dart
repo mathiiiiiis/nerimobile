@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
 
+import 'package:nerimobile/theme/core/theme_data.dart';
+import 'package:nerimobile/theme/core/token.dart';
+import 'package:nerimobile/theme/sizing/dimens.dart';
+import 'package:nerimobile/theme/sizing/radius.dart';
+import 'package:nerimobile/theme/typography/text_styles.dart';
+
 class AppTextField extends StatefulWidget {
   final String? hintText;
   final String? label;
+  final String? errorText;
   final TextEditingController? controller;
   final FocusNode? focusNode;
   final ValueChanged<String>? onSubmitted;
@@ -13,6 +20,7 @@ class AppTextField extends StatefulWidget {
     super.key,
     this.label,
     this.hintText,
+    this.errorText,
     this.controller,
     this.focusNode,
     this.onSubmitted,
@@ -48,6 +56,13 @@ class _AppTextFieldState extends State<AppTextField> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.neri;
+    final sizing = context.neriSize;
+    final radius = sizing.radius(NeriRadiusRole.md);
+    final borderColor = widget.errorText != null
+        ? colors[NeriToken.alert]
+        : colors[NeriToken.border];
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       spacing: 4,
@@ -55,7 +70,9 @@ class _AppTextFieldState extends State<AppTextField> {
         if (widget.label != null)
           Text(
             widget.label!,
-            style: TextStyle(fontSize: 14, color: Colors.grey.shade400),
+            style: context.neriText[NeriTextRole.labelLarge].copyWith(
+              color: colors[NeriToken.textSecondary],
+            ),
           ),
         ClipRRect(
           borderRadius: BorderRadius.circular(8),
@@ -76,22 +93,21 @@ class _AppTextFieldState extends State<AppTextField> {
                   ),
 
                   enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(radius),
                     borderSide: BorderSide(
-                      color: Colors.grey.shade800,
-                      width: 1.0,
+                      color: borderColor,
+                      width: sizing.dimen(NeriDimen.borderWidth),
                     ),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(radius),
                     borderSide: BorderSide(
-                      color: Colors.grey.shade800,
-                      width: 1.0,
+                      color: borderColor,
+                      width: sizing.dimen(NeriDimen.borderWidth),
                     ),
                   ),
-                  hintStyle: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey.shade600,
+                  hintStyle: context.neriText[NeriTextRole.bodyMedium].copyWith(
+                    color: colors[NeriToken.textPlaceholder],
                   ),
                   hintText: widget.hintText,
                 ),
@@ -105,11 +121,11 @@ class _AppTextFieldState extends State<AppTextField> {
                   height: 1,
                   decoration: BoxDecoration(
                     color: _focusNode.hasFocus
-                        ? const Color(0xff4c93ff)
+                        ? colors[NeriToken.primary]
                         : Colors.transparent,
-                    borderRadius: const BorderRadius.only(
-                      bottomLeft: Radius.circular(8),
-                      bottomRight: Radius.circular(8),
+                    borderRadius: BorderRadius.only(
+                      bottomLeft: Radius.circular(radius),
+                      bottomRight: Radius.circular(radius),
                     ),
                   ),
                 ),
@@ -117,6 +133,13 @@ class _AppTextFieldState extends State<AppTextField> {
             ],
           ),
         ),
+        if (widget.errorText != null)
+          Text(
+            widget.errorText!,
+            style: context.neriText[NeriTextRole.bodySmall].copyWith(
+              color: colors[NeriToken.alert],
+            ),
+          ),
       ],
     );
   }
