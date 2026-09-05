@@ -1,27 +1,28 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nerimobile/models/server_role.dart';
-import 'package:signals/signals_flutter.dart';
 
-final serverRolesStore = ServerRolesStore();
+final serverRolesProvider =
+    NotifierProvider<ServerRolesNotifier, Map<String, Map<String, ServerRole>>>(
+      ServerRolesNotifier.new,
+    );
 
-class ServerRolesStore {
-  final serverRoles = mapSignal<String, MapSignal<String, ServerRole>>({});
-
-  MapSignal<String, ServerRole> _getOrCreate(String serverId) {
-    if (!serverRoles.containsKey(serverId)) {
-      serverRoles[serverId] = mapSignal<String, ServerRole>({});
-    }
-    return serverRoles[serverId]!;
-  }
+class ServerRolesNotifier
+    extends Notifier<Map<String, Map<String, ServerRole>>> {
+  @override
+  Map<String, Map<String, ServerRole>> build() => const {};
 
   void addServerRoles(List<ServerRole> list) {
-    batch(() {
-      for (final role in list) {
-        _getOrCreate(role.serverId)[role.id] = role;
-      }
-    });
+    final next = {
+      for (final entry in state.entries) entry.key: {...entry.value},
+    };
+    for (final role in list) {
+      (next[role.serverId] ??= {})[role.id] = role;
+    }
+    state = next;
   }
 
-  void addServerRole(String serverId, ServerRole role) {
-    _getOrCreate(serverId)[role.id] = role;
-  }
+  void addServerRole(String serverId, ServerRole role) => state = {
+    ...state,
+    serverId: {...?state[serverId], role.id: role},
+  };
 }

@@ -1,4 +1,6 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import 'package:nerimobile/models/channel.dart';
 import 'package:nerimobile/models/message.dart';
 import 'package:nerimobile/models/message_mention.dart';
@@ -16,20 +18,20 @@ import 'package:nerimobile/stores/server/server_store.dart';
 import 'package:nerimobile/stores/user/user_presence_store.dart';
 import 'package:nerimobile/stores/user/user_store.dart';
 
-void handleSocketEvent(String event, dynamic payload) {
+void handleSocketEvent(Ref ref, String event, dynamic payload) {
   switch (event) {
     case 'user:authenticated':
-      onUserAuthenticated(payload);
+      onUserAuthenticated(ref, payload);
     case 'user:presence_update':
-      onUserPresenceUpdate(payload);
+      onUserPresenceUpdate(ref, payload);
     case 'message:created':
-      onMessageCreated(payload);
+      onMessageCreated(ref, payload);
     case 'message:updated':
-      onMessageUpdated(payload);
+      onMessageUpdated(ref, payload);
     case 'message:deleted':
-      onMessageDeleted(payload);
+      onMessageDeleted(ref, payload);
     case 'notification:dismissed':
-      onNotificationDismissed(payload);
+      onNotificationDismissed(ref, payload);
   }
 }
 
@@ -85,49 +87,61 @@ AuthenticatedPayload _parseAuthenticatedPayload(Map<String, dynamic> json) {
   return AuthenticatedPayload.fromJson(json);
 }
 
-Future<void> onUserAuthenticated(dynamic payload) async {
+Future<void> onUserAuthenticated(Ref ref, dynamic payload) async {
   final data = await compute(
     _parseAuthenticatedPayload,
     payload as Map<String, dynamic>,
   );
-  serverStore.addServers(data.servers);
-  channelStore.addChannels(data.channels);
-  channelStore.setLastSeenServerChannelIds(data.lastSeenServerChannelIds);
-  serverMemberStore.addServerMembers(data.serverMembers);
-  serverRolesStore.addServerRoles(data.serverRoles);
-  userPresenceStore.addPresences(data.presences);
-  userStore.setCurrentUser(data.user);
-  messageMentionStore.setMentions(data.messageMentions);
+  ref.read(serversProvider.notifier).addServers(data.servers);
+  ref.read(channelsProvider.notifier).addChannels(data.channels);
+  ref
+      .read(lastSeenServerChannelIdsProvider.notifier)
+      .setLastSeenServerChannelIds(data.lastSeenServerChannelIds);
+  ref.read(serverMembersProvider.notifier).addServerMembers(data.serverMembers);
+  ref.read(serverRolesProvider.notifier).addServerRoles(data.serverRoles);
+  ref.read(presencesProvider.notifier).addPresences(data.presences);
+  ref.read(currentUserProvider.notifier).setCurrentUser(data.user);
+  ref.read(messageMentionsProvider.notifier).setMentions(data.messageMentions);
 }
 
-void onMessageCreated(dynamic payload) {
+void onMessageCreated(Ref ref, dynamic payload) {
   final message = Message.fromJson(payload["message"]);
-  final channel = channelStore.channels[message.channelId];
-  final createdByMe = message.createdBy.id == userStore.currentUser.value?.id;
+  final channel = ref.read(channelsProvider)[message.channelId];
+  final createdByMe = message.createdBy.id == ref.read(currentUserProvider)?.id;
   if (channel != null && !createdByMe) {
-    channelStore.updateLastMessagedAt(message.channelId, message.createdAt);
+    ref
+        .read(channelsProvider.notifier)
+        .updateLastMessagedAt(message.channelId, message.createdAt);
   }
-  messageStore.addMessage(message.channelId, message);
+  ref.read(messageProvidier.notifier).addMessage(message.channelId, message);
 }
 
-void onMessageUpdated(dynamic payload) {
-  messageStore.updateMessage(
-    payload["channelId"],
-    payload["messageId"],
-    payload["updated"],
-  );
+void onMessageUpdated(Ref ref, dynamic payload) {
+  ref
+      .read(messageProvidier.notifier)
+      .updateMessage(
+        payload["channelId"],
+        payload["messageId"],
+        payload["updated"],
+      );
 }
 
-void onMessageDeleted(dynamic payload) {
-  messageStore.removeMessage(payload["channelId"], payload["messageId"]);
+void onMessageDeleted(Ref ref, dynamic payload) {
+  ref
+      .read(messageProvidier.notifier)
+      .removeMessage(payload["channelId"], payload["messageId"]);
 }
 
-void onNotificationDismissed(dynamic payload) {
-  channelStore.updateLastSeenServerChannel(payload["channelId"]);
+void onNotificationDismissed(Ref ref, dynamic payload) {
+  ref
+      .read(lastSeenServerChannelIdsProvider.notifier)
+      .updateLastSeenServerChannel(payload["channelId"]);
 }
 
-void onUserPresenceUpdate(dynamic payload) {
+void onUserPresenceUpdate(Ref ref, dynamic payload) {
   if (payload["status"] != null) {
-    userPresenceStore.updatePresence(payload["userId"], payload);
+    ref
+        .read(presencesProvider.notifier)
+        .updatePresence(payload["userId"], payload);
   }
 }

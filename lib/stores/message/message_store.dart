@@ -1,20 +1,22 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:nerimobile/models/message.dart';
 import 'package:nerimobile/services/channel_service.dart';
-import 'package:signals/signals_flutter.dart';
-import '../../models/message.dart';
 
-final messageStore = MessageStore();
+final messageProvidier =
+    NotifierProvider<MessagesNotifier, Map<String, List<Message>>>(
+      MessagesNotifier.new,
+    );
 
-class MessageStore {
-  final messages = mapSignal<String, List<Message>>({});
+class MessagesNotifier extends Notifier<Map<String, List<Message>>> {
+  @override
+  Map<String, List<Message>> build() => const {};
 
   Future<void> loadMessages(String channelId) async {
-    if (messages[channelId] != null) return;
+    if (state[channelId] != null) return;
     try {
-      final response = await fetchMessages(channelId);
-
-      messages[channelId] = response;
+      state = {...state, channelId: await fetchMessages(channelId)};
     } on DioException catch (e) {
       debugPrint(
         'loadMessages error: ${e.response?.statusCode} ${e.response?.data}',
@@ -22,17 +24,19 @@ class MessageStore {
     }
   }
 
-  void setMessages(String channelId, List<Message> list) {
-    messages[channelId] = list;
-  }
+  void setMessages(String channelId, List<Message> list) =>
+      state = {...state, channelId: list};
 
   void addMessage(String channelId, Message message) {
-    final current = messages[channelId];
+    final current = state[channelId];
     if (current == null) return;
     final updated = [...current, message];
-    messages[channelId] = updated.length > 100
-        ? updated.sublist(updated.length - 100)
-        : updated;
+    state = {
+      ...state,
+      channelId: updated.length > 100
+          ? updated.sublist(updated.length - 100)
+          : updated,
+    };
   }
 
   void updateMessage(
@@ -40,18 +44,21 @@ class MessageStore {
     String messageId,
     Map<String, dynamic> partial,
   ) {
-    final current = messages[channelId];
+    final current = state[channelId];
     if (current == null) return;
     final index = current.indexWhere((m) => m.id == messageId);
     if (index == -1) return;
     final updated = List<Message>.from(current);
     updated[index] = current[index].copyWith(partial);
-    messages[channelId] = updated;
+    state = {...state, channelId: updated};
   }
 
   void removeMessage(String channelId, String messageId) {
-    final current = messages[channelId];
+    final current = state[channelId];
     if (current == null) return;
-    messages[channelId] = current.where((m) => m.id != messageId).toList();
+    state = {
+      ...state,
+      channelId: current.where((m) => m.id != messageId).toList(),
+    };
   }
 }

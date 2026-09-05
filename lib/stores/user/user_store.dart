@@ -1,19 +1,27 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nerimobile/models/user.dart';
-import 'package:signals/signals_flutter.dart';
 
-final userStore = UserStore();
+final currentUserProvider = NotifierProvider<CurrentUserNotifier, User?>(
+  CurrentUserNotifier.new,
+);
 
-class UserStore {
-  final currentUser = Signal<User?>(null);
-  final users = mapSignal<String, User>({});
+final usersProvider = NotifierProvider<UsersNotifier, Map<String, User>>(
+  UsersNotifier.new,
+);
 
-  void setCurrentUser(User? user) => currentUser.value = user;
+class CurrentUserNotifier extends Notifier<User?> {
+  @override
+  User? build() => null;
 
-  void setUsers(List<User> list) {
-    users.addAll({for (final u in list) u.id: u});
-  }
+  void setCurrentUser(User? user) => state = user;
+}
 
-  void addUser(User user) {
-    users[user.id] = user;
-  }
+class UsersNotifier extends Notifier<Map<String, User>> {
+  @override
+  Map<String, User> build() => const {};
+
+  void setUsers(List<User> list) =>
+      state = {...state, for (final user in list) user.id: user};
+
+  void addUser(User user) => state = {...state, user.id: user};
 }

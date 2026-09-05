@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
+
 import 'package:nerimobile/models/channel.dart';
 import 'package:nerimobile/models/message.dart';
 import 'package:nerimobile/models/user.dart';
@@ -11,6 +13,7 @@ TextSpan transformCustomTextSpan(
   Entity entity,
   String fullText,
   Message? message,
+  Map<String, Channel> channels,
 ) {
   final String customType = entity.params["type"] ?? "";
   final String content = fullText.substring(
@@ -22,7 +25,7 @@ TextSpan transformCustomTextSpan(
 
   switch (customType) {
     case "#":
-      final channel = channelStore.channels[content];
+      final channel = channels[content];
 
       if (channel != null && channel.name != null) {
         return channelMention(channel);
@@ -86,14 +89,19 @@ TextSpan channelMention(Channel channel) {
   );
 }
 
-TextSpan buildTextSpan(Entity entity, String fullText, Message? message) {
+TextSpan buildTextSpan(
+  Entity entity,
+  String fullText,
+  Message? message,
+  Map<String, Channel> channels,
+) {
   final String content = fullText.substring(
     entity.innerSpan.start,
     entity.innerSpan.end,
   );
 
   List<InlineSpan> children = entity.entities
-      .map((e) => buildTextSpan(e, fullText, message))
+      .map((e) => buildTextSpan(e, fullText, message, channels))
       .toList();
 
   switch (entity.type) {
@@ -171,7 +179,7 @@ TextSpan buildTextSpan(Entity entity, String fullText, Message? message) {
         ],
       );
     case "custom":
-      return transformCustomTextSpan(entity, fullText, message);
+      return transformCustomTextSpan(entity, fullText, message, channels);
     case "text":
     default:
       return TextSpan(
@@ -181,18 +189,25 @@ TextSpan buildTextSpan(Entity entity, String fullText, Message? message) {
   }
 }
 
-class MarkupView extends StatelessWidget {
+class MarkupView extends ConsumerWidget {
   final String? rawText;
   final Message? message;
 
   const MarkupView({super.key, this.rawText, this.message});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     Entity rootEntity = parseMarkup(rawText ?? '');
 
     Entity fullEntityTree = addTextSpans(rootEntity);
 
-    return Text.rich(buildTextSpan(fullEntityTree, rawText ?? '', message));
+    return Text.rich(
+      buildTextSpan(
+        fullEntityTree,
+        rawText ?? '',
+        message,
+        ref.watch(channelsProvider),
+      ),
+    );
   }
 }

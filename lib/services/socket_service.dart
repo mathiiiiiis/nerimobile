@@ -1,10 +1,15 @@
 import 'dart:convert';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
-import './socket_events.dart';
+
+import 'package:nerimobile/services/socket_events.dart';
+
+final socketServiceProvider = Provider<SocketService>(SocketService.new);
 
 class SocketService {
-  static final SocketService instance = SocketService._();
-  SocketService._();
+  SocketService(this._ref);
+
+  final Ref _ref;
 
   WebSocketChannel? _channel;
   String token = "";
@@ -34,7 +39,7 @@ class SocketService {
 
     if (raw[0] == "4" && raw[1] == "2") {
       final decodedEvent = jsonDecode(raw.substring(2)) as List<dynamic>;
-      handleSocketEvent(decodedEvent[0], decodedEvent[1]);
+      handleSocketEvent(_ref, decodedEvent[0], decodedEvent[1]);
     }
   }
 

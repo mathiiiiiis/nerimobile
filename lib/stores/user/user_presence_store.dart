@@ -1,27 +1,29 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nerimobile/models/user_presence.dart';
-import 'package:signals/signals_flutter.dart';
 
-final userPresenceStore = UserPresenceStore();
+final presencesProvider =
+    NotifierProvider<PresencesNotifier, Map<String, UserPresence>>(
+      PresencesNotifier.new,
+    );
 
-class UserPresenceStore {
-  final presences = mapSignal<String, UserPresence>({});
+class PresencesNotifier extends Notifier<Map<String, UserPresence>> {
+  @override
+  Map<String, UserPresence> build() => const {};
 
-  void addPresences(List<UserPresence> list) {
-    presences.addAll({for (final u in list) u.userId: u});
-  }
+  void addPresences(List<UserPresence> list) =>
+      state = {...state, for (final p in list) p.userId: p};
 
-  void addPresence(UserPresence presence) {
-    presences[presence.userId] = presence;
-  }
+  void addPresence(UserPresence presence) =>
+      state = {...state, presence.userId: presence};
 
   void updatePresence(String userId, Map<String, dynamic> payload) {
-    if (payload["status"] != null && payload["status"] == 0) {
-      presences.remove(userId);
-    } else {
-      presences[userId] = UserPresence(
-        userId: userId,
-        status: payload["status"],
-      );
+    if (payload['status'] == 0) {
+      state = {...state}..remove(userId);
+      return;
     }
+    state = {
+      ...state,
+      userId: UserPresence(userId: userId, status: payload['status']),
+    };
   }
 }

@@ -1,119 +1,121 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import 'package:nerimobile/models/channel.dart';
 import 'package:nerimobile/models/server.dart';
 import 'package:nerimobile/models/server_member.dart';
 import 'package:nerimobile/models/server_role.dart';
 import 'package:nerimobile/stores/channel/channel_store.dart';
-import 'package:nerimobile/stores/server/server_member_store.dart';
 import 'package:nerimobile/stores/server/server_roles_store.dart';
-import 'package:signals/signals_flutter.dart';
 
-final serverStore = ServerStore();
-
-class ServerStore {
-  final Signal<String?> currentServerId = signal(null);
-  final servers = mapSignal<String, Server>({});
-
-  void addServers(List<Server> list) {
-    servers.addAll({for (final s in list) s.id: s});
-  }
-
-  void addServer(Server server) {
-    servers[server.id] = server;
-  }
-
-  void removeServer(String id) {
-    servers.remove(id);
-  }
-
-  void setCurrentServerId(String? id) {
-    currentServerId.value = id;
-  }
-
-  late final Computed<Server?> currentServer = computed(() {
-    return servers[currentServerId.value];
-  });
-
-  late final Computed<Iterable<Channel>> currentServerChannels = computed(() {
-    return channelStore.channels.values.where(
-      (c) => c.serverId == currentServerId.value,
+final currentServerIdProvider =
+    NotifierProvider<CurrentServerIdNotifier, String?>(
+      CurrentServerIdNotifier.new,
     );
-  });
 
-  late final Computed<MapSignal<String, ServerMember>?> currentServerMembers =
-      computed(() {
-        return serverMemberStore.serverMembers[currentServerId.value];
-      });
+final serversProvider = NotifierProvider<ServersNotifier, Map<String, Server>>(
+  ServersNotifier.new,
+);
 
-  late final Computed<MapSignal<String, ServerRole>?> currentServerRoles =
-      computed(() {
-        return serverRolesStore.serverRoles[currentServerId.value];
-      });
+class CurrentServerIdNotifier extends Notifier<String?> {
+  @override
+  String? build() => null;
 
-  late final sortedRoles = computed(() {
-    final roles = currentServerRoles.value?.values.toList() ?? [];
-    roles.sort((a, b) => b.order.compareTo(a.order));
-    return roles;
-  });
+  void setCurrentServerId(String? id) => state = id;
+}
 
-  ({String? hexColor, String? icon})? memberTopColorAndIcon(
-    ServerMember? member,
-  ) {
-    if (member == null) return null;
-    final sorted = sortedRoles.value;
+class ServersNotifier extends Notifier<Map<String, Server>> {
+  @override
+  Map<String, Server> build() => const {};
 
-    String? hexColor;
-    String? icon;
+  void addServers(List<Server> list) =>
+      state = {...state, for (final server in list) server.id: server};
 
-    for (final role in sorted) {
-      if (hexColor != null && icon != null) break;
-      if (member.roleIds.contains(role.id)) {
-        if (hexColor == null && role.hexColor != null) hexColor = role.hexColor;
-        if (icon == null && role.icon != null) icon = role.icon;
-      }
+  void addServer(Server server) => state = {...state, server.id: server};
+
+  void removeServer(String id) => state = {...state}..remove(id);
+}
+
+final currentServerProvider = Provider<Server?>((ref) {
+  final id = ref.watch(currentServerIdProvider);
+  return id == null ? null : ref.watch(serversProvider)[id];
+});
+
+final currentServerChannelsProvider = Provider<Iterable<Channel>>((ref) {
+  final id = ref.watch(currentServerIdProvider);
+  return ref.watch(channelsProvider).values.where((c) => c.serverId == id);
+});
+
+final currentServerRolesProvider = Provider<Map<String, ServerRole>?>((ref) {
+  final id = ref.watch(currentServerIdProvider);
+  return id == null ? null : ref.watch(serverRolesProvider)[id];
+});
+
+final sortedRolesProvider = Provider<List<ServerRole>>((ref) {
+  final roles = ref.watch(currentServerRolesProvider)?.values.toList() ?? [];
+  roles.sort((a, b) => b.order.compareTo(a.order));
+  return roles;
+});
+
+final currentServerDefaultRoleProvider = Provider<ServerRole?>((ref) {
+  final defaultRoleId = ref.watch(currentServerProvider)?.defaultRoleId;
+  return ref.watch(currentServerRolesProvider)?[defaultRoleId];
+});
+
+final serverNotificationsProvider = Provider<Map<String, int>>((ref) {
+  final notifications = ref.watch(channelNotificationsProvider);
+  final channels = ref.watch(channelsProvider);
+  final result = <String, int>{};
+
+  for (final entry in notifications.entries) {
+    final serverId = channels[entry.key]?.serverId;
+    if (serverId == null) continue;
+
+    final current = result[serverId] ?? 0;
+    if (entry.value > 0) {
+      result[serverId] = (current < 0 ? 0 : current) + entry.value;
+    } else if (entry.value == -1 && current == 0) {
+      result[serverId] = -1;
     }
-
-    hexColor ??= currentServerDefaultRole.value?.hexColor;
-    icon ??= currentServerDefaultRole.value?.icon;
-
-    return (hexColor: hexColor, icon: icon);
   }
 
-  String? memberTopColor(ServerMember? member) {
-    if (member == null) return null;
-    final sorted = sortedRoles.value;
-    for (final role in sorted) {
-      if (member.roleIds.contains(role.id) && role.hexColor != null) {
-        return role.hexColor;
-      }
-    }
+  return result;
+});
 
-    return currentServerDefaultRole.value?.hexColor;
+({String? hexColor, String? icon})? memberTopColorAndIcon(
+  ServerMember? member,
+  List<ServerRole> sortedRoles,
+  ServerRole? defaultRole,
+) {
+  if (member == null) return null;
+
+  String? hexColor;
+  String? icon;
+
+  for (final role in sortedRoles) {
+    if (hexColor != null && icon != null) break;
+    if (!member.roleIds.contains(role.id)) continue;
+    hexColor ??= role.hexColor;
+    icon ??= role.icon;
   }
 
-  late final Computed<ServerRole?> currentServerDefaultRole = computed(() {
-    final defaultRoleId = currentServer()?.defaultRoleId;
-    return serverRolesStore.serverRoles[currentServerId.value]?[defaultRoleId];
-  });
+  return (
+    hexColor: hexColor ?? defaultRole?.hexColor,
+    icon: icon ?? defaultRole?.icon,
+  );
+}
 
-  late final Computed<Map<String, int>> notifications = computed(() {
-    final notifications = channelStore.channelNotifications.value;
-    final channelMap = channelStore.channels.value;
-    final Map<String, int> result = {};
+String? memberTopColor(
+  ServerMember? member,
+  List<ServerRole> sortedRoles,
+  ServerRole? defaultRole,
+) {
+  if (member == null) return null;
 
-    for (final entry in notifications.entries) {
-      final channel = channelMap[entry.key];
-      if (channel?.serverId == null) continue;
-
-      final serverId = channel!.serverId!;
-      final current = result[serverId] ?? 0;
-
-      if (entry.value > 0) {
-        result[serverId] = (current < 0 ? 0 : current) + entry.value;
-      } else if (entry.value == -1 && current == 0) {
-        result[serverId] = -1;
-      }
+  for (final role in sortedRoles) {
+    if (member.roleIds.contains(role.id) && role.hexColor != null) {
+      return role.hexColor;
     }
+  }
 
-    return result;
-  });
+  return defaultRole?.hexColor;
 }

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:signals/signals_flutter.dart';
-import 'app.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'package:nerimobile/app.dart';
 
 void main() {
-  SignalsObserver.instance = null;
-  runApp(MainApp());
+  runApp(const ProviderScope(child: MainApp()));
 }

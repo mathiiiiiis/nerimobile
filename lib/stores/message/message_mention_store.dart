@@ -1,19 +1,23 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nerimobile/models/message_mention.dart';
-import 'package:signals/signals_flutter.dart';
 
-final messageMentionStore = MessageMentionStore();
+final messageMentionsProvider =
+    NotifierProvider<MessageMentionsNotifier, Map<String, MessageMention>>(
+      MessageMentionsNotifier.new,
+    );
 
-class MessageMentionStore {
-  final mentions = mapSignal<String, MessageMention>({});
+class MessageMentionsNotifier extends Notifier<Map<String, MessageMention>> {
+  @override
+  Map<String, MessageMention> build() => const {};
 
   void setMentions(List<MessageMention> list) {
-    mentions.clear();
+    final next = <String, MessageMention>{};
     for (final mention in list) {
-      final existing = mentions[mention.channelId];
+      final existing = next[mention.channelId];
       if (existing != null) {
         existing.count += 1;
       } else {
-        mentions[mention.channelId] = mention;
+        next[mention.channelId] = mention;
       }
     }
   }

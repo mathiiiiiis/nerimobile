@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import 'package:nerimobile/stores/window/window_focus_store.dart';
 
-class FocusObserver extends StatefulWidget {
+class FocusObserver extends ConsumerStatefulWidget {
   final Widget child;
   const FocusObserver({required this.child, super.key});
 
   @override
-  State<FocusObserver> createState() => _FocusObserverState();
+  ConsumerState<FocusObserver> createState() => _FocusObserverState();
 }
 
-class _FocusObserverState extends State<FocusObserver>
+class _FocusObserverState extends ConsumerState<FocusObserver>
     with WidgetsBindingObserver {
   @override
   void initState() {
@@ -25,7 +27,9 @@ class _FocusObserverState extends State<FocusObserver>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    isWindowFocused.value = state == AppLifecycleState.resumed;
+    ref
+        .read(windowFocusProvider.notifier)
+        .setFocused(state == AppLifecycleState.resumed);
   }
 
   @override
