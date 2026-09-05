@@ -1,7 +1,9 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import 'package:nerimobile/models/message.dart';
+import 'package:nerimobile/services/api_client.dart';
 import 'package:nerimobile/services/channel_service.dart';
 
 final messageProvidier =
@@ -16,7 +18,10 @@ class MessagesNotifier extends Notifier<Map<String, List<Message>>> {
   Future<void> loadMessages(String channelId) async {
     if (state[channelId] != null) return;
     try {
-      state = {...state, channelId: await fetchMessages(channelId)};
+      state = {
+        ...state,
+        channelId: await fetchMessages(ref.read(dioProvider), channelId),
+      };
     } on DioException catch (e) {
       debugPrint(
         'loadMessages error: ${e.response?.statusCode} ${e.response?.data}',
