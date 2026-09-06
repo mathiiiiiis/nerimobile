@@ -1,9 +1,14 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:nerimobile/models/server.dart';
 import 'package:nerimobile/models/user.dart';
+import 'package:nerimobile/models/user_presence.dart';
+import 'package:nerimobile/stores/user/user_presence_store.dart';
+import 'package:nerimobile/theme/core/theme_data.dart';
+import 'package:nerimobile/theme/sizing/dimens.dart';
 import 'package:nerimobile/utils/colors.dart';
 import 'package:nerimobile/utils/image.dart';
 
@@ -72,3 +77,53 @@ int _requestSize(BuildContext context, double size) {
 }
 
 const _minRequestSize = 64;
+
+const _presenceDotRatio = 0.25;
+
+class PresenceAvatar extends ConsumerWidget {
+  const PresenceAvatar({
+    super.key,
+    required this.user,
+    required this.size,
+    required this.surface,
+  });
+
+  final User user;
+  final double size;
+  final Color surface;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final presence = ref.watch(presencesProvider)[user.id];
+    final status =
+        PresenceStatus.fromValue(presence?.status ?? 0) ??
+        PresenceStatus.offline;
+    final dot = size * _presenceDotRatio;
+
+    return SizedBox(
+      width: size,
+      height: size,
+      child: Stack(
+        children: [
+          Avatar(user: user, size: size),
+          Positioned(
+            right: 0,
+            bottom: 0,
+            child: Container(
+              width: dot,
+              height: dot,
+              decoration: BoxDecoration(
+                color: context.neri[status.token],
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: surface,
+                  width: context.neriSize.dimen(NeriDimen.avatarRingWidth),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

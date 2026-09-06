@@ -18,8 +18,6 @@ import 'package:nerimobile/theme/typography/text_styles.dart';
 import 'package:nerimobile/views/avatar.dart';
 import 'package:nerimobile/views/shell/widgets/scroll_fade.dart';
 
-const _presenceDotRatio = 0.25;
-
 class DmListPane extends ConsumerWidget {
   const DmListPane({super.key});
 
@@ -107,10 +105,9 @@ class DmRow extends ConsumerWidget {
         child: Row(
           spacing: sizing.space(NeriSpacingRole.md),
           children: [
-            _AvatarWithPresence(
-              inbox: inbox,
+            PresenceAvatar(
+              user: inbox.recipient,
               size: size,
-              status: status,
               surface: NeriWindow.of(context).isDualPane
                   ? colors[NeriToken.background]
                   : colors[NeriToken.pane],
@@ -141,52 +138,6 @@ class DmRow extends ConsumerWidget {
               _MentionBadge(count: mentions.count),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _AvatarWithPresence extends StatelessWidget {
-  const _AvatarWithPresence({
-    required this.inbox,
-    required this.size,
-    required this.status,
-    required this.surface,
-  });
-
-  final Inbox inbox;
-  final double size;
-  final PresenceStatus status;
-  final Color surface;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.neri;
-    final dot = size * _presenceDotRatio;
-
-    return SizedBox(
-      width: size,
-      height: size,
-      child: Stack(
-        children: [
-          Avatar(user: inbox.recipient, size: size),
-          Positioned(
-            right: 0,
-            bottom: 0,
-            child: Container(
-              width: dot,
-              height: dot,
-              decoration: BoxDecoration(
-                color: colors[status.token],
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: surface,
-                  width: context.neriSize.dimen(NeriDimen.avatarRingWidth),
-                ),
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

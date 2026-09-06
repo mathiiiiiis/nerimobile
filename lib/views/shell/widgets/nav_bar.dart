@@ -5,6 +5,7 @@ import 'package:nerimobile/theme/core/token.dart';
 import 'package:nerimobile/theme/sizing/dimens.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/views/shell/destinations.dart';
+import 'package:nerimobile/views/shell/widgets/destination_icon.dart';
 
 class NavBar extends StatelessWidget {
   const NavBar({super.key, required this.branch, required this.onSelect});
@@ -60,24 +61,14 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.neri;
-    final sizing = context.neriSize;
-
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
-      child: Container(
-        width: size,
-        height: size,
-        alignment: Alignment.center,
-        child: Icon(
-          destination.icon,
-          fill: selected ? 1 : 0,
-          size: sizing.dimen(NeriDimen.iconMd),
-          color: selected
-              ? colors[NeriToken.text]
-              : colors[NeriToken.textTertiary],
-        ),
+      child: DestinationIcon(
+        destination: destination,
+        selected: selected,
+        size: size,
+        surface: context.neri[NeriToken.rail],
       ),
     );
   }

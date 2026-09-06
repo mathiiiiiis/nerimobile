@@ -7,6 +7,7 @@ import 'package:nerimobile/theme/sizing/dimens.dart';
 import 'package:nerimobile/theme/sizing/radius.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/views/shell/destinations.dart';
+import 'package:nerimobile/views/shell/widgets/destination_icon.dart';
 import 'package:nerimobile/views/shell/widgets/scroll_fade.dart';
 
 class NavRail extends StatelessWidget {
@@ -123,12 +124,11 @@ class _RailItem extends StatelessWidget {
                 : Colors.transparent,
             borderRadius: sizing.rounded(NeriRadiusRole.xl),
           ),
-          child: Icon(
-            destination.icon,
-            fill: selected ? 1 : 0,
-            color: selected
-                ? colors[NeriToken.text]
-                : colors[NeriToken.textTertiary],
+          child: DestinationIcon(
+            destination: destination,
+            selected: selected,
+            size: size,
+            surface: colors[NeriToken.rail],
           ),
         ),
       ),
