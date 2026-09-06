@@ -41,6 +41,9 @@ final Map<NeriToken, TokenDerivation> _derivations = {
   NeriToken.messageFloatingOptionsBackground: (resolve) =>
       resolve(NeriToken.tooltip),
   NeriToken.messagePending: (resolve) => dim(resolve(NeriToken.text), 0.45),
+  NeriToken.messageMentionBackground: (resolve) =>
+      dim(resolve(NeriToken.alert), 0.1),
+  NeriToken.messageMentionIndicator: (resolve) => resolve(NeriToken.alert),
 
   NeriToken.primary: (_) => const Color(0xFF4C93FF),
   NeriToken.primaryDark: (resolve) =>

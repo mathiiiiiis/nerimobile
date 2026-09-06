@@ -36,6 +36,8 @@ enum NeriToken {
   messageHoverBackground(ThemeCategory.message),
   messageFloatingOptionsBackground(ThemeCategory.message),
   messagePending(ThemeCategory.message),
+  messageMentionBackground(ThemeCategory.message),
+  messageMentionIndicator(ThemeCategory.message),
 
   primary(ThemeCategory.accent),
   primaryDark(ThemeCategory.accent),

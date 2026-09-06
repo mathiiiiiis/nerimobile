@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:nerimobile/models/message.dart';
+import 'package:nerimobile/stores/user/user_store.dart';
 import 'package:nerimobile/theme/core/theme_data.dart';
 import 'package:nerimobile/theme/core/token.dart';
 import 'package:nerimobile/theme/sizing/dimens.dart';
@@ -13,7 +15,7 @@ const _groupWindow = Duration(minutes: 5);
 const _messageGap = NeriSpacingRole.md;
 const _groupGap = NeriSpacingRole.xs;
 
-class MessageRow extends StatelessWidget {
+class MessageRow extends ConsumerWidget {
   const MessageRow({super.key, required this.message, this.before});
 
   final Message message;
@@ -41,25 +43,65 @@ class MessageRow extends StatelessWidget {
     return b.year != a.year || b.month != a.month || b.day != a.day;
   }
 
+  bool _mentionsMe(String? userId) {
+    if (userId == null) return false;
+    if (message.mentions.any((u) => u.id == userId)) return true;
+    return message.replyMessages.any(
+      (r) => r.replyToMessage?.createdBy.id == userId,
+    );
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final sizing = context.neriSize;
     final gap = before == null
         ? 0.0
         : sizing.space(_compact ? _groupGap : _messageGap);
+    final mentioned = _mentionsMe(ref.watch(currentUserProvider)?.id);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (_newDay) _DayDivider(timestamp: message.createdAt),
         if (!_newDay) SizedBox(height: gap),
-        if (_isSystem)
-          _SystemMessages(message: message)
-        else if (_compact)
-          _CompactMessage(message: message)
-        else
-          _FullMessage(message: message),
+        _Highlight(
+          mentioned: mentioned,
+          gap: _newDay ? 0.0 : gap,
+          child: _isSystem
+              ? _SystemMessages(message: message)
+              : _compact
+              ? _CompactMessage(message: message)
+              : _FullMessage(message: message),
+        ),
       ],
+    );
+  }
+}
+
+class _Highlight extends StatelessWidget {
+  const _Highlight({
+    required this.mentioned,
+    required this.gap,
+    required this.child,
+  });
+
+  final bool mentioned;
+  final double gap;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!mentioned) return child;
+
+    final colors = context.neri;
+    final sizing = context.neriSize;
+
+    return Container(
+      padding: EdgeInsets.symmetric(vertical: sizing.space(NeriSpacingRole.xs)),
+      decoration: BoxDecoration(
+        color: colors[NeriToken.messageMentionBackground],
+      ),
+      child: child,
     );
   }
 }
