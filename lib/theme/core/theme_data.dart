@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import 'package:nerimobile/theme/colors/derive.dart';
 import 'package:nerimobile/theme/core/resolver.dart';
 import 'package:nerimobile/theme/core/theme_spec.dart';
 import 'package:nerimobile/theme/core/token.dart';
@@ -78,11 +79,11 @@ ThemeData buildNeriTheme({
     colorScheme: ColorScheme(
       brightness: brightness,
       primary: colors[NeriToken.primary],
-      onPrimary: _contrastOn(colors[NeriToken.primary]),
+      onPrimary: onColor(colors[NeriToken.primary]),
       secondary: colors[NeriToken.primary],
-      onSecondary: _contrastOn(colors[NeriToken.primary]),
+      onSecondary: onColor(colors[NeriToken.primary]),
       error: colors[NeriToken.alert],
-      onError: _contrastOn(colors[NeriToken.alert]),
+      onError: onColor(colors[NeriToken.alert]),
       surface: colors[NeriToken.pane],
       onSurface: colors[NeriToken.text],
     ),
@@ -101,7 +102,3 @@ TextTheme _textTheme(NeriTypography text, Color color) => TextTheme(
 
 Brightness _brightnessOf(Color color) =>
     color.computeLuminance() > 0.45 ? Brightness.light : Brightness.dark;
-
-Color _contrastOn(Color color) => color.computeLuminance() > 0.45
-    ? const Color(0xFF000000)
-    : const Color(0xFFFFFFFF);

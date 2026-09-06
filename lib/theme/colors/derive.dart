@@ -15,3 +15,7 @@ Color mix(Color base, Color other, double amount) {
 
 Color lift(Color color, double amount) =>
     mix(color, const Color(0xFFFFFFFF), amount);
+
+Color onColor(Color background) => background.computeLuminance() > 0.45
+    ? const Color(0xFF000000)
+    : const Color(0xFFFFFFFF);

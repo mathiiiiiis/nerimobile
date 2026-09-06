@@ -9,6 +9,7 @@ import 'package:nerimobile/theme/sizing/radius.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/theme/typography/text_styles.dart';
 import 'package:nerimobile/views/shell/destinations.dart';
+import 'package:nerimobile/views/shell/widgets/connection_banner.dart';
 import 'package:nerimobile/views/shell/widgets/nav_bar.dart';
 import 'package:nerimobile/views/shell/widgets/nav_rail.dart';
 import 'package:nerimobile/views/shell/widgets/panes.dart';
@@ -90,14 +91,18 @@ class _Header extends StatelessWidget {
             padding: EdgeInsets.symmetric(
               horizontal: sizing.space(NeriSpacingRole.md),
             ),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                label,
-                style: context.neriText[NeriTextRole.titleLarge].copyWith(
-                  color: colors[NeriToken.text],
+            child: Row(
+              children: [
+                Text(
+                  label,
+                  style: context.neriText[NeriTextRole.titleLarge].copyWith(
+                    color: colors[NeriToken.text],
+                  ),
                 ),
-              ),
+                const Spacer(),
+                //TODO: everything pushed over shell has the banner hidden there
+                const ConnectionBanner(),
+              ],
             ),
           ),
         ),
