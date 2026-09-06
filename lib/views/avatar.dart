@@ -5,22 +5,10 @@ import 'package:nerimobile/models/user.dart';
 import 'package:nerimobile/utils/colors.dart';
 import 'package:nerimobile/utils/image.dart';
 
-enum AvatarSize {
-  xs(16),
-  sm(24),
-  md(32),
-  lg(40),
-  xl(48),
-  xxl(64);
-
-  final double value;
-  const AvatarSize(this.value);
-}
-
 class Avatar extends StatelessWidget {
   final Server? server;
   final User? user;
-  final AvatarSize size;
+  final double size;
   final bool? animate;
   const Avatar({
     super.key,
@@ -41,8 +29,8 @@ class Avatar extends StatelessWidget {
         : null;
 
     return Container(
-      width: size.value,
-      height: size.value,
+      width: size,
+      height: size,
       decoration: BoxDecoration(
         color: avatarUrl == null ? hexToColor(hexColor) : null,
         borderRadius: BorderRadius.circular(99),
@@ -62,10 +50,10 @@ class Avatar extends StatelessWidget {
               child: Image.network(
                 avatarUrl,
                 fit: BoxFit.cover,
-                width: size.value,
-                height: size.value,
+                width: size,
+                height: size,
                 errorBuilder: (context, error, stackTrace) =>
-                    SizedBox(height: size.value, width: size.value),
+                    SizedBox(height: size, width: size),
               ),
             ),
     );

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:nerimobile/theme/core/theme_data.dart';
 import 'package:nerimobile/theme/core/token.dart';
 import 'package:nerimobile/theme/typography/text_styles.dart';
+import 'package:nerimobile/views/dashboard/dm_list.dart';
 import 'package:nerimobile/views/shell/destinations.dart';
 
 class ListPane extends StatelessWidget {
@@ -12,7 +13,7 @@ class ListPane extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => switch (branch) {
-    NeriBranch.dashboard => const PlaceholderPane(label: 'Inbox'),
+    NeriBranch.dashboard => const DmListPane(),
     NeriBranch.servers => const PlaceholderPane(label: 'Channels'),
     NeriBranch.explore => const PlaceholderPane(label: 'Explore sections'),
   };

@@ -1,16 +1,17 @@
-import 'package:flutter/services.dart';
+import 'package:nerimobile/theme/core/token.dart';
 
 enum PresenceStatus {
-  offline(0, 'Offline', Color(0xffadadad)),
-  online(1, 'Online', Color(0xff78e380)),
-  lookingToPlay(2, 'Looking To Play', Color(0xff4c93ff)),
-  awayFromKeyboard(3, 'Away From Keyboard', Color(0xffff8f2c)),
-  doNotDisturb(4, 'Do Not Disturb', Color(0xffeb6e6e));
+  //TODO: add l10n
+  offline(0, 'Offline', NeriToken.statusOffline),
+  online(1, 'Online', NeriToken.statusOnline),
+  lookingToPlay(2, 'Looking To Play', NeriToken.statusLookingToPlay),
+  awayFromKeyboard(3, 'Away From Keyboard', NeriToken.statusAwayFromKeyboard),
+  doNotDisturb(4, 'Do Not Disturb', NeriToken.statusDoNotDisturb);
 
   final int value;
   final String name;
-  final Color color;
-  const PresenceStatus(this.value, this.name, this.color);
+  final NeriToken token;
+  const PresenceStatus(this.value, this.name, this.token);
 
   static final _byValue = {for (final s in PresenceStatus.values) s.value: s};
   static PresenceStatus? fromValue(int value) => _byValue[value];

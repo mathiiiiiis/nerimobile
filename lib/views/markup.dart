@@ -55,7 +55,7 @@ TextSpan userMention(User user) {
             mainAxisSize: MainAxisSize.min,
             spacing: 4,
             children: [
-              Avatar(size: AvatarSize.xs, user: user),
+              Avatar(size: 16, user: user),
               Text(user.username),
             ],
           ),
