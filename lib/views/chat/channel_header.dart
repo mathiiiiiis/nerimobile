@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -30,52 +32,64 @@ class ChannelHeader extends ConsumerWidget {
     final colors = context.neri;
     final sizing = context.neriSize;
     final recipient = ref.watch(inboxProvider)[channelId]?.recipient;
+    final radius = sizing.rounded(NeriRadiusRole.image);
 
-    return Container(
-      height: sizing.dimen(NeriDimen.channelHeaderHeight),
-      margin: EdgeInsets.all(sizing.space(NeriSpacingRole.md)),
-      padding: EdgeInsets.only(
-        left: sizing.space(NeriSpacingRole.sm),
-        right: sizing.space(NeriSpacingRole.xs),
-      ),
-      decoration: BoxDecoration(
-        color: colors[NeriToken.pane],
-        borderRadius: sizing.rounded(NeriRadiusRole.image),
-      ),
-      child: Row(
-        children: [
-          if (showBack)
-            HeaderIconButton(
-              icon: Symbols.arrow_back_rounded,
-              onTap: () =>
-                  context.canPop() ? context.pop() : context.go('/app'),
+    return Padding(
+      padding: EdgeInsets.all(sizing.space(NeriSpacingRole.md)),
+      child: ClipRRect(
+        borderRadius: radius,
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+          child: Container(
+            height: sizing.dimen(NeriDimen.channelHeaderHeight),
+            padding: EdgeInsets.only(
+              left: sizing.space(NeriSpacingRole.sm),
+              right: sizing.space(NeriSpacingRole.md),
             ),
-          if (recipient != null) ...[
-            PresenceAvatar(
-              user: recipient,
-              size: sizing.dimen(NeriDimen.controlSize),
-              surface: colors[NeriToken.pane],
-            ),
-            SizedBox(width: sizing.space(NeriSpacingRole.md)),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    recipient.username,
-                    overflow: TextOverflow.ellipsis,
-                    style: context.neriText[NeriTextRole.bodyLarge].copyWith(
-                      color: colors[NeriToken.text],
-                    ),
-                  ),
-                  PresenceLine(userId: recipient.id),
-                ],
+            decoration: BoxDecoration(
+              color: colors[NeriToken.header],
+              borderRadius: radius,
+              border: Border.all(
+                color: colors[NeriToken.border],
+                width: sizing.dimen(NeriDimen.borderWidth),
               ),
             ),
-            ...actions,
-          ],
-        ],
+            child: Row(
+              children: [
+                if (showBack)
+                  HeaderIconButton(
+                    icon: Symbols.arrow_back_rounded,
+                    onTap: () =>
+                        context.canPop() ? context.pop() : context.go('/app'),
+                  ),
+                if (recipient != null) ...[
+                  PresenceAvatar(
+                    user: recipient,
+                    size: sizing.dimen(NeriDimen.controlSize),
+                    surface: colors[NeriToken.pane],
+                  ),
+                  SizedBox(width: sizing.space(NeriSpacingRole.md)),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          recipient.username,
+                          overflow: TextOverflow.ellipsis,
+                          style: context.neriText[NeriTextRole.bodyLarge]
+                              .copyWith(color: colors[NeriToken.text]),
+                        ),
+                        PresenceLine(userId: recipient.id),
+                      ],
+                    ),
+                  ),
+                  ...actions,
+                ],
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

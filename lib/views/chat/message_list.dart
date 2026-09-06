@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:nerimobile/stores/message/message_store.dart';
 import 'package:nerimobile/theme/core/theme_data.dart';
+import 'package:nerimobile/theme/sizing/dimens.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/views/chat/message_row.dart';
 
@@ -52,7 +53,12 @@ class _MessageListState extends ConsumerState<MessageList> {
     return ListView.builder(
       controller: _controller,
       reverse: true,
-      padding: EdgeInsets.symmetric(vertical: sizing.space(NeriSpacingRole.sm)),
+      padding: EdgeInsets.only(
+        bottom: sizing.space(NeriSpacingRole.sm),
+        top:
+            sizing.dimen(NeriDimen.channelHeaderHeight) +
+            sizing.space(NeriSpacingRole.md) * 2,
+      ),
       itemCount: messages.length,
       itemBuilder: (context, index) {
         final position = messages.length - 1 - index;

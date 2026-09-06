@@ -19,7 +19,12 @@ class ChannelPane extends StatelessWidget {
     final dualPane = NeriWindow.of(context).isDualPane;
     final chat = _Chat(channelId: channelId, showBack: !dualPane);
 
-    if (!dualPane) return SafeArea(child: chat);
+    if (!dualPane) {
+      return ColoredBox(
+        color: context.neri[NeriToken.background],
+        child: SafeArea(child: chat),
+      );
+    }
 
     return AppScaffold(
       branch: NeriBranch.dashboard,
@@ -37,18 +42,16 @@ class _Chat extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ColoredBox(
-      color: context.neri[NeriToken.background],
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          ChannelHeader(
-            channelId: channelId,
-            showBack: !NeriWindow.of(context).isDualPane,
-          ),
-          Expanded(child: MessageList(channelId: channelId)),
-        ],
-      ),
+    return Stack(
+      children: [
+        Positioned.fill(child: MessageList(channelId: channelId)),
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          child: ChannelHeader(channelId: channelId, showBack: showBack),
+        ),
+      ],
     );
   }
 }
