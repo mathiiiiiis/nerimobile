@@ -2,6 +2,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:nerimobile/router/slide_over_page.dart';
 import 'package:nerimobile/stores/auth/auth_store.dart';
 import 'package:nerimobile/views/auth/login_page.dart';
 import 'package:nerimobile/views/chat/channel_pane.dart';
@@ -40,12 +41,14 @@ final routerProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/app',
-                builder: (_, _) => const DashboardPane(),
+                pageBuilder: (_, _) => const StaticPage(child: DashboardPane()),
                 routes: [
                   GoRoute(
                     path: 'inbox/:channelId',
-                    builder: (_, state) => ChannelPane(
-                      channelId: state.pathParameters['channelId']!,
+                    pageBuilder: (_, state) => SlideOverPage(
+                      child: ChannelPane(
+                        channelId: state.pathParameters['channelId']!,
+                      ),
                     ),
                   ),
                 ],
