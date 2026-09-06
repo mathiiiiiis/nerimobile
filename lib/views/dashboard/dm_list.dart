@@ -3,10 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:nerimobile/models/inbox.dart';
-import 'package:nerimobile/models/user_presence.dart';
 import 'package:nerimobile/stores/inbox/inbox_store.dart';
 import 'package:nerimobile/stores/message/message_mention_store.dart';
-import 'package:nerimobile/stores/user/user_presence_store.dart';
 
 import 'package:nerimobile/theme/core/theme_data.dart';
 import 'package:nerimobile/theme/core/token.dart';
@@ -16,6 +14,7 @@ import 'package:nerimobile/theme/sizing/radius.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/theme/typography/text_styles.dart';
 import 'package:nerimobile/views/avatar.dart';
+import 'package:nerimobile/views/presence/presence_line.dart';
 import 'package:nerimobile/views/shell/widgets/scroll_fade.dart';
 
 class DmListPane extends ConsumerWidget {
@@ -88,11 +87,6 @@ class DmRow extends ConsumerWidget {
     final colors = context.neri;
     final sizing = context.neriSize;
     final size = sizing.dimen(NeriDimen.avatarMd);
-
-    final presence = ref.watch(presencesProvider)[inbox.recipientId];
-    final status =
-        PresenceStatus.fromValue(presence?.status ?? 0) ??
-        PresenceStatus.offline;
     final mentions = ref.watch(messageMentionsProvider)[inbox.channelId];
 
     return InkWell(
@@ -124,13 +118,7 @@ class DmRow extends ConsumerWidget {
                       color: colors[NeriToken.textSecondary],
                     ),
                   ),
-                  Text(
-                    status.name,
-                    overflow: TextOverflow.ellipsis,
-                    style: context.neriText[NeriTextRole.bodySmall].copyWith(
-                      color: colors[NeriToken.textPlaceholder],
-                    ),
-                  ),
+                  PresenceLine(userId: inbox.recipientId),
                 ],
               ),
             ),
