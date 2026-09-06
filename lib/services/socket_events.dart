@@ -38,6 +38,10 @@ void handleSocketEvent(Ref ref, String event, dynamic payload) {
       onMessageDeleted(ref, payload);
     case 'notification:dismissed':
       onNotificationDismissed(ref, payload);
+    case 'inbox:opened':
+      onInboxOpened(ref, payload);
+    case 'inbox:closed':
+      onInboxClosed(ref, payload);
   }
 }
 
@@ -155,6 +159,21 @@ void onNotificationDismissed(Ref ref, dynamic payload) {
   ref
       .read(lastSeenServerChannelIdsProvider.notifier)
       .updateLastSeenServerChannel(payload["channelId"]);
+}
+
+void onInboxOpened(Ref ref, dynamic payload) {
+  final channel = Channel.fromJson(payload['channel']);
+  ref.read(channelsProvider.notifier).addChannel(channel);
+  ref.read(usersProvider.notifier).addUser(User.fromJson(payload['recipient']));
+  ref
+      .read(inboxProvider.notifier)
+      .addInbox(Inbox.fromJson({...payload, 'channelId': channel.id}));
+}
+
+void onInboxClosed(Ref ref, dynamic payload) {
+  final channelId = payload['channelId'] as String;
+  ref.read(inboxProvider.notifier).removeInbox(channelId);
+  ref.read(channelsProvider.notifier).removeChannel(channelId);
 }
 
 void onUserPresenceUpdate(Ref ref, dynamic payload) {
