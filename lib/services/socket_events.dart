@@ -176,6 +176,7 @@ void onMessageDeleted(Ref ref, dynamic payload) {
 }
 
 void onNotificationDismissed(Ref ref, dynamic payload) {
+  ref.read(messageMentionsProvider.notifier).clear(payload["channelId"]);
   ref
       .read(lastSeenServerChannelIdsProvider.notifier)
       .updateLastSeenServerChannel(payload["channelId"]);
