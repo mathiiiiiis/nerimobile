@@ -3,21 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:nerimobile/theme/core/theme_data.dart';
 import 'package:nerimobile/theme/core/token.dart';
 import 'package:nerimobile/theme/typography/text_styles.dart';
-import 'package:nerimobile/views/dashboard/dm_list.dart';
-import 'package:nerimobile/views/shell/destinations.dart';
-
-class ListPane extends StatelessWidget {
-  const ListPane({super.key, required this.branch});
-
-  final NeriBranch branch;
-
-  @override
-  Widget build(BuildContext context) => switch (branch) {
-    NeriBranch.dashboard => const DmListPane(),
-    NeriBranch.servers => const PlaceholderPane(label: 'Channels'),
-    NeriBranch.explore => const PlaceholderPane(label: 'Explore sections'),
-  };
-}
 
 class PlaceholderPane extends StatelessWidget {
   const PlaceholderPane({super.key, required this.label});

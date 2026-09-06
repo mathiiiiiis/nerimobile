@@ -7,7 +7,8 @@ import 'package:nerimobile/stores/auth/auth_store.dart';
 import 'package:nerimobile/views/auth/login_page.dart';
 import 'package:nerimobile/views/chat/channel_pane.dart';
 import 'package:nerimobile/views/dashboard/dashboard_pane.dart';
-import 'package:nerimobile/views/shell/app_shell.dart';
+import 'package:nerimobile/views/shell/app_scaffold.dart';
+import 'package:nerimobile/views/shell/destinations.dart';
 import 'package:nerimobile/views/shell/widgets/panes.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -34,8 +35,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         ],
       ),
       StatefulShellRoute.indexedStack(
-        builder: (_, _, navigationShell) =>
-            AppShell(navigationShell: navigationShell),
+        builder: (_, _, navigationShell) => navigationShell,
         branches: [
           StatefulShellBranch(
             routes: [
@@ -59,16 +59,28 @@ final routerProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/app/servers',
-                builder: (_, _) => const PlaceholderPane(label: 'No server'),
+                builder: (_, _) => const AppScaffold(
+                  branch: NeriBranch.servers,
+                  listPane: PlaceholderPane(label: 'Channels'),
+                  content: PlaceholderPane(label: 'No server'),
+                ),
               ),
               GoRoute(
                 path: '/app/servers/:serverId',
-                builder: (_, _) => const PlaceholderPane(label: 'Server'),
+                builder: (_, _) => const AppScaffold(
+                  branch: NeriBranch.servers,
+                  listPane: PlaceholderPane(label: 'Channels'),
+                  content: PlaceholderPane(label: 'Server'),
+                ),
                 routes: [
                   GoRoute(
                     path: ':channelId',
-                    builder: (_, state) => PlaceholderPane(
-                      label: 'channel ${state.pathParameters['channelId']}',
+                    builder: (_, state) => AppScaffold(
+                      branch: NeriBranch.servers,
+                      listPane: const PlaceholderPane(label: 'Channels'),
+                      content: PlaceholderPane(
+                        label: 'channel ${state.pathParameters['channelId']}',
+                      ),
                     ),
                   ),
                 ],
@@ -83,8 +95,12 @@ final routerProvider = Provider<GoRouter>((ref) {
               ),
               GoRoute(
                 path: '/app/explore/:section',
-                builder: (_, state) => PlaceholderPane(
-                  label: 'explore ${state.pathParameters['section']}',
+                builder: (_, state) => AppScaffold(
+                  branch: NeriBranch.explore,
+                  listPane: const PlaceholderPane(label: 'Explore sections'),
+                  content: PlaceholderPane(
+                    label: 'explore ${state.pathParameters['section']}',
+                  ),
                 ),
               ),
             ],

@@ -8,6 +8,8 @@ import 'package:nerimobile/theme/sizing/breakpoints.dart';
 import 'package:nerimobile/theme/sizing/radius.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/views/dashboard/dm_list.dart';
+import 'package:nerimobile/views/shell/app_scaffold.dart';
+import 'package:nerimobile/views/shell/destinations.dart';
 import 'package:nerimobile/views/shell/widgets/panes.dart';
 
 const _indicatorHeight = 8.0;
@@ -19,9 +21,13 @@ class DashboardPane extends StatelessWidget {
   const DashboardPane({super.key});
 
   @override
-  Widget build(BuildContext context) => NeriWindow.of(context).isDualPane
-      ? const DashboardContent()
-      : const _DashboardPager();
+  Widget build(BuildContext context) => AppScaffold(
+    branch: NeriBranch.dashboard,
+    listPane: const DmListPane(),
+    content: NeriWindow.of(context).isDualPane
+        ? const DashboardContent()
+        : const _DashboardPager(),
+  );
 }
 
 class DashboardContent extends StatelessWidget {
