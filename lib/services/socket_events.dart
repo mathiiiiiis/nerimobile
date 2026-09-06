@@ -158,9 +158,7 @@ void onNotificationDismissed(Ref ref, dynamic payload) {
 }
 
 void onUserPresenceUpdate(Ref ref, dynamic payload) {
-  if (payload["status"] != null) {
-    ref
-        .read(presencesProvider.notifier)
-        .updatePresence(payload["userId"], payload);
-  }
+  ref
+      .read(presencesProvider.notifier)
+      .updatePresence(payload["userId"], payload);
 }

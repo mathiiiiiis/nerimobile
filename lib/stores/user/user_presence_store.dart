@@ -21,9 +21,12 @@ class PresencesNotifier extends Notifier<Map<String, UserPresence>> {
       state = {...state}..remove(userId);
       return;
     }
+    final current = state[userId];
     state = {
       ...state,
-      userId: UserPresence(userId: userId, status: payload['status']),
+      userId: current == null
+          ? UserPresence(userId: userId, status: payload['status'])
+          : current.merge(payload),
     };
   }
 }
