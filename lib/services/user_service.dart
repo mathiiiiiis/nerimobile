@@ -9,8 +9,8 @@ Future<String> userLogin(
   final response = await dio.post(
     '/users/login',
     data: {
-      if (email != null) 'email': email,
-      if (usernameAndTag != null) 'usernameAndTag': usernameAndTag,
+      'email': ?email,
+      'usernameAndTag': ?usernameAndTag,
       'password': password,
     },
   );
