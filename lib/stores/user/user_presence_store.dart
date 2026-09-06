@@ -25,7 +25,7 @@ class PresencesNotifier extends Notifier<Map<String, UserPresence>> {
     state = {
       ...state,
       userId: current == null
-          ? UserPresence(userId: userId, status: payload['status'])
+          ? UserPresence.fromJson({...payload, 'usedId': userId})
           : current.merge(payload),
     };
   }

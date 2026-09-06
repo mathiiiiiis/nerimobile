@@ -79,7 +79,7 @@ class UserPresence {
   //missing fields stay unchanged, null clears them
   UserPresence merge(Map<String, dynamic> json) => UserPresence(
     userId: userId,
-    status: json.containsKey('status') ? json['status'] : status,
+    status: json['status'] as int? ?? status,
     custom: json.containsKey('custom') ? json['custom'] : custom,
     activities: json.containsKey('activities')
         ? _activities(json['activities'])
