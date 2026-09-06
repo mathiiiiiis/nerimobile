@@ -34,7 +34,7 @@ class AppShell extends StatelessWidget {
     final sizing = context.neriSize;
     final branch = NeriBranch.values[navigationShell.currentIndex];
     final fullScreen =
-        !windowClass.isDualPane &
+        !windowClass.isDualPane &&
         GoRouter.of(context).state.matchedLocation.contains('/inbox/');
 
     if (fullScreen) return SafeArea(child: navigationShell);
