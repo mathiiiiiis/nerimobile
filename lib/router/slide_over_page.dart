@@ -1,9 +1,9 @@
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 const _dragMinDistance = 12.0;
 const _flingVelocity = 700.0;
-const _transition = Duration(milliseconds: 200);
+const _dismissAt = 0.85;
+const _transition = Duration(milliseconds: 300);
 
 class StaticPage<T> extends Page<T> {
   const StaticPage({required this.child, super.key, super.name});
@@ -89,13 +89,44 @@ class SlideOverRoute<T> extends PageRoute<T> {
   void dragUpdate(double fraction) => controller!.value -= fraction;
 
   void dragEnd({required bool pop}) {
-    _dragging = false;
+    final controller = this.controller!;
+
     if (pop) {
       navigator!.pop();
+      if (controller.isAnimating) {
+        controller.animateBack(
+          0,
+          duration: _transition * controller.value,
+          curve: Curves.easeOut,
+        );
+      }
     } else {
-      controller!.animateTo(1, duration: _transition, curve: Curves.easeOut);
+      controller.animateTo(
+        1,
+        duration: _transition * (1 - controller.value),
+        curve: Curves.easeOut,
+      );
     }
-    navigator!.didStopUserGesture();
+
+    if (!controller.isAnimating) {
+      _endGesture();
+      return;
+    }
+
+    void onStatus(AnimationStatus status) {
+      controller.removeStatusListener(onStatus);
+      _endGesture();
+    }
+
+    controller.addStatusListener(onStatus);
+  }
+
+  void _endGesture() {
+    if (!_dragging) return;
+    _dragging = false;
+    if (navigator?.userGestureInProgress ?? false) {
+      navigator!.didStopUserGesture();
+    }
   }
 
   double get dragProgress => controller!.value;
@@ -129,19 +160,24 @@ class _SlideOverGestureDetector extends StatefulWidget {
 
 class _SlideOverGestureDetectorState extends State<_SlideOverGestureDetector> {
   double _width = 0;
+  double _travelled = 0;
 
   bool get _enabled =>
       widget.route.isCurrent &&
       !widget.route.navigator!.userGestureInProgress &&
       widget.route.animation?.status == AnimationStatus.completed;
 
-  void _onStart(DragStartDetails details) {
-    if (!_enabled) return;
-    widget.route.dragStart();
-  }
+  void _onStart(DragStartDetails details) => _travelled = 0;
 
   void _onUpdate(DragUpdateDetails details) {
-    if (!widget.route._dragging) return;
+    final delta = details.primaryDelta ?? 0;
+
+    if (!widget.route._dragging) {
+      _travelled += delta;
+      if (_travelled < _dragMinDistance || !_enabled) return;
+      widget.route.dragStart();
+    }
+
     widget.route.dragUpdate(details.primaryDelta! / _width);
   }
 
@@ -153,7 +189,7 @@ class _SlideOverGestureDetectorState extends State<_SlideOverGestureDetector> {
         ? true
         : velocity < -_flingVelocity
         ? false
-        : widget.route.dragProgress < 0.5;
+        : widget.route.dragProgress < _dismissAt;
 
     widget.route.dragEnd(pop: shouldPop);
   }
@@ -163,54 +199,14 @@ class _SlideOverGestureDetectorState extends State<_SlideOverGestureDetector> {
     return LayoutBuilder(
       builder: (context, constraints) {
         _width = constraints.maxWidth;
-        return RawGestureDetector(
+        return GestureDetector(
           behavior: HitTestBehavior.translucent,
-          gestures: {
-            _BackDragRecognizer:
-                GestureRecognizerFactoryWithHandlers<_BackDragRecognizer>(
-                  _BackDragRecognizer.new,
-                  (recognizer) => recognizer
-                    ..onStart = _onStart
-                    ..onUpdate = _onUpdate
-                    ..onEnd = _onEnd,
-                ),
-          },
+          onHorizontalDragStart: _onStart,
+          onHorizontalDragUpdate: _onUpdate,
+          onHorizontalDragEnd: _onEnd,
           child: widget.child,
         );
       },
     );
-  }
-}
-
-class _BackDragRecognizer extends HorizontalDragGestureRecognizer {
-  final _origins = <int, Offset>{};
-
-  @override
-  void addAllowedPointer(PointerDownEvent event) {
-    _origins[event.pointer] = event.position;
-    super.addAllowedPointer(event);
-  }
-
-  @override
-  void handleEvent(PointerEvent event) {
-    final origin = _origins[event.pointer];
-
-    //let vertical and leftward drag win
-    if (event is PointerMoveEvent && origin != null) {
-      final delta = event.position.dx - origin.dx;
-      if (delta < _dragMinDistance) {
-        if (delta < -_dragMinDistance) {
-          _origins.remove(event.pointer);
-          stopTrackingPointer(event.pointer);
-        }
-        return;
-      }
-    }
-
-    if (event is PointerUpEvent || event is PointerCancelEvent) {
-      _origins.remove(event.pointer);
-    }
-
-    super.handleEvent(event);
   }
 }
