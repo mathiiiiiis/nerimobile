@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:nerimobile/stores/dashboard/dashboard_page_store.dart';
 
 import 'package:nerimobile/theme/core/theme_data.dart';
 import 'package:nerimobile/theme/core/token.dart';
@@ -30,15 +32,22 @@ class DashboardContent extends StatelessWidget {
       const PlaceholderPane(label: 'Dashboard');
 }
 
-class _DashboardPager extends StatefulWidget {
+class _DashboardPager extends ConsumerStatefulWidget {
   const _DashboardPager();
 
   @override
-  State<_DashboardPager> createState() => _DashboardPagerState();
+  ConsumerState<_DashboardPager> createState() => _DashboardPagerState();
 }
 
-class _DashboardPagerState extends State<_DashboardPager> {
+class _DashboardPagerState extends ConsumerState<_DashboardPager> {
   static const _initialPage = 1;
+
+  void _onPageChanged(int page) {
+    setState(() => _page = page);
+    ref
+        .read(dashboardPageProvider.notifier)
+        .setPage(DashboardPage.values[page]);
+  }
 
   final _controller = PageController(initialPage: _initialPage);
   int _page = _initialPage;
@@ -57,7 +66,7 @@ class _DashboardPagerState extends State<_DashboardPager> {
       children: [
         PageView(
           controller: _controller,
-          onPageChanged: (page) => setState(() => _page = page),
+          onPageChanged: _onPageChanged,
           children: const [DmListPane(), DashboardContent()],
         ),
         Positioned(

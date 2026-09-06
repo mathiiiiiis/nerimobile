@@ -36,15 +36,16 @@ class DmListPane extends ConsumerWidget {
     final list = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Padding(
-          padding: EdgeInsets.all(sizing.space(NeriSpacingRole.md)),
-          child: Text(
-            'Direct Messages', //TODO: add l10n
-            style: context.neriText[NeriTextRole.headlineSmall].copyWith(
-              color: colors[NeriToken.text],
+        if (framed)
+          Padding(
+            padding: EdgeInsets.all(sizing.space(NeriSpacingRole.md)),
+            child: Text(
+              'Direct Messages', //TODO: add l10n
+              style: context.neriText[NeriTextRole.headlineSmall].copyWith(
+                color: colors[NeriToken.text],
+              ),
             ),
           ),
-        ),
         Expanded(
           child: ScrollFade(
             color: surface,

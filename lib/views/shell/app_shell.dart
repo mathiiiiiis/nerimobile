@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:nerimobile/stores/dashboard/dashboard_page_store.dart';
 
 import 'package:nerimobile/theme/core/theme_data.dart';
 import 'package:nerimobile/theme/core/token.dart';
@@ -27,7 +29,7 @@ class AppShell extends StatelessWidget {
 
     return Column(
       children: [
-        _Header(label: branch.label, height: windowClass.headerHeight),
+        _Header(branch: branch, height: windowClass.headerHeight),
         Expanded(
           child: Row(
             children: [
@@ -70,16 +72,20 @@ class AppShell extends StatelessWidget {
   }
 }
 
-class _Header extends StatelessWidget {
-  const _Header({required this.label, required this.height});
+class _Header extends ConsumerWidget {
+  const _Header({required this.branch, required this.height});
 
-  final String label;
+  final NeriBranch branch;
   final double height;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.neri;
     final sizing = context.neriSize;
+    final label =
+        branch == NeriBranch.dashboard && !NeriWindow.of(context).isDualPane
+        ? ref.watch(dashboardPageProvider).label
+        : branch.label;
 
     return ColoredBox(
       color: colors[NeriToken.background],
