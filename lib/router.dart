@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:nerimobile/stores/auth/auth_store.dart';
 import 'package:nerimobile/views/auth/login_page.dart';
+import 'package:nerimobile/views/chat/channel_pane.dart';
 import 'package:nerimobile/views/dashboard/dashboard_pane.dart';
 import 'package:nerimobile/views/shell/app_shell.dart';
 import 'package:nerimobile/views/shell/widgets/panes.dart';
@@ -43,8 +44,8 @@ final routerProvider = Provider<GoRouter>((ref) {
                 routes: [
                   GoRoute(
                     path: 'inbox/:channelId',
-                    builder: (_, state) => PlaceholderPane(
-                      label: 'dm ${state.pathParameters['channelId']}',
+                    builder: (_, state) => ChannelPane(
+                      channelId: state.pathParameters['channelId']!,
                     ),
                   ),
                 ],

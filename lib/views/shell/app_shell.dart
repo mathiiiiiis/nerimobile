@@ -23,9 +23,21 @@ class AppShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: GoRouter.of(context).routerDelegate,
+      builder: (context, _) => _build(context),
+    );
+  }
+
+  Widget _build(BuildContext context) {
     final windowClass = NeriWindow.of(context);
     final sizing = context.neriSize;
     final branch = NeriBranch.values[navigationShell.currentIndex];
+    final fullScreen =
+        !windowClass.isDualPane &
+        GoRouter.of(context).state.matchedLocation.contains('/inbox/');
+
+    if (fullScreen) return SafeArea(child: navigationShell);
 
     return Column(
       children: [
