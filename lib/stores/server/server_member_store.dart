@@ -29,8 +29,8 @@ class ServerMembersNotifier
         roleIds: raw.roleIds,
         nickname: raw.nickname,
       );
-      state = next;
     }
+    state = next;
   }
 
   void addServerMember(String serverId, ServerMember member) => state = {
