@@ -156,18 +156,18 @@ void onMessageCreated(Ref ref, dynamic payload) {
     }
   }
 
-  ref.read(messageProvidier(message.channelId).notifier).addMessage(message);
+  ref.read(messagesProvidier(message.channelId).notifier).addMessage(message);
 }
 
 void onMessageUpdated(Ref ref, dynamic payload) {
   ref
-      .read(messageProvidier(payload["channelId"]).notifier)
+      .read(messagesProvidier(payload["channelId"]).notifier)
       .updateMessage(payload["messageId"], payload["updated"]);
 }
 
 void onMessageDeleted(Ref ref, dynamic payload) {
   ref
-      .read(messageProvidier(payload["channelId"]).notifier)
+      .read(messagesProvidier(payload["channelId"]).notifier)
       .removeMessage(payload["messageId"]);
 }
 
