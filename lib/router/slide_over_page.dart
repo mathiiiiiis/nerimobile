@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 const _dragMinDistance = 12.0;
 const _flingVelocity = 700.0;
-const _dismissAt = 0.85;
+const _dismissAt = 0.75;
 const _transition = Duration(milliseconds: 300);
 
 class StaticPage<T> extends Page<T> {
