@@ -1,8 +1,17 @@
 import 'package:dio/dio.dart';
 import 'package:nerimobile/models/message.dart';
 
-Future<List<Message>> fetchMessages(Dio dio, String channelId) async {
-  final response = await dio.get('/channels/$channelId/messages');
+Future<List<Message>> fetchMessages(
+  Dio dio,
+  String channelId, {
+  required int limit,
+  String? before,
+  String? after,
+}) async {
+  final response = await dio.get(
+    '/channels/$channelId/messages',
+    queryParameters: {'limit': limit, 'before': ?before, 'after': ?after},
+  );
   return (response.data as List<dynamic>)
       .map((m) => Message.fromJson(m as Map<String, dynamic>))
       .toList();

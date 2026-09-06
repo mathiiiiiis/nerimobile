@@ -1,7 +1,26 @@
 import 'package:nerimobile/models/user.dart';
 
+enum MessageType {
+  content(0),
+  joinServer(1),
+  leaveServer(2),
+  kickUser(3),
+  banUser(4),
+  callStarted(5),
+  bumpServer(6),
+  pinnedMessage(7);
+
+  final int value;
+  const MessageType(this.value);
+
+  static final _byValue = {for (final t in MessageType.values) t.value: t};
+  static MessageType fromValue(int? value) =>
+      _byValue[value ?? 0] ?? MessageType.content;
+}
+
 class Message {
   final String id;
+  final MessageType type;
   final String content;
   final String channelId;
   final User createdBy;
@@ -14,6 +33,7 @@ class Message {
   Message({
     required this.id,
     required this.content,
+    this.type = MessageType.content,
     required this.channelId,
     required this.createdBy,
     required this.attachments,
@@ -25,7 +45,8 @@ class Message {
 
   factory Message.fromJson(Map<String, dynamic> json) => Message(
     id: json['id'],
-    content: json['content'],
+    type: MessageType.fromValue(json['type'] as int?),
+    content: json['content'] ?? '',
     channelId: json['channelId'],
     createdAt: json['createdAt'] as int,
     createdBy: User.fromJson(json['createdBy']),
@@ -42,6 +63,7 @@ class Message {
   Message copyWith(Map<String, dynamic> partial) {
     return Message(
       id: id,
+      type: type,
       content: partial["content"] ?? content,
       channelId: channelId,
       createdBy: createdBy,
