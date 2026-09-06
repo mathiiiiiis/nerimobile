@@ -16,7 +16,7 @@ String buildImageUrl(
 
   final newParams = Map<String, String>.from(uri.queryParameters);
 
-  if (isAnimated && animate == null || animate == false) {
+  if (isAnimated && (animate == null || animate == false)) {
     newParams['type'] = 'webp';
   }
 

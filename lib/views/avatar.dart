@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 import 'package:nerimobile/models/server.dart';
@@ -25,7 +27,11 @@ class Avatar extends StatelessWidget {
     final avatar = server?.avatar ?? user?.avatar;
     final avatarExists = avatar != null && avatar.trim() != '';
     final avatarUrl = avatarExists
-        ? buildImageUrl(avatar, size: 60, animate: animate == true)
+        ? buildImageUrl(
+            avatar,
+            size: _requestSize(context, size),
+            animate: animate == true,
+          )
         : null;
 
     return Container(
@@ -59,3 +65,10 @@ class Avatar extends StatelessWidget {
     );
   }
 }
+
+int _requestSize(BuildContext context, double size) {
+  final pixels = size * MediaQuery.devicePixelRatioOf(context);
+  return max(_minRequestSize, (pixels / 32).ceil() * 32);
+}
+
+const _minRequestSize = 64;
