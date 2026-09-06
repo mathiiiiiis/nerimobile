@@ -20,5 +20,24 @@ class MessageMentionsNotifier extends Notifier<Map<String, MessageMention>> {
         next[mention.channelId] = mention;
       }
     }
+    state = next;
   }
+
+  void increment({
+    required String channelId,
+    required String userId,
+    String? serverId,
+  }) {
+    final current = state[channelId];
+    state = {
+      ...state,
+      channelId: MessageMention(
+        channelId: channelId,
+        serverId: serverId,
+        count: (current?.count ?? 0) + 1,
+      ),
+    };
+  }
+
+  void clear(String channelId) => state = {...state}..remove(channelId);
 }

@@ -129,13 +129,33 @@ Future<void> onUserAuthenticated(Ref ref, dynamic payload) async {
 
 void onMessageCreated(Ref ref, dynamic payload) {
   final message = Message.fromJson(payload["message"]);
-  final channel = ref.read(channelsProvider)[message.channelId];
+  final serverId = payload["serverId"] as String?;
   final createdByMe = message.createdBy.id == ref.read(currentUserProvider)?.id;
-  if (channel != null && !createdByMe) {
+  ref
+      .read(channelsProvider.notifier)
+      .updateLastMessagedAt(message.channelId, message.createdAt);
+
+  if (createdByMe) {
     ref
-        .read(channelsProvider.notifier)
-        .updateLastMessagedAt(message.channelId, message.createdAt);
+        .read(lastSeenServerChannelIdsProvider.notifier)
+        .updateLastSeenServerChannel(message.channelId);
+  } else {
+    ref.read(usersProvider.notifier).addUser(message.createdBy);
+
+    final mentionsMe = message.mentions.any(
+      (u) => u.id == ref.read(currentUserProvider)?.id,
+    );
+    if (serverId == null || mentionsMe) {
+      ref
+          .read(messageMentionsProvider.notifier)
+          .increment(
+            channelId: message.channelId,
+            userId: message.createdBy.id,
+            serverId: serverId,
+          );
+    }
   }
+
   ref.read(messageProvidier.notifier).addMessage(message.channelId, message);
 }
 
