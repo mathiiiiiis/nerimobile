@@ -26,7 +26,7 @@ class _MessageListState extends ConsumerState<MessageList> {
     super.initState();
     _controller.addListener(_onScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(messagesProvidier(widget.channelId).notifier).open();
+      ref.read(messagesProvider(widget.channelId).notifier).open();
     });
   }
 
@@ -41,13 +41,13 @@ class _MessageListState extends ConsumerState<MessageList> {
     if (position.pixels < position.maxScrollExtent - _loadOlderThreshold) {
       return;
     }
-    ref.read(messagesProvidier(widget.channelId).notifier).loadOlder();
+    ref.read(messagesProvider(widget.channelId).notifier).loadOlder();
   }
 
   @override
   Widget build(BuildContext context) {
     final sizing = context.neriSize;
-    final channel = ref.watch(messagesProvidier(widget.channelId));
+    final channel = ref.watch(messagesProvider(widget.channelId));
     final messages = channel.messages;
 
     return ListView.builder(

@@ -37,7 +37,7 @@ class ChannelMessages {
   );
 }
 
-final messagesProvidier =
+final messagesProvider =
     NotifierProvider.family<MessagesNotifier, ChannelMessages, String>(
       MessagesNotifier.new,
     );
