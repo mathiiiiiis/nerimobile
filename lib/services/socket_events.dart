@@ -1,7 +1,10 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+//models
 import 'package:nerimobile/models/channel.dart';
+import 'package:nerimobile/models/friend.dart';
+import 'package:nerimobile/models/inbox.dart';
 import 'package:nerimobile/models/message.dart';
 import 'package:nerimobile/models/message_mention.dart';
 import 'package:nerimobile/models/raw_server_member.dart';
@@ -9,12 +12,15 @@ import 'package:nerimobile/models/server.dart';
 import 'package:nerimobile/models/server_role.dart';
 import 'package:nerimobile/models/user.dart';
 import 'package:nerimobile/models/user_presence.dart';
+//stores
 import 'package:nerimobile/stores/channel/channel_store.dart';
+import 'package:nerimobile/stores/inbox/inbox_store.dart';
 import 'package:nerimobile/stores/message/message_mention_store.dart';
 import 'package:nerimobile/stores/message/message_store.dart';
 import 'package:nerimobile/stores/server/server_member_store.dart';
 import 'package:nerimobile/stores/server/server_roles_store.dart';
 import 'package:nerimobile/stores/server/server_store.dart';
+import 'package:nerimobile/stores/user/friend_store.dart';
 import 'package:nerimobile/stores/user/user_presence_store.dart';
 import 'package:nerimobile/stores/user/user_store.dart';
 
@@ -43,6 +49,8 @@ class AuthenticatedPayload {
   final List<ServerRole> serverRoles;
   final List<UserPresence> presences;
   final List<MessageMention> messageMentions;
+  final List<Inbox> inbox;
+  final List<Friend> friends;
   final Map<String, int> lastSeenServerChannelIds;
 
   AuthenticatedPayload({
@@ -53,34 +61,37 @@ class AuthenticatedPayload {
     required this.serverRoles,
     required this.presences,
     required this.messageMentions,
+    required this.inbox,
+    required this.friends,
     required this.lastSeenServerChannelIds,
   });
 
-  factory AuthenticatedPayload.fromJson(Map<String, dynamic> json) =>
-      AuthenticatedPayload(
-        user: User.fromJson(json['user']),
-        servers: (json['servers'] as List)
-            .map((s) => Server.fromJson(s))
-            .toList(),
-        channels: (json['channels'] as List)
-            .map((s) => Channel.fromJson(s))
-            .toList(),
-        serverMembers: (json['serverMembers'] as List)
-            .map((s) => RawServerMember.fromJson(s))
-            .toList(),
-        serverRoles: (json['serverRoles'] as List)
-            .map((s) => ServerRole.fromJson(s))
-            .toList(),
-        presences: (json['presences'] as List)
-            .map((s) => UserPresence.fromJson(s))
-            .toList(),
-        messageMentions: (json['messageMentions'] as List)
-            .map((s) => MessageMention.fromJson(s))
-            .toList(),
-        lastSeenServerChannelIds: Map<String, int>.from(
-          json['lastSeenServerChannelIds'],
-        ),
-      );
+  factory AuthenticatedPayload.fromJson(
+    Map<String, dynamic> json,
+  ) => AuthenticatedPayload(
+    user: User.fromJson(json['user']),
+    servers: (json['servers'] as List).map((s) => Server.fromJson(s)).toList(),
+    channels: (json['channels'] as List)
+        .map((s) => Channel.fromJson(s))
+        .toList(),
+    serverMembers: (json['serverMembers'] as List)
+        .map((s) => RawServerMember.fromJson(s))
+        .toList(),
+    serverRoles: (json['serverRoles'] as List)
+        .map((s) => ServerRole.fromJson(s))
+        .toList(),
+    presences: (json['presences'] as List)
+        .map((s) => UserPresence.fromJson(s))
+        .toList(),
+    messageMentions: (json['messageMentions'] as List)
+        .map((s) => MessageMention.fromJson(s))
+        .toList(),
+    inbox: (json['inbox'] as List).map((s) => Inbox.fromJson(s)).toList(),
+    friends: (json['friends'] as List).map((s) => Friend.fromJson(s)).toList(),
+    lastSeenServerChannelIds: Map<String, int>.from(
+      json['lastSeenServerChannelIds'],
+    ),
+  );
 }
 
 AuthenticatedPayload _parseAuthenticatedPayload(Map<String, dynamic> json) {
@@ -102,6 +113,14 @@ Future<void> onUserAuthenticated(Ref ref, dynamic payload) async {
   ref.read(presencesProvider.notifier).addPresences(data.presences);
   ref.read(currentUserProvider.notifier).setCurrentUser(data.user);
   ref.read(messageMentionsProvider.notifier).setMentions(data.messageMentions);
+  ref.read(inboxProvider.notifier).setInbox(data.inbox);
+  ref.read(friendsProvider.notifier).setFriends(data.friends);
+  for (final item in data.inbox) {
+    ref.read(usersProvider.notifier).addUser(item.recipient);
+  }
+  for (final friend in data.friends) {
+    ref.read(usersProvider.notifier).addUser(friend.recipient);
+  }
 }
 
 void onMessageCreated(Ref ref, dynamic payload) {
