@@ -22,6 +22,7 @@ class MessageReplies extends StatelessWidget {
     final colors = context.neri;
     final sizing = context.neriSize;
     final rowHeight = sizing.dimen(NeriDimen.replyHeight);
+    final avatar = sizing.dimen(NeriDimen.avatarSm);
     final side = BorderSide(
       color: colors[NeriToken.divider],
       width: _lineWidth,
@@ -29,7 +30,7 @@ class MessageReplies extends StatelessWidget {
 
     return Padding(
       padding: EdgeInsets.only(
-        left: sizing.space(NeriSpacingRole.md),
+        left: avatar / 2 - _lineWidth / 2,
         bottom: sizing.space(NeriSpacingRole.xs),
       ),
       child: Stack(
