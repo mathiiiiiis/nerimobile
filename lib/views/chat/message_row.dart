@@ -17,6 +17,7 @@ const _groupWindow = Duration(minutes: 5);
 const _messageGap = NeriSpacingRole.md;
 const _groupGap = NeriSpacingRole.xs;
 const _flashFade = Duration(milliseconds: 300);
+const _avatarSize = NeriDimen.controlSize;
 
 class MessageRow extends ConsumerWidget {
   const MessageRow({
@@ -148,10 +149,7 @@ class _FullMessage extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             spacing: sizing.space(NeriSpacingRole.md),
             children: [
-              Avatar(
-                user: message.createdBy,
-                size: sizing.dimen(NeriDimen.avatarSm),
-              ),
+              Avatar(user: message.createdBy, size: sizing.dimen(_avatarSize)),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -201,7 +199,7 @@ class _CompactMessage extends StatelessWidget {
       padding: EdgeInsets.only(
         left:
             sizing.space(NeriSpacingRole.md) +
-            sizing.dimen(NeriDimen.avatarSm) +
+            sizing.dimen(_avatarSize) +
             sizing.space(NeriSpacingRole.md),
         right: sizing.space(NeriSpacingRole.md),
       ),
