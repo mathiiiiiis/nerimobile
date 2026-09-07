@@ -9,6 +9,7 @@ import 'package:nerimobile/theme/sizing/dimens.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/theme/typography/text_styles.dart';
 import 'package:nerimobile/views/avatar.dart';
+import 'package:nerimobile/views/chat/message_replies.dart';
 import 'package:nerimobile/views/markup.dart';
 
 const _groupWindow = Duration(minutes: 5);
@@ -120,40 +121,49 @@ class _FullMessage extends StatelessWidget {
       padding: EdgeInsets.symmetric(
         horizontal: sizing.space(NeriSpacingRole.md),
       ),
-      child: Row(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        spacing: sizing.space(NeriSpacingRole.md),
         children: [
-          Avatar(
-            user: message.createdBy,
-            size: sizing.dimen(NeriDimen.avatarSm),
-          ),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  spacing: sizing.space(NeriSpacingRole.sm),
+          if (message.replyMessages.isNotEmpty)
+            MessageReplies(replies: message.replyMessages),
+
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            spacing: sizing.space(NeriSpacingRole.md),
+            children: [
+              Avatar(
+                user: message.createdBy,
+                size: sizing.dimen(NeriDimen.avatarSm),
+              ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Flexible(
-                      child: Text(
-                        message.createdBy.username,
-                        overflow: TextOverflow.ellipsis,
-                        style: context.neriText[NeriTextRole.labelLarge]
-                            .copyWith(color: colors[NeriToken.text]),
-                      ),
+                    Row(
+                      spacing: sizing.space(NeriSpacingRole.sm),
+                      children: [
+                        Flexible(
+                          child: Text(
+                            message.createdBy.username,
+                            overflow: TextOverflow.ellipsis,
+                            style: context.neriText[NeriTextRole.labelLarge]
+                                .copyWith(color: colors[NeriToken.text]),
+                          ),
+                        ),
+                        Text(
+                          formatTime(message.createdAt),
+                          style: context.neriText[NeriTextRole.labelSmall]
+                              .copyWith(
+                                color: colors[NeriToken.textPlaceholder],
+                              ),
+                        ),
+                      ],
                     ),
-                    Text(
-                      formatTime(message.createdAt),
-                      style: context.neriText[NeriTextRole.labelSmall].copyWith(
-                        color: colors[NeriToken.textPlaceholder],
-                      ),
-                    ),
+                    MarkupView(rawText: message.content, message: message),
                   ],
                 ),
-                MarkupView(rawText: message.content, message: message),
-              ],
-            ),
+              ),
+            ],
           ),
         ],
       ),
