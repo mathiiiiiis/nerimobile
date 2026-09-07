@@ -5,6 +5,7 @@ import 'package:nerimobile/models/server.dart';
 import 'package:nerimobile/models/server_member.dart';
 import 'package:nerimobile/models/server_role.dart';
 import 'package:nerimobile/stores/channel/channel_store.dart';
+import 'package:nerimobile/stores/server/server_member_store.dart';
 import 'package:nerimobile/stores/server/server_roles_store.dart';
 
 final currentServerIdProvider =
@@ -43,6 +44,13 @@ final currentServerProvider = Provider<Server?>((ref) {
 final currentServerChannelsProvider = Provider<Iterable<Channel>>((ref) {
   final id = ref.watch(currentServerIdProvider);
   return ref.watch(channelsProvider).values.where((c) => c.serverId == id);
+});
+
+final currentServerMembersProvider = Provider<Map<String, ServerMember>?>((
+  ref,
+) {
+  final id = ref.watch(currentServerIdProvider);
+  return id == null ? null : ref.watch(serverMembersProvider)[id];
 });
 
 final currentServerRolesProvider = Provider<Map<String, ServerRole>?>((ref) {

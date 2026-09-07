@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:nerimobile/models/message.dart';
+import 'package:nerimobile/stores/server/server_store.dart';
 import 'package:nerimobile/theme/core/theme_data.dart';
 import 'package:nerimobile/theme/core/token.dart';
 import 'package:nerimobile/theme/sizing/dimens.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/theme/typography/text_styles.dart';
+import 'package:nerimobile/utils/colors.dart';
 
 const _lineWidth = 2.0;
 const _cornerRadius = 8.0;
@@ -74,13 +77,13 @@ class MessageReplies extends StatelessWidget {
   }
 }
 
-class _ReplyContent extends StatelessWidget {
+class _ReplyContent extends ConsumerWidget {
   const _ReplyContent({required this.message});
 
   final PartialMessage? message;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.neri;
     final sizing = context.neriSize;
     final reply = message;
@@ -102,6 +105,12 @@ class _ReplyContent extends StatelessWidget {
     final attachmentOnly =
         reply.content.isEmpty && reply.attachments.isNotEmpty;
 
+    final hexColor = memberTopColor(
+      ref.watch(currentServerMembersProvider)?[reply.createdBy.id],
+      ref.watch(sortedRolesProvider),
+      ref.watch(currentServerDefaultRoleProvider),
+    );
+
     return Row(
       spacing: sizing.space(NeriSpacingRole.xs),
       children: [
@@ -121,7 +130,9 @@ class _ReplyContent extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: style.copyWith(
-              color: colors[NeriToken.textPlaceholder],
+              color: hexColor == null
+                  ? colors[NeriToken.textPlaceholder]
+                  : hexToColor(hexColor),
               fontStyle: attachmentOnly ? FontStyle.italic : null,
             ),
           ),
