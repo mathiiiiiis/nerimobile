@@ -44,6 +44,8 @@ final Map<NeriToken, TokenDerivation> _derivations = {
   NeriToken.messageMentionBackground: (resolve) =>
       dim(resolve(NeriToken.alert), 0.1),
   NeriToken.messageMentionIndicator: (resolve) => resolve(NeriToken.alert),
+  NeriToken.messageFlashBackground: (resolve) =>
+      lift(resolve(NeriToken.background), 0.12),
 
   NeriToken.primary: (_) => const Color(0xFF4C93FF),
   NeriToken.primaryDark: (resolve) =>

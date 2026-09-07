@@ -9,6 +9,7 @@ import 'package:nerimobile/theme/sizing/dimens.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/theme/typography/text_styles.dart';
 import 'package:nerimobile/utils/colors.dart';
+import 'package:nerimobile/views/chat/message_list.dart';
 
 const _lineWidth = 2.0;
 const _cornerRadius = 8.0;
@@ -64,9 +65,12 @@ class MessageReplies extends StatelessWidget {
               for (final reply in replies)
                 SizedBox(
                   height: rowHeight,
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: _contentLeft),
-                    child: _ReplyContent(message: reply.replyToMessage),
+                  child: _ReplyTarget(
+                    message: reply.replyToMessage,
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: _contentLeft),
+                      child: _ReplyContent(message: reply.replyToMessage),
+                    ),
                   ),
                 ),
             ],
@@ -138,6 +142,27 @@ class _ReplyContent extends ConsumerWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _ReplyTarget extends StatelessWidget {
+  const _ReplyTarget({required this.message, required this.child});
+
+  final PartialMessage? message;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final reply = message;
+    if (reply == null) return child;
+
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => context
+          .findAncestorStateOfType<MessageListState>()
+          ?.scrollToMessage(reply.id),
+      child: child,
     );
   }
 }

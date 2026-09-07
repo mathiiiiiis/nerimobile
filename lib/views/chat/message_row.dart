@@ -16,12 +16,19 @@ import 'package:nerimobile/views/markup.dart';
 const _groupWindow = Duration(minutes: 5);
 const _messageGap = NeriSpacingRole.md;
 const _groupGap = NeriSpacingRole.xs;
+const _flashFade = Duration(milliseconds: 300);
 
 class MessageRow extends ConsumerWidget {
-  const MessageRow({super.key, required this.message, this.before});
+  const MessageRow({
+    super.key,
+    required this.message,
+    this.before,
+    this.flashed = false,
+  });
 
   final Message message;
   final Message? before;
+  final bool flashed;
 
   bool get _isSystem => message.type != MessageType.content;
 
@@ -68,6 +75,7 @@ class MessageRow extends ConsumerWidget {
         if (!_newDay) SizedBox(height: gap),
         _Highlight(
           mentioned: mentioned,
+          flashed: flashed,
           gap: _newDay ? 0.0 : gap,
           child: _isSystem
               ? _SystemMessages(message: message)
@@ -83,25 +91,32 @@ class MessageRow extends ConsumerWidget {
 class _Highlight extends StatelessWidget {
   const _Highlight({
     required this.mentioned,
+    required this.flashed,
     required this.gap,
     required this.child,
   });
 
   final bool mentioned;
+  final bool flashed;
   final double gap;
   final Widget child;
 
   @override
   Widget build(BuildContext context) {
-    if (!mentioned) return child;
-
     final colors = context.neri;
     final sizing = context.neriSize;
 
-    return Container(
-      padding: EdgeInsets.symmetric(vertical: sizing.space(NeriSpacingRole.xs)),
+    return AnimatedContainer(
+      duration: _flashFade,
+      padding: mentioned
+          ? EdgeInsets.symmetric(vertical: sizing.space(NeriSpacingRole.xs))
+          : EdgeInsets.zero,
       decoration: BoxDecoration(
-        color: colors[NeriToken.messageMentionBackground],
+        color: flashed
+            ? colors[NeriToken.messageFlashBackground]
+            : mentioned
+            ? colors[NeriToken.messageMentionBackground]
+            : Colors.transparent,
         borderRadius: sizing.rounded(NeriRadiusRole.sm),
       ),
       child: child,
