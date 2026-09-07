@@ -6,6 +6,7 @@ import 'package:nerimobile/stores/user/user_store.dart';
 import 'package:nerimobile/theme/core/theme_data.dart';
 import 'package:nerimobile/theme/core/token.dart';
 import 'package:nerimobile/theme/sizing/dimens.dart';
+import 'package:nerimobile/theme/sizing/radius.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/theme/typography/text_styles.dart';
 import 'package:nerimobile/views/avatar.dart';
@@ -101,6 +102,7 @@ class _Highlight extends StatelessWidget {
       padding: EdgeInsets.symmetric(vertical: sizing.space(NeriSpacingRole.xs)),
       decoration: BoxDecoration(
         color: colors[NeriToken.messageMentionBackground],
+        borderRadius: sizing.rounded(NeriRadiusRole.sm),
       ),
       child: child,
     );
