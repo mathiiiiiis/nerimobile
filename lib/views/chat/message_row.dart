@@ -10,8 +10,17 @@ import 'package:nerimobile/theme/sizing/radius.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/theme/typography/text_styles.dart';
 import 'package:nerimobile/views/avatar.dart';
+import 'package:nerimobile/views/chat/message_media.dart';
 import 'package:nerimobile/views/chat/message_replies.dart';
 import 'package:nerimobile/views/markup.dart';
+
+//avoid showing an image url twice
+bool showsContent(Message message) {
+  if (message.content.isEmpty) return false;
+  if (message.embed?.isImage != true) return true;
+  if (message.content.contains(' ')) return true;
+  return Uri.tryParse(message.content)?.hasScheme != true;
+}
 
 const _groupWindow = Duration(minutes: 5);
 const _messageGap = NeriSpacingRole.md;
@@ -174,7 +183,9 @@ class _FullMessage extends StatelessWidget {
                         ),
                       ],
                     ),
-                    MarkupView(rawText: message.content, message: message),
+                    if (showsContent(message))
+                      MarkupView(rawText: message.content, message: message),
+                    MessageMedia(message: message),
                   ],
                 ),
               ),
@@ -203,7 +214,14 @@ class _CompactMessage extends StatelessWidget {
             sizing.space(NeriSpacingRole.md),
         right: sizing.space(NeriSpacingRole.md),
       ),
-      child: MarkupView(rawText: message.content, message: message),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (showsContent(message))
+            MarkupView(rawText: message.content, message: message),
+          MessageMedia(message: message),
+        ],
+      ),
     );
   }
 }
