@@ -1,3 +1,4 @@
+import 'package:nerimobile/theme/sizing/border.dart';
 import 'package:flutter/material.dart';
 
 import 'package:nerimobile/theme/core/theme_data.dart';
@@ -83,7 +84,7 @@ class _ServerPlaceholder extends StatelessWidget {
             shape: BoxShape.circle,
             border: Border.all(
               color: colors[NeriToken.border],
-              width: sizing.dimen(NeriDimen.avatarRingWidth),
+              width: sizing.border(NeriBorderRole.thin),
             ),
           ),
         ),

@@ -1,3 +1,4 @@
+import 'package:nerimobile/theme/sizing/border.dart';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -51,7 +52,7 @@ class ChannelHeader extends ConsumerWidget {
               borderRadius: radius,
               border: Border.all(
                 color: colors[NeriToken.border],
-                width: sizing.dimen(NeriDimen.borderWidth),
+                width: sizing.border(NeriBorderRole.hairline),
               ),
             ),
             child: Row(

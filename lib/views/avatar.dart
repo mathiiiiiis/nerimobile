@@ -1,3 +1,4 @@
+import 'package:nerimobile/theme/sizing/border.dart';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -8,7 +9,6 @@ import 'package:nerimobile/models/user.dart';
 import 'package:nerimobile/models/user_presence.dart';
 import 'package:nerimobile/stores/user/user_presence_store.dart';
 import 'package:nerimobile/theme/core/theme_data.dart';
-import 'package:nerimobile/theme/sizing/dimens.dart';
 import 'package:nerimobile/utils/colors.dart';
 import 'package:nerimobile/utils/image.dart';
 
@@ -117,7 +117,7 @@ class PresenceAvatar extends ConsumerWidget {
                 shape: BoxShape.circle,
                 border: Border.all(
                   color: surface,
-                  width: context.neriSize.dimen(NeriDimen.avatarRingWidth),
+                  width: context.neriSize.border(NeriBorderRole.thin),
                 ),
               ),
             ),

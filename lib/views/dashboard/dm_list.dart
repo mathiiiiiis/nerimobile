@@ -1,3 +1,4 @@
+import 'package:nerimobile/theme/sizing/border.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -68,7 +69,7 @@ class DmListPane extends ConsumerWidget {
           borderRadius: sizing.rounded(NeriRadiusRole.md),
           border: Border.all(
             color: colors[NeriToken.border],
-            width: sizing.dimen(NeriDimen.borderWidth),
+            width: sizing.border(NeriBorderRole.hairline),
           ),
         ),
         child: list,

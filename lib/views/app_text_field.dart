@@ -1,8 +1,8 @@
+import 'package:nerimobile/theme/sizing/border.dart';
 import 'package:flutter/material.dart';
 
 import 'package:nerimobile/theme/core/theme_data.dart';
 import 'package:nerimobile/theme/core/token.dart';
-import 'package:nerimobile/theme/sizing/dimens.dart';
 import 'package:nerimobile/theme/sizing/radius.dart';
 import 'package:nerimobile/theme/typography/text_styles.dart';
 
@@ -96,14 +96,14 @@ class _AppTextFieldState extends State<AppTextField> {
                     borderRadius: BorderRadius.circular(radius),
                     borderSide: BorderSide(
                       color: borderColor,
-                      width: sizing.dimen(NeriDimen.borderWidth),
+                      width: sizing.border(NeriBorderRole.hairline),
                     ),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(radius),
                     borderSide: BorderSide(
                       color: borderColor,
-                      width: sizing.dimen(NeriDimen.borderWidth),
+                      width: sizing.border(NeriBorderRole.hairline),
                     ),
                   ),
                   hintStyle: context.neriText[NeriTextRole.bodyMedium].copyWith(

@@ -9,11 +9,8 @@ enum NeriDimen {
   iconSm,
   iconMd,
   fadeHeight,
-  mentionIndicatorWidth,
   replyHeight,
   channelHeaderHeight,
-  borderWidth,
-  avatarRingWidth,
 }
 
 const neriDimentDefaults = <NeriDimen, double>{
@@ -27,9 +24,6 @@ const neriDimentDefaults = <NeriDimen, double>{
   NeriDimen.iconSm: 24,
   NeriDimen.iconMd: 30,
   NeriDimen.fadeHeight: 31,
-  NeriDimen.mentionIndicatorWidth: 1,
   NeriDimen.replyHeight: 26,
   NeriDimen.channelHeaderHeight: 57,
-  NeriDimen.borderWidth: 1,
-  NeriDimen.avatarRingWidth: 1.5,
 };

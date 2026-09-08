@@ -2,6 +2,7 @@ import 'dart:ui' show lerpDouble;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:nerimobile/theme/sizing/border.dart';
 
 import 'package:nerimobile/theme/sizing/dimens.dart';
 import 'package:nerimobile/theme/sizing/radius.dart';
@@ -12,7 +13,9 @@ class SizingSpec {
     required this.id,
     required this.name,
     this.radiusScale = 1,
+    this.borderScale = 1,
     this.radii = const {},
+    this.borders = const {},
     this.spacing = const {},
     this.dimens = const {},
   });
@@ -20,7 +23,9 @@ class SizingSpec {
   final String id;
   final String name;
   final double radiusScale;
+  final double borderScale;
   final Map<NeriRadiusRole, double> radii;
+  final Map<NeriBorderRole, double> borders;
   final Map<NeriSpacingRole, double> spacing;
   final Map<NeriDimen, double> dimens;
 }
@@ -30,13 +35,17 @@ const defaultSizing = SizingSpec(id: 'nerimobile', name: 'Nerimobile');
 class SizingOverrides {
   const SizingOverrides({
     this.radiusScale,
+    this.borderScale,
     this.radii = const {},
+    this.borders = const {},
     this.spacing = const {},
     this.dimens = const {},
   });
 
   final double? radiusScale;
+  final double? borderScale;
   final Map<NeriRadiusRole, double> radii;
+  final Map<NeriBorderRole, double> borders;
   final Map<NeriSpacingRole, double> spacing;
   final Map<NeriDimen, double> dimens;
 }
@@ -52,6 +61,7 @@ class SizingResolver {
 
   NeriSizing resolve() => NeriSizing(
     radii: {for (final role in NeriRadiusRole.values) role: _radius(role)},
+    borders: {for (final role in NeriBorderRole.values) role: _border(role)},
     spacing: {
       for (final role in NeriSpacingRole.values)
         role:
@@ -67,6 +77,19 @@ class SizingResolver {
             neriDimentDefaults[dimen]!,
     },
   );
+
+  double _border(NeriBorderRole role) {
+    final base =
+        overrides.borders[role] ??
+        spec.borders[role] ??
+        neriBorderDefaults[role]!;
+
+    final scale = (overrides.borderScale ?? spec.borderScale).clamp(
+      neriBorderScaleRange.min,
+      neriBorderScaleRange.max,
+    );
+    return base * scale;
+  }
 
   double _radius(NeriRadiusRole role) {
     final base =
@@ -86,15 +109,19 @@ class SizingResolver {
 class NeriSizing extends ThemeExtension<NeriSizing> {
   const NeriSizing({
     this.radii = const {},
+    this.borders = const {},
     this.spacing = const {},
     this.dimens = const {},
   });
 
   final Map<NeriRadiusRole, double> radii;
+  final Map<NeriBorderRole, double> borders;
   final Map<NeriSpacingRole, double> spacing;
   final Map<NeriDimen, double> dimens;
 
   double radius(NeriRadiusRole role) => radii[role] ?? 0;
+
+  double border(NeriBorderRole role) => borders[role] ?? 0;
 
   BorderRadius rounded(NeriRadiusRole role) =>
       BorderRadius.circular(radius(role));
@@ -106,10 +133,12 @@ class NeriSizing extends ThemeExtension<NeriSizing> {
   @override
   NeriSizing copyWith({
     Map<NeriRadiusRole, double>? radii,
+    Map<NeriBorderRole, double>? borders,
     Map<NeriSpacingRole, double>? spacing,
     Map<NeriDimen, double>? dimens,
   }) => NeriSizing(
     radii: radii ?? this.radii,
+    borders: borders ?? this.borders,
     spacing: spacing ?? this.spacing,
     dimens: dimens ?? this.dimens,
   );
@@ -121,6 +150,10 @@ class NeriSizing extends ThemeExtension<NeriSizing> {
       radii: {
         for (final role in NeriRadiusRole.values)
           role: lerpDouble(radius(role), other.radius(role), t)!,
+      },
+      borders: {
+        for (final role in NeriBorderRole.values)
+          role: lerpDouble(border(role), other.border(role), t)!,
       },
       spacing: {
         for (final role in NeriSpacingRole.values)
@@ -137,12 +170,14 @@ class NeriSizing extends ThemeExtension<NeriSizing> {
   bool operator ==(Object other) =>
       other is NeriSizing &&
       mapEquals(radii, other.radii) &&
+      mapEquals(borders, other.borders) &&
       mapEquals(spacing, other.spacing) &&
       mapEquals(dimens, other.dimens);
 
   @override
   int get hashCode => Object.hash(
     Object.hashAll(radii.values),
+    Object.hashAll(borders.values),
     Object.hashAll(spacing.values),
     Object.hashAll(dimens.values),
   );

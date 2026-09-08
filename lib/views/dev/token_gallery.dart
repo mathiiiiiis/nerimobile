@@ -1,3 +1,4 @@
+import 'package:nerimobile/theme/sizing/border.dart';
 import 'package:flutter/material.dart';
 
 import 'package:nerimobile/theme/core/theme_data.dart';
@@ -326,7 +327,7 @@ class _RadiusSample extends StatelessWidget {
               color: colors[NeriToken.card],
               border: Border.all(
                 color: colors[NeriToken.border],
-                width: sizing.dimen(NeriDimen.borderWidth),
+                width: sizing.border(NeriBorderRole.hairline),
               ),
               borderRadius: sizing.rounded(role),
             ),
