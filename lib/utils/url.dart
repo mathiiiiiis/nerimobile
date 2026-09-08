@@ -6,3 +6,12 @@ bool isValidUrl(String url) {
     return false;
   }
 }
+
+String filenameFromPath(String path) {
+  final name = path.split('/').last;
+  try {
+    return Uri.decodeComponent(name);
+  } on ArgumentError {
+    return name;
+  }
+}

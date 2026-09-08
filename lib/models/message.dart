@@ -89,6 +89,7 @@ class Attachment {
   final int? height;
   final int? filesize;
   final int? duration;
+  final int? expireAt;
 
   Attachment({
     required this.id,
@@ -100,7 +101,11 @@ class Attachment {
     this.height,
     this.filesize,
     this.duration,
+    this.expireAt,
   });
+
+  bool get isExpired =>
+      expireAt != null && expireAt! <= DateTime.now().millisecondsSinceEpoch;
 
   bool get isImage => mime?.startsWith('image/') ?? false;
   bool get isVideo => mime?.startsWith('video/') ?? false;
@@ -116,6 +121,7 @@ class Attachment {
     height: json['height'] as int?,
     filesize: json['filesize'] as int?,
     duration: json['duration'] as int?,
+    expireAt: json['expireAt'] as int?,
   );
 }
 

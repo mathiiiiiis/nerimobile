@@ -13,6 +13,8 @@ import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/theme/typography/text_styles.dart';
 import 'package:nerimobile/utils/format.dart';
 import 'package:nerimobile/utils/image.dart';
+import 'package:nerimobile/utils/url.dart';
+import 'package:nerimobile/views/chat/attachment_expiry.dart';
 
 const _maxWidth = 300.0;
 const _trackHeight = 5.0;
@@ -106,18 +108,26 @@ class _Details extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
-          Uri.decodeComponent(path.split('/').last),
+          filenameFromPath(path),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: context.neriText[NeriTextRole.bodyMedium].copyWith(
             color: colors[NeriToken.text],
           ),
         ),
-        Text(
-          size == null ? (attachment.mime ?? '') : formatFileSize(size),
-          style: context.neriText[NeriTextRole.labelSmall].copyWith(
-            color: colors[NeriToken.textPlaceholder],
-          ),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          spacing: 8,
+          children: [
+            Text(
+              size == null ? (attachment.mime ?? '') : formatFileSize(size),
+              style: context.neriText[NeriTextRole.labelSmall].copyWith(
+                color: colors[NeriToken.textPlaceholder],
+              ),
+            ),
+            if (attachment.expireAt != null)
+              AttachmentExpiry(expireAt: attachment.expireAt!),
+          ],
         ),
       ],
     );

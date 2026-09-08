@@ -11,6 +11,8 @@ import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/theme/typography/text_styles.dart';
 import 'package:nerimobile/utils/format.dart';
 import 'package:nerimobile/utils/image.dart';
+import 'package:nerimobile/utils/url.dart';
+import 'package:nerimobile/views/chat/attachment_expiry.dart';
 import 'package:nerimobile/views/chat/audio/audio_player.dart';
 
 const _maxWidth = 600.0;
@@ -55,6 +57,7 @@ class _Attachment extends StatelessWidget {
     final path = attachment.path;
     if (path == null) return const SizedBox.shrink();
 
+    if (attachment.isExpired) return _FileCard(attachment: attachment);
     if (attachment.isAudio) return AudioPlayer(attachment: attachment);
     if (!attachment.isImage) return _FileCard(attachment: attachment);
 
@@ -215,19 +218,38 @@ class _FileCard extends StatelessWidget {
             size: sizing.dimen(NeriDimen.iconSm),
             color: colors[NeriToken.textSecondary],
           ),
-          Text(
-            attachment?.mime ?? 'Attachment', //TODO: add l10n
-            style: context.neriText[NeriTextRole.bodySmall].copyWith(
-              color: colors[NeriToken.textSecondary],
+          Flexible(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  attachment?.path == null
+                      ? 'Attachment' //TODO: add l10n
+                      : filenameFromPath(attachment!.path!),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: context.neriText[NeriTextRole.bodySmall].copyWith(
+                    color: colors[NeriToken.textSecondary],
+                  ),
+                ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  spacing: sizing.space(NeriSpacingRole.sm),
+                  children: [
+                    if (attachment?.filesize != null)
+                      Text(
+                        formatFileSize(attachment!.filesize!),
+                        style: context.neriText[NeriTextRole.labelSmall]
+                            .copyWith(color: colors[NeriToken.textPlaceholder]),
+                      ),
+                    if (attachment?.expireAt != null)
+                      AttachmentExpiry(expireAt: attachment!.expireAt!),
+                  ],
+                ),
+              ],
             ),
           ),
-          if (attachment?.filesize != null)
-            Text(
-              formatFileSize(attachment!.filesize!),
-              style: context.neriText[NeriTextRole.labelSmall].copyWith(
-                color: colors[NeriToken.textPlaceholder],
-              ),
-            ),
         ],
       ),
     );

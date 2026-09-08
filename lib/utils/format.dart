@@ -16,3 +16,13 @@ String formatDuration(Duration duration) {
   final seconds = duration.inSeconds.remainder(60).toString().padLeft(2, '0');
   return '$minutes:$seconds';
 }
+
+String formatExpiry(int expiresAt) {
+  final remaining = expiresAt - DateTime.now().millisecondsSinceEpoch;
+  if (remaining <= 0) return 'Expired'; //TODO: add l10n
+
+  final minutes = remaining ~/ Duration.millisecondsPerMinute;
+  if (minutes < 60) return 'Expires in ${minutes}m'; //TODO: add l10n
+
+  return 'Expires in ${minutes ~/ 60}h'; //TODO: add l10n
+}
