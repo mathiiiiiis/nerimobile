@@ -80,20 +80,42 @@ class Message {
 
 class Attachment {
   final String id;
+  final String provider;
+  final String? fileId;
   final String? path;
 
   final String? mime;
   final int? width;
   final int? height;
+  final int? filesize;
+  final int? duration;
 
-  Attachment({required this.id, this.path, this.mime, this.width, this.height});
+  Attachment({
+    required this.id,
+    this.provider = 'local',
+    this.fileId,
+    this.path,
+    this.mime,
+    this.width,
+    this.height,
+    this.filesize,
+    this.duration,
+  });
+
+  bool get isImage => mime?.startsWith('image/') ?? false;
+  bool get isVideo => mime?.startsWith('video/') ?? false;
+  bool get isAudio => mime?.startsWith('audio/') ?? false;
 
   factory Attachment.fromJson(Map<String, dynamic> json) => Attachment(
     id: json['id'],
+    provider: json['provider'] ?? 'local',
+    fileId: json['fileId'] as String?,
     path: json['path'] as String?,
     mime: json['mime'] as String?,
     width: json['width'] as int?,
     height: json['height'] as int?,
+    filesize: json['filesize'] as int?,
+    duration: json['duration'] as int?,
   );
 }
 
@@ -101,26 +123,50 @@ enum EmbedType { image }
 
 class Embed {
   final String? type;
+  final String? title;
+  final String? description;
+  final String? url;
+  final String? origUrl;
+  final String? siteName;
   final bool? animated;
   final String? imageMime;
   final int? imageWidth;
   final int? imageHeight;
   final String? imageUrl;
   final String? domain;
+  final String? channelName;
+  final String? uploadDate;
+  final String? viewCount;
+
+  bool get isImage => type == 'image';
+  bool get hasDetails =>
+      title != null || description != null || siteName != null;
 
   Embed({
     this.type,
     this.domain,
-
+    this.title,
+    this.description,
+    this.url,
+    this.origUrl,
+    this.siteName,
     this.animated,
     this.imageWidth,
     this.imageHeight,
     this.imageMime,
     this.imageUrl,
+    this.channelName,
+    this.uploadDate,
+    this.viewCount,
   });
 
   factory Embed.fromJson(Map<String, dynamic> json) => Embed(
     type: json['type'] as String?,
+    title: json['title'] as String?,
+    description: json['description'] as String?,
+    url: json['url'] as String?,
+    origUrl: json['origUrl'] as String?,
+    siteName: json['siteName'] as String?,
     animated: json['animated'] as bool?,
     imageWidth: json['imageWidth'] == null
         ? null
@@ -131,6 +177,9 @@ class Embed {
     imageMime: json['imageMime'] as String?,
     imageUrl: json['imageUrl'] as String?,
     domain: json['domain'] as String?,
+    channelName: json['channelName'] as String?,
+    uploadDate: json['uploadDate'] as String?,
+    viewCount: json['viewCount']?.toString(),
   );
 }
 
