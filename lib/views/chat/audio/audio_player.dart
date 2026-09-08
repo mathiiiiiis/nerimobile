@@ -11,8 +11,8 @@ import 'package:nerimobile/theme/sizing/dimens.dart';
 import 'package:nerimobile/theme/sizing/radius.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/theme/typography/text_styles.dart';
+import 'package:nerimobile/utils/format.dart';
 import 'package:nerimobile/utils/image.dart';
-import 'package:nerimobile/views/chat/message/message_media.dart';
 
 const _maxWidth = 300.0;
 const _trackHeight = 5.0;
@@ -263,10 +263,4 @@ class _Progress extends StatelessWidget {
       ],
     );
   }
-}
-
-String formatDuration(Duration duration) {
-  final minutes = duration.inMinutes;
-  final seconds = duration.inSeconds.remainder(60).toString().padLeft(2, '0');
-  return '$minutes:$seconds';
 }

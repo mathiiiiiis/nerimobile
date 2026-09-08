@@ -9,6 +9,7 @@ import 'package:nerimobile/theme/sizing/dimens.dart';
 import 'package:nerimobile/theme/sizing/radius.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/theme/typography/text_styles.dart';
+import 'package:nerimobile/utils/format.dart';
 import 'package:nerimobile/utils/image.dart';
 import 'package:nerimobile/views/chat/audio/audio_player.dart';
 
@@ -231,17 +232,4 @@ class _FileCard extends StatelessWidget {
       ),
     );
   }
-}
-
-String formatFileSize(int bytes) {
-  const units = ['B', 'KB', 'MB', 'GB'];
-  var size = bytes.toDouble();
-  var unit = 0;
-
-  while (size >= 1024 && unit < units.length - 1) {
-    size /= 1024;
-    unit += 1;
-  }
-
-  return '${size.toStringAsFixed(unit == 0 ? 0 : 1)} ${units[unit]}';
 }
