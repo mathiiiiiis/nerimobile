@@ -10,6 +10,7 @@ import 'package:nerimobile/theme/sizing/radius.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/theme/typography/text_styles.dart';
 import 'package:nerimobile/utils/image.dart';
+import 'package:nerimobile/views/chat/audio/audio_player.dart';
 
 const _maxWidth = 600.0;
 const _maxHeight = 350.0;
@@ -53,6 +54,7 @@ class _Attachment extends StatelessWidget {
     final path = attachment.path;
     if (path == null) return const SizedBox.shrink();
 
+    if (attachment.isAudio) return AudioPlayer(attachment: attachment);
     if (!attachment.isImage) return _FileCard(attachment: attachment);
 
     return _Media(
