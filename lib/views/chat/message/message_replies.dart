@@ -9,7 +9,7 @@ import 'package:nerimobile/theme/sizing/dimens.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/theme/typography/text_styles.dart';
 import 'package:nerimobile/utils/colors.dart';
-import 'package:nerimobile/views/chat/message_list.dart';
+import 'package:nerimobile/views/chat/message/message_list.dart';
 
 const _lineWidth = 2.0;
 const _cornerRadius = 8.0;
