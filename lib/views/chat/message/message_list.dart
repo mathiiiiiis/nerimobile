@@ -8,7 +8,7 @@ import 'package:nerimobile/stores/message/message_store.dart';
 import 'package:nerimobile/theme/core/theme_data.dart';
 import 'package:nerimobile/theme/sizing/dimens.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
-import 'package:nerimobile/views/chat/message_row.dart';
+import 'package:nerimobile/views/chat/message/message_row.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 const _loadOlderThreshold = 5;
