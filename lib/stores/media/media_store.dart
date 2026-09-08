@@ -2,50 +2,59 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:media_kit/media_kit.dart';
+import 'package:media_kit_video/media_kit_video.dart';
 
-class AudioState {
-  const AudioState({
+class MediaState {
+  const MediaState({
     this.url,
     this.playing = false,
     this.position = Duration.zero,
     this.duration,
+    this.muted = false,
   });
 
   final String? url;
   final bool playing;
   final Duration position;
   final Duration? duration;
+  final bool muted;
 
   bool isCurrent(String other) => url == other;
 
-  AudioState copyWith({
+  MediaState copyWith({
     String? url,
     bool? playing,
     Duration? position,
     Duration? duration,
-  }) => AudioState(
+    bool? muted,
+  }) => MediaState(
     url: url ?? this.url,
     playing: playing ?? this.playing,
     position: position ?? this.position,
     duration: duration ?? this.duration,
+    muted: muted ?? this.muted,
   );
 }
 
-final audioProvider = NotifierProvider<AudioNotifier, AudioState>(
-  AudioNotifier.new,
+final mediaProvider = NotifierProvider<MediaNotifier, MediaState>(
+  MediaNotifier.new,
 );
 
-class AudioNotifier extends Notifier<AudioState> {
+class MediaNotifier extends Notifier<MediaState> {
   Player? _player;
+  VideoController? _video;
 
   final _subscriptions = <StreamSubscription<dynamic>>[];
   final _resumeAt = <String, Duration>{};
 
   @override
-  AudioState build() {
+  MediaState build() {
     ref.onDispose(_teardown);
-    return const AudioState();
+    return const MediaState();
   }
+
+  VideoController get video => _video ??= VideoController(_ensurePlayer());
+  Player _ensurePlayer() => _player ??= _create();
 
   Player _create() {
     final player = Player();
@@ -74,7 +83,7 @@ class AudioNotifier extends Notifier<AudioState> {
   }
 
   Future<void> toggle(String url) async {
-    final player = _player ??= _create();
+    final player = _ensurePlayer();
 
     if (state.isCurrent(url)) {
       await (state.playing ? player.pause() : player.play());
@@ -82,11 +91,16 @@ class AudioNotifier extends Notifier<AudioState> {
     }
 
     await player.pause();
-    state = AudioState(url: url, position: _resumeAt[url] ?? Duration.zero);
+    state = MediaState(url: url, position: _resumeAt[url] ?? Duration.zero);
 
     await player.open(Media(url), play: false);
     if (state.position > Duration.zero) await player.seek(state.position);
     await player.play();
+  }
+
+  Future<void> setMuted(bool muted) async {
+    state = state.copyWith(muted: muted);
+    await _player?.setVolume(muted ? 0 : 100);
   }
 
   Future<void> seek(String url, Duration position) async {

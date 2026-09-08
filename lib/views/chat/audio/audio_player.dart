@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import 'package:nerimobile/models/message.dart';
-import 'package:nerimobile/stores/audio/audio_store.dart';
+import 'package:nerimobile/stores/media/media_store.dart';
 import 'package:nerimobile/theme/core/theme_data.dart';
 import 'package:nerimobile/theme/core/token.dart';
 import 'package:nerimobile/theme/sizing/border.dart';
@@ -38,7 +38,7 @@ class AudioPlayer extends ConsumerWidget {
     final control = sizing.dimen(NeriDimen.avatarSm);
 
     final url = buildImageUrl(path);
-    final audio = ref.watch(audioProvider);
+    final audio = ref.watch(mediaProvider);
     final current = audio.isCurrent(url);
 
     final total = current && audio.duration != null
@@ -71,7 +71,7 @@ class AudioPlayer extends ConsumerWidget {
                 _PlayButton(
                   size: control,
                   playing: current && audio.playing,
-                  onTap: () => ref.read(audioProvider.notifier).toggle(url),
+                  onTap: () => ref.read(mediaProvider.notifier).toggle(url),
                 ),
                 Expanded(
                   child: _Details(attachment: attachment, path: path),
@@ -83,7 +83,7 @@ class AudioPlayer extends ConsumerWidget {
               elapsed: elapsed,
               total: total,
               onSeek: (value) =>
-                  ref.read(audioProvider.notifier).seek(url, total * value),
+                  ref.read(mediaProvider.notifier).seek(url, total * value),
             ),
           ],
         ),
