@@ -55,7 +55,8 @@ class VideoPlayer extends ConsumerWidget {
                   Video(
                     controller: ref.read(mediaProvider.notifier).video,
                     controls: null,
-                    fill: Colors.transparent,
+                    fill: Colors.black,
+                    fit: BoxFit.contain,
                   )
                 else
                   Image.network(
