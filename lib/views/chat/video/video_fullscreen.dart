@@ -15,7 +15,6 @@ import 'package:nerimobile/theme/typography/text_styles.dart';
 import 'package:nerimobile/utils/format.dart';
 
 const _open = Duration(milliseconds: 200);
-const _fade = Duration(milliseconds: 200);
 const _trackHeight = 4.0;
 const _buttonOpacity = 0.4;
 const _dismissDistance = 120.0;
@@ -61,7 +60,7 @@ class _VideoFullscreenState extends ConsumerState<VideoFullscreen> {
 
   @override
   void dispose() {
-    _media.setFullscreen(false);
+    Future(() => _media.setFullscreen(false));
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     super.dispose();
   }
@@ -69,7 +68,7 @@ class _VideoFullscreenState extends ConsumerState<VideoFullscreen> {
   void _toggleControls() {
     setState(() => _controls = !_controls);
     SystemChrome.setEnabledSystemUIMode(
-      _controls ? SystemUiMode.edgeToEdge : SystemUiMode.immersive,
+      _controls ? SystemUiMode.edgeToEdge : SystemUiMode.immersiveSticky,
     );
   }
 
@@ -143,25 +142,28 @@ class _Controls extends StatelessWidget {
 
     return IgnorePointer(
       ignoring: !visible,
-      child: AnimatedOpacity(
+      child: Opacity(
         opacity: visible ? 1 : 0,
-        duration: _fade,
         child: Stack(
           children: [
-            SafeArea(
-              child: Padding(
-                padding: EdgeInsets.all(sizing.space(NeriSpacingRole.md)),
-                child: Align(
-                  alignment: Alignment.topLeft,
-                  child: ControlButton(
-                    icon: Symbols.close_rounded,
-                    size: sizing.dimen(NeriDimen.avatarSm),
-                    onTap: () => Navigator.of(context).pop(),
-                  ),
+            Padding(
+              padding: EdgeInsets.fromLTRB(
+                sizing.space(NeriSpacingRole.md),
+                sizing.space(NeriSpacingRole.md) +
+                    MediaQuery.viewPaddingOf(context).top,
+                sizing.space(NeriSpacingRole.md),
+                sizing.space(NeriSpacingRole.md),
+              ),
+              child: Align(
+                alignment: Alignment.topLeft,
+                child: ControlButton(
+                  icon: Symbols.close_rounded,
+                  size: sizing.dimen(NeriDimen.avatarSm),
+                  onTap: () => Navigator.of(context).pop(),
                 ),
               ),
-              //TODO: message options once context menu exists
             ),
+            //TODO: message options once context menu exists
             Align(
               alignment: Alignment.bottomCenter,
               child: _BottomBar(media: media, notifier: notifier, url: url),
@@ -227,42 +229,45 @@ class _BottomBar extends StatelessWidget {
               ),
             ),
           ),
-          child: SafeArea(
-            top: false,
-            child: Padding(
-              padding: EdgeInsets.all(sizing.space(NeriSpacingRole.md)),
-              child: Row(
-                spacing: sizing.space(NeriSpacingRole.md),
-                children: [
-                  ControlButton(
-                    icon: media.playing
-                        ? Symbols.pause_rounded
-                        : Symbols.play_arrow_rounded,
-                    size: sizing.dimen(NeriDimen.controlSize),
-                    background: false,
-                    onTap: () => notifier.toggle(url),
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(
+              sizing.space(NeriSpacingRole.md),
+              sizing.space(NeriSpacingRole.md),
+              sizing.space(NeriSpacingRole.md),
+              sizing.space(NeriSpacingRole.md) +
+                  MediaQuery.viewPaddingOf(context).bottom,
+            ),
+            child: Row(
+              spacing: sizing.space(NeriSpacingRole.md),
+              children: [
+                ControlButton(
+                  icon: media.playing
+                      ? Symbols.pause_rounded
+                      : Symbols.play_arrow_rounded,
+                  size: sizing.dimen(NeriDimen.controlSize),
+                  background: false,
+                  onTap: () => notifier.toggle(url),
+                ),
+                Text(
+                  formatDuration(media.position),
+                  style: context.neriText[NeriTextRole.labelSmall].copyWith(
+                    color: colors[NeriToken.text],
                   ),
-                  Text(
-                    formatDuration(media.position),
-                    style: context.neriText[NeriTextRole.labelSmall].copyWith(
-                      color: colors[NeriToken.text],
-                    ),
+                ),
+                Expanded(
+                  child: _Scrubber(
+                    position: media.position,
+                    total: total,
+                    onSeek: (value) => notifier.seek(url, total * value),
                   ),
-                  Expanded(
-                    child: _Scrubber(
-                      position: media.position,
-                      total: total,
-                      onSeek: (value) => notifier.seek(url, total * value),
-                    ),
+                ),
+                Text(
+                  formatDuration(total),
+                  style: context.neriText[NeriTextRole.labelSmall].copyWith(
+                    color: colors[NeriToken.text],
                   ),
-                  Text(
-                    formatDuration(total),
-                    style: context.neriText[NeriTextRole.labelSmall].copyWith(
-                      color: colors[NeriToken.text],
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),
