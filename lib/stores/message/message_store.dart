@@ -95,6 +95,14 @@ class MessagesNotifier extends Notifier<ChannelMessages> {
     }
   }
 
+  Future<void> send(String content) async {
+    try {
+      await postMessage(ref.read(dioProvider), channelId, content);
+    } catch (e) {
+      debugPrint('postMessage($channelId) failed: $e');
+    }
+  }
+
   void addMessage(Message message) {
     if (state.messages.any((m) => m.id == message.id)) return;
     state = state.copyWith(messages: _merge([message]));

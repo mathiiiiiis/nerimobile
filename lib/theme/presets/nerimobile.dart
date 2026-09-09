@@ -14,8 +14,8 @@ const nerimobilePreset = ThemeSpec(
 
     NeriToken.tooltip: '#2d2d2d',
 
-    NeriToken.chatInputBackground: '#8c8c8c',
-    NeriToken.chatInputBackgroundBlurDisabled: '#8c8c8c',
+    NeriToken.chatInputBackground: '#202020',
+    NeriToken.chatInputBackgroundBlurDisabled: '#202020',
 
     NeriToken.messageFloatingOptionsBackground: '#2d2d2d',
 

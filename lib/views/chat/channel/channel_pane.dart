@@ -4,6 +4,7 @@ import 'package:nerimobile/theme/core/theme_data.dart';
 import 'package:nerimobile/theme/core/token.dart';
 import 'package:nerimobile/theme/sizing/breakpoints.dart';
 import 'package:nerimobile/views/chat/channel/channel_header.dart';
+import 'package:nerimobile/views/chat/composer/composer.dart';
 import 'package:nerimobile/views/chat/message/message_list.dart';
 import 'package:nerimobile/views/dashboard/dm_list.dart';
 import 'package:nerimobile/views/shell/app_scaffold.dart';
@@ -42,15 +43,22 @@ class _Chat extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
+    return Column(
       children: [
-        Positioned.fill(child: MessageList(channelId: channelId)),
-        Positioned(
-          top: 0,
-          left: 0,
-          right: 0,
-          child: ChannelHeader(channelId: channelId, showBack: showBack),
+        Expanded(
+          child: Stack(
+            children: [
+              Positioned.fill(child: MessageList(channelId: channelId)),
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: ChannelHeader(channelId: channelId, showBack: showBack),
+              ),
+            ],
+          ),
         ),
+        Composer(channelId: channelId),
       ],
     );
   }
