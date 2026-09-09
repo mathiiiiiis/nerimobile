@@ -4,8 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nerimobile/models/message.dart';
 import 'package:nerimobile/services/api_client.dart';
 import 'package:nerimobile/services/channel_service.dart';
+import 'package:nerimobile/stores/user/user_store.dart';
 
 const messagePageSize = 50;
+
+//pending messages sort last
+String _localId() => '999${DateTime.now().microsecondsSinceEpoch}';
 
 @immutable
 class ChannelMessages {
@@ -14,12 +18,16 @@ class ChannelMessages {
     this.loaded = false,
     this.loading = false,
     this.hasMore = true,
+    this.pending = const {},
+    this.failed = const {},
   });
 
   final List<Message> messages;
   final bool loaded;
   final bool loading;
   final bool hasMore;
+  final Set<String> pending;
+  final Set<String> failed;
 
   Message? get newest => messages.isEmpty ? null : messages.last;
   Message? get oldest => messages.isEmpty ? null : messages.first;
@@ -29,11 +37,15 @@ class ChannelMessages {
     bool? loaded,
     bool? loading,
     bool? hasMore,
+    Set<String>? pending,
+    Set<String>? failed,
   }) => ChannelMessages(
     messages: messages ?? this.messages,
     loaded: loaded ?? this.loaded,
     loading: loading ?? this.loading,
     hasMore: hasMore ?? this.hasMore,
+    pending: pending ?? this.pending,
+    failed: failed ?? this.failed,
   );
 }
 
@@ -96,11 +108,42 @@ class MessagesNotifier extends Notifier<ChannelMessages> {
   }
 
   Future<void> send(String content) async {
+    final author = ref.read(currentUserProvider);
+    if (author == null) return;
+
+    final localId = _localId();
+    final local = Message(
+      id: localId,
+      content: content,
+      channelId: channelId,
+      createdBy: author,
+      attachments: const [],
+      createdAt: DateTime.now().millisecondsSinceEpoch,
+    );
+
+    state = state.copyWith(
+      messages: [...state.messages, local],
+      pending: {...state.pending, localId},
+    );
+
     try {
-      await postMessage(ref.read(dioProvider), channelId, content);
+      final sent = await postMessage(ref.read(dioProvider), channelId, content);
+      _replaceLocal(localId, Message.fromJson(sent['message'] ?? sent));
     } catch (e) {
       debugPrint('postMessage($channelId) failed: $e');
+      state = state.copyWith(
+        pending: {...state.pending}..remove(localId),
+        failed: {...state.failed, localId},
+      );
     }
+  }
+
+  void retry(String localId) {
+    final local = state.messages.where((m) => m.id == localId).firstOrNull;
+    if (local == null) return;
+
+    _remove(localId);
+    send(local.content);
   }
 
   void addMessage(Message message) {
@@ -139,6 +182,22 @@ class MessagesNotifier extends Notifier<ChannelMessages> {
       return null;
     }
   }
+
+  void _replaceLocal(String localId, Message sent) {
+    state = state.copyWith(
+      messages: _sorted([
+        ...state.messages.where((m) => m.id != localId),
+        if (!state.messages.any((m) => m.id == sent.id)) sent,
+      ]),
+      pending: {...state.pending}..remove(localId),
+    );
+  }
+
+  void _remove(String localId) => state = state.copyWith(
+    messages: state.messages.where((m) => m.id != localId).toList(),
+    pending: {...state.pending}..remove(localId),
+    failed: {...state.failed}..remove(localId),
+  );
 
   List<Message> _merge(List<Message> batch) {
     final byId = {for (final m in state.messages) m.id: m};

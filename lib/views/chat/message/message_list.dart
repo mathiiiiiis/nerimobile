@@ -120,10 +120,16 @@ class MessageListState extends ConsumerState<MessageList> {
       itemCount: messages.length,
       itemBuilder: (context, index) {
         final position = messages.length - 1 - index;
+        final message = messages[position];
         return MessageRow(
-          message: messages[position],
+          message: message,
           before: position == 0 ? null : messages[position - 1],
-          flashed: messages[position].id == _flashed,
+          pending: channel.pending.contains(message.id),
+          failed: channel.failed.contains(message.id),
+          onRetry: () => ref
+              .read(messagesProvider(widget.channelId).notifier)
+              .retry(message.id),
+          flashed: message.id == _flashed,
         );
       },
     );

@@ -26,6 +26,7 @@ const _groupWindow = Duration(minutes: 5);
 const _messageGap = NeriSpacingRole.md;
 const _groupGap = NeriSpacingRole.xs;
 const _flashFade = Duration(milliseconds: 300);
+const _pendingOpacity = 0.5;
 const _avatarSize = NeriDimen.controlSize;
 
 class MessageRow extends ConsumerWidget {
@@ -34,11 +35,17 @@ class MessageRow extends ConsumerWidget {
     required this.message,
     this.before,
     this.flashed = false,
+    this.pending = false,
+    this.failed = false,
+    this.onRetry,
   });
 
   final Message message;
   final Message? before;
   final bool flashed;
+  final bool pending;
+  final bool failed;
+  final VoidCallback? onRetry;
 
   bool get _isSystem => message.type != MessageType.content;
 
@@ -90,9 +97,10 @@ class MessageRow extends ConsumerWidget {
           child: _isSystem
               ? _SystemMessages(message: message)
               : _compact
-              ? _CompactMessage(message: message)
-              : _FullMessage(message: message),
+              ? _CompactMessage(message: message, pending: pending)
+              : _FullMessage(message: message, pending: pending),
         ),
+        if (failed) _FailedNotice(onRetry: onRetry),
       ],
     );
   }
@@ -134,10 +142,39 @@ class _Highlight extends StatelessWidget {
   }
 }
 
+class _FailedNotice extends StatelessWidget {
+  const _FailedNotice({required this.onRetry});
+
+  final VoidCallback? onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.neri;
+    final sizing = context.neriSize;
+
+    return Padding(
+      padding: EdgeInsets.symmetric(
+        horizontal: sizing.space(NeriSpacingRole.md),
+      ),
+      child: GestureDetector(
+        onTap: onRetry,
+        behavior: HitTestBehavior.opaque,
+        child: Text(
+          'Could not send. Tap to retry', //TODO: add l10n
+          style: context.neriText[NeriTextRole.labelSmall].copyWith(
+            color: colors[NeriToken.alert],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _FullMessage extends StatelessWidget {
-  const _FullMessage({required this.message});
+  const _FullMessage({required this.message, this.pending = false});
 
   final Message message;
+  final bool pending;
 
   @override
   Widget build(BuildContext context) {
@@ -183,9 +220,7 @@ class _FullMessage extends StatelessWidget {
                         ),
                       ],
                     ),
-                    if (showsContent(message))
-                      MarkupView(rawText: message.content, message: message),
-                    MessageMedia(message: message),
+                    _Body(message: message, pending: pending),
                   ],
                 ),
               ),
@@ -198,9 +233,10 @@ class _FullMessage extends StatelessWidget {
 }
 
 class _CompactMessage extends StatelessWidget {
-  const _CompactMessage({required this.message});
+  const _CompactMessage({required this.message, this.pending = false});
 
   final Message message;
+  final bool pending;
 
   @override
   Widget build(BuildContext context) {
@@ -214,6 +250,21 @@ class _CompactMessage extends StatelessWidget {
             sizing.space(NeriSpacingRole.md),
         right: sizing.space(NeriSpacingRole.md),
       ),
+      child: _Body(message: message, pending: pending),
+    );
+  }
+}
+
+class _Body extends StatelessWidget {
+  const _Body({required this.message, required this.pending});
+
+  final Message message;
+  final bool pending;
+
+  @override
+  Widget build(BuildContext context) {
+    return Opacity(
+      opacity: pending ? _pendingOpacity : 1,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
