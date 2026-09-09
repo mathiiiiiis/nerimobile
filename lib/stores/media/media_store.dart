@@ -76,7 +76,8 @@ class MediaNotifier extends Notifier<MediaState> {
         if (!completed) return;
         final url = state.url;
         if (url != null) _resumeAt.remove(url);
-        state = state.copyWith(playing: false, position: Duration.zero);
+        state = const MediaState();
+        unawaited(_release());
       }),
     ]);
     return player;
@@ -93,9 +94,9 @@ class MediaNotifier extends Notifier<MediaState> {
     await player.pause();
     state = MediaState(url: url, position: _resumeAt[url] ?? Duration.zero);
 
-    await player.open(Media(url), play: false);
-    if (state.position > Duration.zero) await player.seek(state.position);
-    await player.play();
+    final resume = state.position;
+    await player.open(Media(url));
+    if (resume > Duration.zero) await player.seek(resume);
   }
 
   Future<void> setMuted(bool muted) async {
@@ -109,10 +110,17 @@ class MediaNotifier extends Notifier<MediaState> {
     await _player?.seek(position);
   }
 
+  Future<void> _release() async {
+    final player = _player;
+    _player = null;
+    _video = null;
+    _subscriptions
+      ..forEach((subscriptions) => subscriptions.cancel())
+      ..clear();
+    await player?.dispose();
+  }
+
   void _teardown() {
-    for (final subscription in _subscriptions) {
-      subscription.cancel();
-    }
-    _player?.dispose();
+    unawaited(_release());
   }
 }
