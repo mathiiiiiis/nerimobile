@@ -3,8 +3,11 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nerimobile/models/message.dart';
+import 'package:nerimobile/services/socket_events.dart';
+import 'package:nerimobile/stores/connection/connection_store.dart';
 
 import 'package:nerimobile/stores/message/message_store.dart';
+import 'package:nerimobile/stores/window/window_focus_store.dart';
 import 'package:nerimobile/theme/core/theme_data.dart';
 import 'package:nerimobile/theme/sizing/dimens.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
@@ -52,9 +55,40 @@ class MessageListState extends ConsumerState<MessageList> {
   List<Message> get _messages =>
       ref.read(messagesProvider(widget.channelId)).messages;
 
+  bool _dismissed = false;
+
+  void _dismiss() {
+    _dismissed = false;
+    WidgetsBinding.instance.addPostFrameCallback((_) => _dismissNow());
+  }
+
+  void _dismissNow() {
+    if (!mounted) return;
+    if (!ref.read(windowFocusProvider)) return;
+    if (!_atBottom || _dismissed) return;
+
+    _dismissed = true;
+    ref.read(connectionProvider.notifier).send(notificationDismissEvent, {
+      'channelId': widget.channelId,
+    });
+  }
+
+  bool get _atBottom {
+    final positions = _positions.itemPositions.value;
+    if (positions.isEmpty) return false;
+
+    final newest = positions
+        .map((p) => p.index)
+        .reduce((a, b) => a < b ? a : b);
+    return newest == 0;
+  }
+
   void _onScroll() {
     final positions = _positions.itemPositions.value;
     if (positions.isEmpty) return;
+
+    if (!_atBottom) _dismissed = false;
+    _dismissNow();
 
     final oldest = positions
         .map((p) => p.index)
@@ -103,6 +137,13 @@ class MessageListState extends ConsumerState<MessageList> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(windowFocusProvider, (_, focused) {
+      if (focused) _dismiss();
+    });
+    ref.listen(messagesProvider(widget.channelId), (previous, next) {
+      if (next.messages.length != previous?.messages.length) _dismiss();
+    });
+
     final sizing = context.neriSize;
     final channel = ref.watch(messagesProvider(widget.channelId));
     final messages = channel.messages;

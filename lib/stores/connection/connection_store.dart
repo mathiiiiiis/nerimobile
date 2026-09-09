@@ -40,9 +40,12 @@ final connectionProvider =
     );
 
 class ConnectionNotifier extends Notifier<ConnectionState> {
+  SocketService? _socket;
+
   @override
   ConnectionState build() {
     final token = ref.watch(authProvider).value;
+    _socket = null;
     if (token == null) return const Disconnected();
 
     final socket = SocketService(
@@ -50,9 +53,15 @@ class ConnectionNotifier extends Notifier<ConnectionState> {
       token: token,
       onState: (next) => state = next,
     );
+    _socket = socket;
     ref.onDispose(socket.dispose);
     socket.connect();
 
     return const Connecting();
+  }
+
+  void send(String event, Map<String, dynamic> payload) {
+    if (state is! Authenticated) return;
+    _socket?.send(event, payload);
   }
 }

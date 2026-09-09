@@ -171,6 +171,8 @@ void onMessageDeleted(Ref ref, dynamic payload) {
       .removeMessage(payload["messageId"]);
 }
 
+const notificationDismissEvent = 'notification:dismiss';
+
 void onNotificationDismissed(Ref ref, dynamic payload) {
   ref.read(messageMentionsProvider.notifier).clear(payload["channelId"]);
   ref
