@@ -11,6 +11,7 @@ class MediaState {
     this.position = Duration.zero,
     this.duration,
     this.muted = false,
+    this.fullscreen = false,
   });
 
   final String? url;
@@ -18,6 +19,7 @@ class MediaState {
   final Duration position;
   final Duration? duration;
   final bool muted;
+  final bool fullscreen;
 
   bool isCurrent(String other) => url == other;
 
@@ -27,12 +29,14 @@ class MediaState {
     Duration? position,
     Duration? duration,
     bool? muted,
+    bool? fullscreen,
   }) => MediaState(
     url: url ?? this.url,
     playing: playing ?? this.playing,
     position: position ?? this.position,
     duration: duration ?? this.duration,
     muted: muted ?? this.muted,
+    fullscreen: fullscreen ?? this.fullscreen,
   );
 }
 
@@ -103,6 +107,9 @@ class MediaNotifier extends Notifier<MediaState> {
     state = state.copyWith(muted: muted);
     await _player?.setVolume(muted ? 0 : 100);
   }
+
+  void setFullscreen(bool fullscreen) =>
+      state = state.copyWith(fullscreen: fullscreen);
 
   Future<void> seek(String url, Duration position) async {
     if (!state.isCurrent(url)) return;

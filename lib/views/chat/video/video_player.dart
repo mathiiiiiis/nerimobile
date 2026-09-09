@@ -11,6 +11,7 @@ import 'package:nerimobile/theme/sizing/dimens.dart';
 import 'package:nerimobile/theme/sizing/radius.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/utils/image.dart';
+import 'package:nerimobile/views/chat/video/video_fullscreen.dart';
 
 const _maxWidth = 600.0;
 const _maxHeight = 350.0;
@@ -31,7 +32,7 @@ class VideoPlayer extends ConsumerWidget {
     final sizing = context.neriSize;
     final url = buildImageUrl(path);
     final media = ref.watch(mediaProvider);
-    final current = media.isCurrent(url);
+    final current = media.isCurrent(url) && !media.fullscreen;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -64,6 +65,11 @@ class VideoPlayer extends ConsumerWidget {
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stack) =>
                         ColoredBox(color: context.neri[NeriToken.card]),
+                  ),
+                if (current)
+                  GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => openVideoFullscreen(context, url),
                   ),
                 _PlayOverlay(
                   visible: !current || !media.playing,
