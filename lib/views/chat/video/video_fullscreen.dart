@@ -60,7 +60,7 @@ class _VideoFullscreenState extends ConsumerState<VideoFullscreen> {
 
   @override
   void dispose() {
-    Future(() => _media.setFullscreen(false));
+    Future(_media.stop);
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     super.dispose();
   }

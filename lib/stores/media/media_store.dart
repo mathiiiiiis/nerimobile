@@ -77,14 +77,17 @@ class MediaNotifier extends Notifier<MediaState> {
         }
       }),
       player.stream.completed.listen((completed) {
-        if (!completed) return;
-        final url = state.url;
-        if (url != null) _resumeAt.remove(url);
-        state = const MediaState();
-        unawaited(_release());
+        if (completed) unawaited(stop());
       }),
     ]);
     return player;
+  }
+
+  Future<void> stop() async {
+    final url = state.url;
+    if (url != null) _resumeAt.remove(url);
+    state = const MediaState();
+    await _release();
   }
 
   Future<void> toggle(String url) async {
