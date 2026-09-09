@@ -112,7 +112,7 @@ class MessageListState extends ConsumerState<MessageList> {
       itemPositionsListener: _positions,
       reverse: true,
       padding: EdgeInsets.only(
-        bottom: sizing.space(NeriSpacingRole.sm),
+        bottom: sizing.space(NeriSpacingRole.xl),
         top:
             sizing.dimen(NeriDimen.channelHeaderHeight) +
             sizing.space(NeriSpacingRole.md) * 2,
