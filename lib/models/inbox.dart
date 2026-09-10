@@ -25,4 +25,13 @@ class Inbox {
     lastSeen: json['lastSeen'],
     createdAt: json['createdAt'],
   );
+
+  Inbox copyWith({int? lastSeen}) => Inbox(
+    id: id,
+    channelId: channelId,
+    recipientId: recipientId,
+    recipient: recipient,
+    lastSeen: lastSeen ?? this.lastSeen,
+    createdAt: createdAt,
+  );
 }

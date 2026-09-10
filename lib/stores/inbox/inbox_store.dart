@@ -17,6 +17,12 @@ class InboxNotifier extends Notifier<Map<String, Inbox>> {
   void addInbox(Inbox item) => state = {...state, item.channelId: item};
 
   void removeInbox(String channelId) => state = {...state}..remove(channelId);
+
+  void updateLastSeen(String channelId, int lastSeen) {
+    final item = state[channelId];
+    if (item == null) return;
+    state = {...state, channelId: item.copyWith(lastSeen: lastSeen)};
+  }
 }
 
 final sortedInboxProvider = Provider<List<Inbox>>((ref) {

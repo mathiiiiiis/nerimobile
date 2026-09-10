@@ -174,10 +174,14 @@ void onMessageDeleted(Ref ref, dynamic payload) {
 const notificationDismissEvent = 'notification:dismiss';
 
 void onNotificationDismissed(Ref ref, dynamic payload) {
-  ref.read(messageMentionsProvider.notifier).clear(payload["channelId"]);
+  final channelId = payload["channelId"] as String;
+  final now = DateTime.now().millisecondsSinceEpoch;
+
+  ref.read(messageMentionsProvider.notifier).clear(channelId);
+  ref.read(inboxProvider.notifier).updateLastSeen(channelId, now);
   ref
       .read(lastSeenServerChannelIdsProvider.notifier)
-      .updateLastSeenServerChannel(payload["channelId"]);
+      .updateLastSeenServerChannel(channelId);
 }
 
 void onInboxOpened(Ref ref, dynamic payload) {

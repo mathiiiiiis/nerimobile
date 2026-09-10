@@ -46,7 +46,21 @@ class MessageListState extends ConsumerState<MessageList> {
     super.initState();
     _positions.itemPositions.addListener(_onScroll);
     _lastSeen = _readLastSeen();
-    debugPrint('lastSeen for ${widget.channelId}: $_lastSeen');
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(messagesProvider(widget.channelId).notifier).open();
+    });
+  }
+
+  @override
+  void didUpdateWidget(MessageList oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.channelId == widget.channelId) return;
+
+    _dismissed = false;
+    _flash?.cancel();
+    _flashed = null;
+    _lastSeen = _readLastSeen();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(messagesProvider(widget.channelId).notifier).open();
     });
