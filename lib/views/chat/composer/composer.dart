@@ -83,20 +83,7 @@ class _ComposerState extends ConsumerState<Composer> {
                 color: colors[NeriToken.border],
                 width: sizing.border(NeriBorderRole.hairline),
               )
-            : Border(
-                top: BorderSide(
-                  color: colors[NeriToken.border],
-                  width: sizing.border(NeriBorderRole.hairline),
-                ),
-                left: BorderSide(
-                  color: colors[NeriToken.border],
-                  width: sizing.border(NeriBorderRole.hairline),
-                ),
-                right: BorderSide(
-                  color: colors[NeriToken.border],
-                  width: sizing.border(NeriBorderRole.hairline),
-                ),
-              ),
+            : null,
       ),
       child: SafeArea(
         top: false,
