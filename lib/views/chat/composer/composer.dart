@@ -7,6 +7,8 @@ import 'package:nerimobile/stores/inbox/inbox_store.dart';
 import 'package:nerimobile/stores/message/message_store.dart';
 import 'package:nerimobile/theme/core/theme_data.dart';
 import 'package:nerimobile/theme/core/token.dart';
+import 'package:nerimobile/theme/sizing/border.dart';
+import 'package:nerimobile/theme/sizing/breakpoints.dart';
 import 'package:nerimobile/theme/sizing/dimens.dart';
 import 'package:nerimobile/theme/sizing/radius.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
@@ -62,15 +64,43 @@ class _ComposerState extends ConsumerState<Composer> {
   Widget build(BuildContext context) {
     final colors = context.neri;
     final sizing = context.neriSize;
+    final dual = NeriWindow.of(context).isDualPane;
     final radius = Radius.circular(sizing.radius(NeriRadiusRole.xl));
 
     return Container(
+      margin: dual
+          ? EdgeInsets.all(sizing.space(NeriSpacingRole.sm))
+          : EdgeInsets.zero,
       decoration: BoxDecoration(
         color: colors[NeriToken.pane],
-        borderRadius: BorderRadius.only(topLeft: radius, topRight: radius),
+        borderRadius: dual
+            ? BorderRadius.all(
+                Radius.circular(sizing.radius(NeriRadiusRole.image)),
+              )
+            : BorderRadius.only(topLeft: radius, topRight: radius),
+        border: dual
+            ? Border.all(
+                color: colors[NeriToken.border],
+                width: sizing.border(NeriBorderRole.hairline),
+              )
+            : Border(
+                top: BorderSide(
+                  color: colors[NeriToken.border],
+                  width: sizing.border(NeriBorderRole.hairline),
+                ),
+                left: BorderSide(
+                  color: colors[NeriToken.border],
+                  width: sizing.border(NeriBorderRole.hairline),
+                ),
+                right: BorderSide(
+                  color: colors[NeriToken.border],
+                  width: sizing.border(NeriBorderRole.hairline),
+                ),
+              ),
       ),
       child: SafeArea(
         top: false,
+        bottom: !dual,
         child: Padding(
           padding: EdgeInsets.all(sizing.space(NeriSpacingRole.sm)),
           child: Row(

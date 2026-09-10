@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 
 import 'package:nerimobile/theme/core/theme_data.dart';
 import 'package:nerimobile/theme/core/token.dart';
+import 'package:nerimobile/theme/sizing/border.dart';
 import 'package:nerimobile/theme/sizing/breakpoints.dart';
+import 'package:nerimobile/theme/sizing/radius.dart';
+import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/views/chat/channel/channel_header.dart';
 import 'package:nerimobile/views/chat/composer/composer.dart';
 import 'package:nerimobile/views/chat/message/message_list.dart';
@@ -19,6 +22,7 @@ class ChannelPane extends StatelessWidget {
   Widget build(BuildContext context) {
     final dualPane = NeriWindow.of(context).isDualPane;
     final chat = _Chat(channelId: channelId, showBack: !dualPane);
+    final sizing = context.neriSize;
 
     if (!dualPane) {
       return ColoredBox(
@@ -30,7 +34,25 @@ class ChannelPane extends StatelessWidget {
     return AppScaffold(
       branch: NeriBranch.dashboard,
       listPane: const DmListPane(),
-      content: chat,
+      content: Padding(
+        padding: EdgeInsets.only(
+          top: sizing.space(NeriSpacingRole.sm),
+          right: sizing.space(NeriSpacingRole.sm),
+          bottom: sizing.space(NeriSpacingRole.sm),
+        ),
+        child: Container(
+          clipBehavior: Clip.antiAlias,
+          decoration: BoxDecoration(
+            color: context.neri[NeriToken.background],
+            borderRadius: sizing.rounded(NeriRadiusRole.md),
+            border: Border.all(
+              color: context.neri[NeriToken.border],
+              width: sizing.border(NeriBorderRole.hairline),
+            ),
+          ),
+          child: chat,
+        ),
+      ),
     );
   }
 }
