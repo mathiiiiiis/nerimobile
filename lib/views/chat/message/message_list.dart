@@ -2,11 +2,14 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import 'package:nerimobile/models/message.dart';
 import 'package:nerimobile/services/socket_events.dart';
+import 'package:nerimobile/stores/channel/channel_store.dart';
 import 'package:nerimobile/stores/connection/connection_store.dart';
-
+import 'package:nerimobile/stores/inbox/inbox_store.dart';
 import 'package:nerimobile/stores/message/message_store.dart';
+import 'package:nerimobile/stores/user/user_store.dart';
 import 'package:nerimobile/stores/window/window_focus_store.dart';
 import 'package:nerimobile/theme/core/theme_data.dart';
 import 'package:nerimobile/theme/sizing/dimens.dart';
@@ -36,10 +39,14 @@ class MessageListState extends ConsumerState<MessageList> {
   Timer? _flash;
   String? _flashed;
 
+  int? _lastSeen;
+
   @override
   void initState() {
     super.initState();
     _positions.itemPositions.addListener(_onScroll);
+    _lastSeen = _readLastSeen();
+    debugPrint('lastSeen for ${widget.channelId}: $_lastSeen');
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(messagesProvider(widget.channelId).notifier).open();
     });
@@ -50,6 +57,26 @@ class MessageListState extends ConsumerState<MessageList> {
     _flash?.cancel();
     _positions.itemPositions.removeListener(_onScroll);
     super.dispose();
+  }
+
+  int? _readLastSeen() {
+    final inbox = ref.read(inboxProvider)[widget.channelId];
+    if (inbox != null) return inbox.lastSeen;
+    return ref.read(lastSeenServerChannelIdsProvider)[widget.channelId];
+  }
+
+  void _clearUnread() {
+    setState(() => _lastSeen = null);
+    _dismissed = false;
+    _dismissNow();
+  }
+
+  bool _startsUnread(Message message, Message? before) {
+    final seen = _lastSeen;
+    if (seen == null) return false;
+    if (message.createdBy.id == ref.read(currentUserProvider)?.id) return false;
+    if (message.createdAt <= seen) return false;
+    return before == null || before.createdAt <= seen;
   }
 
   List<Message> get _messages =>
@@ -162,9 +189,13 @@ class MessageListState extends ConsumerState<MessageList> {
       itemBuilder: (context, index) {
         final position = messages.length - 1 - index;
         final message = messages[position];
+        final before = position == 0 ? null : messages[position - 1];
+
         return MessageRow(
+          unread: _startsUnread(message, before),
+          onClearUnread: _clearUnread,
           message: message,
-          before: position == 0 ? null : messages[position - 1],
+          before: before,
           pending: channel.pending.contains(message.id),
           failed: channel.failed.contains(message.id),
           onRetry: () => ref

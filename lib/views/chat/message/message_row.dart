@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 import 'package:nerimobile/models/message.dart';
 import 'package:nerimobile/stores/user/user_store.dart';
@@ -35,17 +36,21 @@ class MessageRow extends ConsumerWidget {
     required this.message,
     this.before,
     this.flashed = false,
+    this.unread = false,
     this.pending = false,
     this.failed = false,
     this.onRetry,
+    this.onClearUnread,
   });
 
   final Message message;
   final Message? before;
   final bool flashed;
+  final bool unread;
   final bool pending;
   final bool failed;
   final VoidCallback? onRetry;
+  final VoidCallback? onClearUnread;
 
   bool get _isSystem => message.type != MessageType.content;
 
@@ -88,6 +93,7 @@ class MessageRow extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        if (unread) _UnreadDivider(onTap: onClearUnread),
         if (_newDay) _DayDivider(timestamp: message.createdAt),
         if (!_newDay) SizedBox(height: gap),
         _Highlight(
@@ -296,6 +302,63 @@ class _SystemMessages extends StatelessWidget {
         style: context.neriText[NeriTextRole.bodySmall].copyWith(
           color: colors[NeriToken.textPlaceholder],
         ),
+      ),
+    );
+  }
+}
+
+class _UnreadDivider extends StatelessWidget {
+  const _UnreadDivider({required this.onTap});
+
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.neri;
+    final sizing = context.neriSize;
+
+    return Padding(
+      padding: EdgeInsets.symmetric(
+        horizontal: sizing.space(NeriSpacingRole.md),
+        vertical: sizing.space(NeriSpacingRole.sm),
+      ),
+      child: Row(
+        spacing: sizing.space(NeriSpacingRole.sm),
+        children: [
+          Expanded(child: Divider(color: colors[NeriToken.alert])),
+          GestureDetector(
+            onTap: onTap,
+            behavior: HitTestBehavior.opaque,
+            child: Container(
+              padding: EdgeInsets.symmetric(
+                horizontal: sizing.space(NeriSpacingRole.sm),
+                vertical: sizing.space(NeriSpacingRole.xs) / 2,
+              ),
+              decoration: BoxDecoration(
+                color: colors[NeriToken.alert],
+                borderRadius: sizing.rounded(NeriRadiusRole.sm),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                spacing: sizing.space(NeriSpacingRole.xs),
+                children: [
+                  Text(
+                    'New messages', //TODO: add l10n
+                    style: context.neriText[NeriTextRole.labelSmall].copyWith(
+                      color: colors[NeriToken.text],
+                    ),
+                  ),
+                  Icon(
+                    Symbols.close_rounded,
+                    size: sizing.dimen(NeriDimen.iconSm) * 0.6,
+                    color: colors[NeriToken.text],
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Expanded(child: Divider(color: colors[NeriToken.alert])),
+        ],
       ),
     );
   }
