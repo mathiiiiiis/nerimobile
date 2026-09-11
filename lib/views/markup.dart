@@ -6,9 +6,11 @@ import 'package:nerimobile/models/channel.dart';
 import 'package:nerimobile/models/message.dart';
 import 'package:nerimobile/models/user.dart';
 import 'package:nerimobile/stores/channel/channel_store.dart';
+import 'package:nerimobile/utils/emoji_shortcodes.dart';
 import 'package:nerimobile/utils/nevula.dart';
 import 'package:nerimobile/views/avatar.dart';
 import 'package:nerimobile/views/chat/message/emoji/custom_emoji.dart';
+import 'package:nerimobile/views/chat/message/emoji/twemoji.dart';
 
 TextSpan transformCustomTextSpan(
   Entity entity,
@@ -55,6 +57,17 @@ TextSpan customEmoji(String id, String name, CustomEmojiKind kind) {
       WidgetSpan(
         alignment: PlaceholderAlignment.middle,
         child: CustomEmoji(id: id, name: name, kind: kind),
+      ),
+    ],
+  );
+}
+
+TextSpan twemoji(String unicode) {
+  return TextSpan(
+    children: [
+      WidgetSpan(
+        alignment: PlaceholderAlignment.middle,
+        child: Twemoji(unicode: unicode),
       ),
     ],
   );
@@ -199,6 +212,19 @@ TextSpan buildTextSpan(
       );
     case "custom":
       return transformCustomTextSpan(entity, fullText, message, channels);
+    case "emoji":
+      return twemoji(content);
+    case "emoji_name":
+      final unicode = emojiShortcodes[content];
+      if (unicode == null) {
+        return TextSpan(
+          text: fullText.substring(
+            entity.outerSpan.start,
+            entity.outerSpan.end,
+          ),
+        );
+      }
+      return twemoji(unicode);
     case "text":
     default:
       return TextSpan(
