@@ -8,6 +8,7 @@ import 'package:nerimobile/models/user.dart';
 import 'package:nerimobile/stores/channel/channel_store.dart';
 import 'package:nerimobile/utils/nevula.dart';
 import 'package:nerimobile/views/avatar.dart';
+import 'package:nerimobile/views/chat/message/custom_emoji.dart';
 
 TextSpan transformCustomTextSpan(
   Entity entity,
@@ -37,8 +38,26 @@ TextSpan transformCustomTextSpan(
       if (user != null) {
         return userMention(user);
       }
+
+    case "ce":
+    case "ace":
+    case "wace":
+      final kind = CustomEmojiKind.fromType(customType)!;
+      final [id, ...rest] = content.split(':');
+      return customEmoji(id, rest.join(':'), kind);
   }
   return TextSpan(text: "[$customType:$content]");
+}
+
+TextSpan customEmoji(String id, String name, CustomEmojiKind kind) {
+  return TextSpan(
+    children: [
+      WidgetSpan(
+        alignment: PlaceholderAlignment.middle,
+        child: CustomEmoji(id: id, name: name, kind: kind),
+      ),
+    ],
+  );
 }
 
 TextSpan userMention(User user) {
