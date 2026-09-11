@@ -8,7 +8,7 @@ import 'package:nerimobile/models/user.dart';
 import 'package:nerimobile/stores/channel/channel_store.dart';
 import 'package:nerimobile/utils/nevula.dart';
 import 'package:nerimobile/views/avatar.dart';
-import 'package:nerimobile/views/chat/message/custom_emoji.dart';
+import 'package:nerimobile/views/chat/message/emoji/custom_emoji.dart';
 
 TextSpan transformCustomTextSpan(
   Entity entity,
