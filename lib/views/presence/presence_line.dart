@@ -56,7 +56,8 @@ class PresenceLine extends ConsumerWidget {
     final status = _statusOf(presence);
 
     return Text(
-      custom != null && custom.isNotEmpty ? custom : status.name,
+      _inline(custom != null && custom.isNotEmpty ? custom : status.name),
+      maxLines: 1,
       overflow: TextOverflow.ellipsis,
       style: style.copyWith(color: colors[NeriToken.textPlaceholder]),
     );
@@ -65,6 +66,8 @@ class PresenceLine extends ConsumerWidget {
 
 PresenceStatus _statusOf(UserPresence? presence) =>
     PresenceStatus.fromValue(presence?.status ?? 0) ?? PresenceStatus.offline;
+
+String _inline(String text) => text.replaceAll(RegExp(r'\s+'), ' ').trim();
 
 class _ActivityLine extends StatelessWidget {
   const _ActivityLine({
@@ -114,6 +117,7 @@ class _ActivityLine extends StatelessWidget {
                 ),
               ],
             ),
+            maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: style,
           ),

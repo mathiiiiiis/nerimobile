@@ -114,6 +114,7 @@ class DmRow extends ConsumerWidget {
                 children: [
                   Text(
                     inbox.recipient.username,
+                    maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: context.neriText[NeriTextRole.bodyLarge].copyWith(
                       color: colors[NeriToken.textSecondary],

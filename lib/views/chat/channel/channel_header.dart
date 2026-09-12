@@ -77,6 +77,7 @@ class ChannelHeader extends ConsumerWidget {
                       children: [
                         Text(
                           recipient.username,
+                          maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: context.neriText[NeriTextRole.bodyLarge]
                               .copyWith(color: colors[NeriToken.text]),
