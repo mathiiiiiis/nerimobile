@@ -10,6 +10,7 @@ import 'package:nerimobile/models/user.dart';
 import 'package:nerimobile/models/user_presence.dart';
 import 'package:nerimobile/stores/user/user_presence_store.dart';
 import 'package:nerimobile/theme/core/theme_data.dart';
+import 'package:nerimobile/theme/sizing/dimens.dart';
 import 'package:nerimobile/theme/sizing/radius.dart';
 import 'package:nerimobile/utils/colors.dart';
 import 'package:nerimobile/utils/image.dart';
@@ -36,7 +37,7 @@ class Avatar extends StatelessWidget {
     final avatarUrl = avatarExists
         ? buildImageUrl(
             avatar,
-            size: _requestSize(context, size),
+            size: _requestSize(context),
             animate: animate == true,
           )
         : null;
@@ -118,12 +119,13 @@ double _initialsRatio(String letters) => switch (letters.characters.length) {
 
 const _maxInitials = 10;
 
-int _requestSize(BuildContext context, double size) {
-  final pixels = size * MediaQuery.devicePixelRatioOf(context);
-  return max(_minRequestSize, (pixels / 32).ceil() * 32);
+int _requestSize(BuildContext context) {
+  final largest = context.neriSize.dimen(NeriDimen.avatarLg);
+  final pixels = largest * MediaQuery.devicePixelRatioOf(context);
+  return min(_maxRequestSize, (pixels / 32).ceil() * 32);
 }
 
-const _minRequestSize = 64;
+const _maxRequestSize = 256;
 
 const _presenceDotRatio = 0.25;
 
