@@ -13,7 +13,7 @@ import 'package:nerimobile/theme/typography/text_styles.dart';
 import 'package:nerimobile/views/avatar.dart';
 import 'package:nerimobile/views/chat/message/message_media.dart';
 import 'package:nerimobile/views/chat/message/message_replies.dart';
-import 'package:nerimobile/views/markup.dart';
+import 'package:nerimobile/views/markup/markup.dart';
 
 //avoid showing an image url twice
 bool showsContent(Message message) {
