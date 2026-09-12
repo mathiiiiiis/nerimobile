@@ -36,9 +36,11 @@ class MarkupRenderContext {
   int textCount = 0;
   int emojiCount = 0;
   int spoilerCount = 0;
+  int spoilerDepth = 0;
   int? hiddenSpoiler;
+  bool spoiledEmoji = false;
 
-  bool get largeEmoji => emojiCount <= 5 && textCount == 0;
+  bool get largeEmoji => emojiCount <= 5 && textCount == 0 && !spoiledEmoji;
 
   bool get hidden => hiddenSpoiler != null;
 
@@ -66,6 +68,12 @@ class MarkupRenderContext {
   String countText(String text) {
     if (text.trim().isNotEmpty) textCount += text.length;
     return text;
+  }
+
+  //spoilered emoji stays at text size
+  void countEmoji() {
+    emojiCount++;
+    if (spoilerDepth > 0) spoiledEmoji = true;
   }
 }
 
@@ -99,7 +107,7 @@ TextSpan transformCustomTextSpan(Entity entity, MarkupRenderContext ctx) {
     case "wace":
       final kind = CustomEmojiKind.fromType(customType)!;
       final [id, ...rest] = content.split(':');
-      ctx.emojiCount++;
+      ctx.countEmoji();
       return customEmoji(id, rest.join(':'), kind, ctx);
   }
   return TextSpan(
@@ -216,17 +224,19 @@ TextSpan buildTextSpan(Entity entity, MarkupRenderContext ctx) {
       );
     case "spoiler":
       final index = ctx.spoilerCount++;
-      if (ctx.spoilers.isRevealed(index)) {
-        return TextSpan(children: children());
-      }
+      final revealed = ctx.spoilers.isRevealed(index);
 
       final outer = ctx.hiddenSpoiler;
-      ctx.hiddenSpoiler = index;
-      final hiddenSpans = children();
+      if (!revealed) ctx.hiddenSpoiler = index;
+      ctx.spoilerDepth++;
+      final spoilerSpans = children();
+      ctx.spoilerDepth--;
       ctx.hiddenSpoiler = outer;
 
+      if (revealed) return TextSpan(children: spoilerSpans);
+
       return TextSpan(
-        children: hiddenSpans,
+        children: spoilerSpans,
         style: TextStyle(
           backgroundColor: ctx.spoilerColor(index),
           color: Colors.transparent,
@@ -304,7 +314,7 @@ TextSpan buildTextSpan(Entity entity, MarkupRenderContext ctx) {
     case "custom":
       return transformCustomTextSpan(entity, ctx);
     case "emoji":
-      ctx.emojiCount++;
+      ctx.countEmoji();
       return twemoji(content, ctx);
     case "emoji_name":
       final unicode = emojiShortcodes[content];
@@ -314,7 +324,7 @@ TextSpan buildTextSpan(Entity entity, MarkupRenderContext ctx) {
           recognizer: ctx.spoilerTap,
         );
       }
-      ctx.emojiCount++;
+      ctx.countEmoji();
       return twemoji(unicode, ctx);
     case "text":
     default:
