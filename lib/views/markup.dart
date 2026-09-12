@@ -132,34 +132,33 @@ TextSpan channelMention(Channel channel) {
 TextSpan buildTextSpan(Entity entity, MarkupRenderContext ctx) {
   final String content = ctx.slice(entity.innerSpan);
 
-  List<InlineSpan> children = entity.entities
-      .map((e) => buildTextSpan(e, ctx))
-      .toList();
+  List<InlineSpan> children() =>
+      entity.entities.map((e) => buildTextSpan(e, ctx)).toList();
 
   switch (entity.type) {
     case "bold":
       return TextSpan(
-        children: children,
+        children: children(),
         style: const TextStyle(fontWeight: FontWeight.bold),
       );
     case "italic":
       return TextSpan(
-        children: children,
+        children: children(),
         style: const TextStyle(fontStyle: FontStyle.italic),
       );
     case "underline":
       return TextSpan(
-        children: children,
+        children: children(),
         style: const TextStyle(decoration: TextDecoration.underline),
       );
     case "strikethrough":
       return TextSpan(
-        children: children,
+        children: children(),
         style: const TextStyle(decoration: TextDecoration.lineThrough),
       );
     case "spoiler":
       return TextSpan(
-        children: children,
+        children: children(),
         style: const TextStyle(
           backgroundColor: Colors.black,
           color: Colors.black,
@@ -184,7 +183,7 @@ TextSpan buildTextSpan(Entity entity, MarkupRenderContext ctx) {
         color = Color(int.parse('0xFF$hexStr'));
       }
       return TextSpan(
-        children: children,
+        children: children(),
         style: TextStyle(color: color),
       );
     case "code":
@@ -205,7 +204,7 @@ TextSpan buildTextSpan(Entity entity, MarkupRenderContext ctx) {
         children: [
           const WidgetSpan(child: SizedBox(height: 20)),
           TextSpan(
-            children: children,
+            children: children(),
             style: TextStyle(fontSize: fontSize, fontWeight: FontWeight.w600),
           ),
         ],
@@ -222,10 +221,8 @@ TextSpan buildTextSpan(Entity entity, MarkupRenderContext ctx) {
       return twemoji(unicode);
     case "text":
     default:
-      return TextSpan(
-        text: children.isEmpty ? content : null,
-        children: children,
-      );
+      final spans = children();
+      return TextSpan(text: spans.isEmpty ? content : null, children: spans);
   }
 }
 
