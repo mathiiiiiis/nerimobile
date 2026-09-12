@@ -1,7 +1,10 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+
 import 'package:nerimobile/models/channel.dart';
 import 'package:nerimobile/models/server_role.dart';
+import 'package:nerimobile/utils/cached_svg_loader.dart';
 import 'package:nerimobile/utils/emojis.dart';
 import 'package:nerimobile/utils/image.dart';
 
@@ -20,32 +23,38 @@ class CdnIcon extends StatelessWidget {
     required this.size,
   });
 
+  Widget _fallback() => fallbackIcon == null
+      ? const SizedBox.shrink()
+      : Icon(fallbackIcon, size: size);
+
   @override
   Widget build(BuildContext context) {
     final icon = channel?.icon ?? serverRole?.icon ?? path;
-    if (icon == null) {
-      if (fallbackIcon != null) {
-        return Icon(fallbackIcon, size: size);
-      } else {
-        return const SizedBox.shrink();
-      }
-    }
+    if (icon == null) return _fallback();
 
     final isSvgIcon = !icon.contains(".");
 
-    final iconUrl = isSvgIcon
-        ? unicodeToTwemojiUrl(icon)
-        : buildImageUrl('emojis/$icon', size: size.toInt());
+    if (isSvgIcon) {
+      return SvgPicture(
+        CachedSvgLoader(unicodeToTwemojiUrl(icon)),
+        width: size,
+        height: size,
+        placeholderBuilder: (_) => SizedBox.square(dimension: size),
+        errorBuilder: (_, _, _) => _fallback(),
+      );
+    }
 
-    return isSvgIcon
-        ? SvgPicture.network(iconUrl, width: size, height: size)
-        : Image.network(
-            iconUrl,
-            fit: BoxFit.scaleDown,
-            width: size,
-            height: size,
-            errorBuilder: (context, error, stackTrace) =>
-                const SizedBox.shrink(),
-          );
+    final pixels = size * MediaQuery.devicePixelRatioOf(context);
+
+    return CachedNetworkImage(
+      imageUrl: buildImageUrl('emojis/$icon', size: pixels.toInt()),
+      fit: BoxFit.scaleDown,
+      width: size,
+      height: size,
+      fadeInDuration: Duration.zero,
+      fadeOutDuration: Duration.zero,
+      placeholder: (_, _) => SizedBox.square(dimension: size),
+      errorWidget: (_, _, _) => _fallback(),
+    );
   }
 }
