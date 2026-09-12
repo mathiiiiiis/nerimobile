@@ -9,6 +9,7 @@ import 'package:nerimobile/models/user.dart';
 import 'package:nerimobile/stores/channel/channel_store.dart';
 import 'package:nerimobile/theme/core/theme_data.dart';
 import 'package:nerimobile/theme/core/token.dart';
+import 'package:nerimobile/theme/sizing/dimens.dart';
 import 'package:nerimobile/utils/emoji_shortcodes.dart';
 import 'package:nerimobile/utils/nevula.dart';
 import 'package:nerimobile/views/avatar.dart';
@@ -41,9 +42,15 @@ class MarkupRenderContext {
   int spoilerDepth = 0;
   int? hiddenSpoiler;
   bool spoiledEmoji = false;
+  bool styledEmoji = false;
+  double? emojiSizeOverride;
 
   bool get largeEmoji =>
-      !inline && emojiCount <= 5 && textCount == 0 && !spoiledEmoji;
+      !inline &&
+      emojiCount <= 5 &&
+      textCount == 0 &&
+      !spoiledEmoji &&
+      !styledEmoji;
 
   bool get hidden => hiddenSpoiler != null;
 
@@ -77,6 +84,15 @@ class MarkupRenderContext {
   void countEmoji() {
     emojiCount++;
     if (spoilerDepth > 0) spoiledEmoji = true;
+    if (emojiSizeOverride != null) styledEmoji = true;
+  }
+
+  //keeps emoji size in sync with resized text
+  Widget scaleEmoji(Widget child) {
+    final size = emojiSizeOverride;
+    if (size == null) return child;
+
+    return EmojiSizeScope(size: size, child: child);
   }
 }
 
@@ -129,7 +145,9 @@ TextSpan customEmoji(
     children: [
       WidgetSpan(
         alignment: PlaceholderAlignment.middle,
-        child: ctx.cover(CustomEmoji(id: id, name: name, kind: kind)),
+        child: ctx.cover(
+          ctx.scaleEmoji(CustomEmoji(id: id, name: name, kind: kind)),
+        ),
       ),
     ],
   );
@@ -140,7 +158,7 @@ TextSpan twemoji(String unicode, MarkupRenderContext ctx) {
     children: [
       WidgetSpan(
         alignment: PlaceholderAlignment.middle,
-        child: ctx.cover(Twemoji(unicode: unicode)),
+        child: ctx.cover(ctx.scaleEmoji(Twemoji(unicode: unicode))),
       ),
     ],
   );
@@ -305,11 +323,16 @@ TextSpan buildTextSpan(Entity entity, MarkupRenderContext ctx) {
       final int level = entity.params["level"] ?? 1;
       double fontSize = levelSizes[level] ?? 14.0;
 
+      final outerSize = ctx.emojiSizeOverride;
+      ctx.emojiSizeOverride = fontSize;
+      final headingSpans = children();
+      ctx.emojiSizeOverride = outerSize;
+
       return TextSpan(
         children: [
           const WidgetSpan(child: SizedBox(height: 20)),
           TextSpan(
-            children: children(),
+            children: headingSpans,
             style: TextStyle(fontSize: fontSize, fontWeight: FontWeight.w600),
           ),
         ],
@@ -396,7 +419,9 @@ class _MarkupViewState extends ConsumerState<MarkupView> {
     final span = buildTextSpan(fullEntityTree, ctx);
 
     return EmojiSizeScope(
-      size: ctx.largeEmoji ? largeEmojiSize : emojiSize,
+      size: ctx.largeEmoji
+          ? context.neriSize.dimen(NeriDimen.emojiLg)
+          : emojiSizeFor(context),
       child: Text.rich(
         span,
         maxLines: widget.maxLines,
