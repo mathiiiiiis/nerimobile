@@ -37,8 +37,8 @@ const nerimobilePreset = ThemeSpec(
     NeriToken.textPlaceholder: '#676767',
     NeriToken.messagePending: '#939393',
 
-    NeriToken.markupSpoilerBackground: '#2a2a2a',
-    NeriToken.markupSpoilerBackgroundHover: '#2d2d2d',
+    NeriToken.markupSpoilerBackground: '#424242',
+    NeriToken.markupSpoilerBackgroundHover: '#4c4c4c',
 
     NeriToken.drawerItemBackground: '#464646',
     NeriToken.drawerItemText: '#a4a4a4',
