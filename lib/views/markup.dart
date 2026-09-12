@@ -10,6 +10,7 @@ import 'package:nerimobile/utils/emoji_shortcodes.dart';
 import 'package:nerimobile/utils/nevula.dart';
 import 'package:nerimobile/views/avatar.dart';
 import 'package:nerimobile/views/chat/message/emoji/custom_emoji.dart';
+import 'package:nerimobile/views/chat/message/emoji/emoji_size.dart';
 import 'package:nerimobile/views/chat/message/emoji/twemoji.dart';
 
 class MarkupRenderContext {
@@ -22,8 +23,17 @@ class MarkupRenderContext {
   final String text;
   final Map<String, Channel> channels;
   final Message? message;
+  int textCount = 0;
+  int emojiCount = 0;
+
+  bool get largeEmoji => emojiCount <= 5 && textCount == 0;
 
   String slice(Span span) => text.substring(span.start, span.end);
+
+  String countText(String text) {
+    if (text.trim().isNotEmpty) textCount += text.length;
+    return text;
+  }
 }
 
 TextSpan transformCustomTextSpan(Entity entity, MarkupRenderContext ctx) {
@@ -37,6 +47,7 @@ TextSpan transformCustomTextSpan(Entity entity, MarkupRenderContext ctx) {
       final channel = ctx.channels[content];
 
       if (channel != null && channel.name != null) {
+        ctx.countText(content);
         return channelMention(channel);
       }
 
@@ -46,6 +57,7 @@ TextSpan transformCustomTextSpan(Entity entity, MarkupRenderContext ctx) {
           .firstOrNull;
 
       if (user != null) {
+        ctx.countText(content);
         return userMention(user);
       }
 
@@ -54,9 +66,10 @@ TextSpan transformCustomTextSpan(Entity entity, MarkupRenderContext ctx) {
     case "wace":
       final kind = CustomEmojiKind.fromType(customType)!;
       final [id, ...rest] = content.split(':');
+      ctx.emojiCount++;
       return customEmoji(id, rest.join(':'), kind);
   }
-  return TextSpan(text: "[$customType:$content]");
+  return TextSpan(text: ctx.countText("[$customType:$content]"));
 }
 
 TextSpan customEmoji(String id, String name, CustomEmojiKind kind) {
@@ -167,7 +180,9 @@ TextSpan buildTextSpan(Entity entity, MarkupRenderContext ctx) {
     case "link":
     case "named_link":
       return TextSpan(
-        text: entity.type == "named_link" ? entity.params["name"] : content,
+        text: ctx.countText(
+          entity.type == "named_link" ? entity.params["name"] : content,
+        ),
         style: const TextStyle(color: Colors.blue),
       );
     case "color":
@@ -188,7 +203,7 @@ TextSpan buildTextSpan(Entity entity, MarkupRenderContext ctx) {
       );
     case "code":
       return TextSpan(
-        text: content,
+        text: ctx.countText(content),
         style: const TextStyle(
           fontFamily: 'monospace',
           backgroundColor: Colors.grey,
@@ -212,17 +227,22 @@ TextSpan buildTextSpan(Entity entity, MarkupRenderContext ctx) {
     case "custom":
       return transformCustomTextSpan(entity, ctx);
     case "emoji":
+      ctx.emojiCount++;
       return twemoji(content);
     case "emoji_name":
       final unicode = emojiShortcodes[content];
       if (unicode == null) {
-        return TextSpan(text: ctx.slice(entity.outerSpan));
+        return TextSpan(text: ctx.countText(ctx.slice(entity.outerSpan)));
       }
+      ctx.emojiCount++;
       return twemoji(unicode);
     case "text":
     default:
       final spans = children();
-      return TextSpan(text: spans.isEmpty ? content : null, children: spans);
+      return TextSpan(
+        text: spans.isEmpty ? ctx.countText(content) : null,
+        children: spans,
+      );
   }
 }
 
@@ -238,15 +258,16 @@ class MarkupView extends ConsumerWidget {
 
     Entity fullEntityTree = addTextSpans(rootEntity);
 
-    return Text.rich(
-      buildTextSpan(
-        fullEntityTree,
-        MarkupRenderContext(
-          text: rawText ?? '',
-          channels: ref.watch(channelsProvider),
-          message: message,
-        ),
-      ),
+    final ctx = MarkupRenderContext(
+      text: rawText ?? '',
+      channels: ref.watch(channelsProvider),
+      message: message,
+    );
+    final span = buildTextSpan(fullEntityTree, ctx);
+
+    return EmojiSizeScope(
+      size: ctx.largeEmoji ? largeEmojiSize : emojiSize,
+      child: Text.rich(span),
     );
   }
 }
