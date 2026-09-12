@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
@@ -6,6 +7,8 @@ import 'package:nerimobile/models/channel.dart';
 import 'package:nerimobile/models/message.dart';
 import 'package:nerimobile/models/user.dart';
 import 'package:nerimobile/stores/channel/channel_store.dart';
+import 'package:nerimobile/theme/core/theme_data.dart';
+import 'package:nerimobile/theme/core/token.dart';
 import 'package:nerimobile/utils/emoji_shortcodes.dart';
 import 'package:nerimobile/utils/nevula.dart';
 import 'package:nerimobile/views/avatar.dart';
@@ -17,16 +20,28 @@ class MarkupRenderContext {
   MarkupRenderContext({
     required this.text,
     required this.channels,
+    required this.spoilerBackground,
+    required this.revealedSpoilers,
+    required this.spoilerRecognizer,
     this.message,
   });
 
   final String text;
   final Map<String, Channel> channels;
+  final Color spoilerBackground;
+  final Set<int> revealedSpoilers;
+  final GestureRecognizer Function(int index) spoilerRecognizer;
   final Message? message;
   int textCount = 0;
   int emojiCount = 0;
+  int spoilerCount = 0;
+  GestureRecognizer? spoilerTap;
 
   bool get largeEmoji => emojiCount <= 5 && textCount == 0;
+
+  bool get hidden => spoilerTap != null;
+
+  Color? hide(Color? color) => hidden ? Colors.transparent : color;
 
   String slice(Span span) => text.substring(span.start, span.end);
 
@@ -69,7 +84,10 @@ TextSpan transformCustomTextSpan(Entity entity, MarkupRenderContext ctx) {
       ctx.emojiCount++;
       return customEmoji(id, rest.join(':'), kind);
   }
-  return TextSpan(text: ctx.countText("[$customType:$content]"));
+  return TextSpan(
+    text: ctx.countText("[$customType:$content]"),
+    recognizer: ctx.spoilerTap,
+  );
 }
 
 TextSpan customEmoji(String id, String name, CustomEmojiKind kind) {
@@ -170,11 +188,21 @@ TextSpan buildTextSpan(Entity entity, MarkupRenderContext ctx) {
         style: const TextStyle(decoration: TextDecoration.lineThrough),
       );
     case "spoiler":
+      final index = ctx.spoilerCount++;
+      if (ctx.revealedSpoilers.contains(index)) {
+        return TextSpan(children: children());
+      }
+
+      final outerTap = ctx.spoilerTap;
+      ctx.spoilerTap = ctx.spoilerRecognizer(index);
+      final hiddenSpans = children();
+      ctx.spoilerTap = outerTap;
+
       return TextSpan(
-        children: children(),
-        style: const TextStyle(
-          backgroundColor: Colors.black,
-          color: Colors.black,
+        children: hiddenSpans,
+        style: TextStyle(
+          backgroundColor: ctx.spoilerBackground,
+          color: Colors.transparent,
         ),
       );
     case "link":
@@ -183,7 +211,8 @@ TextSpan buildTextSpan(Entity entity, MarkupRenderContext ctx) {
         text: ctx.countText(
           entity.type == "named_link" ? entity.params["name"] : content,
         ),
-        style: const TextStyle(color: Colors.blue),
+        style: TextStyle(color: ctx.hide(Colors.blue)),
+        recognizer: ctx.spoilerTap,
       );
     case "color":
       final textBefore = ctx.textCount;
@@ -199,9 +228,9 @@ TextSpan buildTextSpan(Entity entity, MarkupRenderContext ctx) {
         );
         return TextSpan(
           children: [
-            TextSpan(text: ctx.countText(prefix)),
+            TextSpan(text: ctx.countText(prefix), recognizer: ctx.spoilerTap),
             ...spans,
-            TextSpan(text: ctx.countText(suffix)),
+            TextSpan(text: ctx.countText(suffix), recognizer: ctx.spoilerTap),
           ],
         );
       }
@@ -219,7 +248,7 @@ TextSpan buildTextSpan(Entity entity, MarkupRenderContext ctx) {
       }
       return TextSpan(
         children: spans,
-        style: TextStyle(color: color),
+        style: TextStyle(color: ctx.hide(color)),
       );
     case "code":
       return TextSpan(
@@ -228,6 +257,7 @@ TextSpan buildTextSpan(Entity entity, MarkupRenderContext ctx) {
           fontFamily: 'monospace',
           backgroundColor: Colors.grey,
         ),
+        recognizer: ctx.spoilerTap,
       );
     case "heading":
       const levelSizes = {1: 34.0, 2: 24.0, 3: 18.0, 4: 14.0, 5: 12.0, 6: 10.0};
@@ -252,7 +282,10 @@ TextSpan buildTextSpan(Entity entity, MarkupRenderContext ctx) {
     case "emoji_name":
       final unicode = emojiShortcodes[content];
       if (unicode == null) {
-        return TextSpan(text: ctx.countText(ctx.slice(entity.outerSpan)));
+        return TextSpan(
+          text: ctx.countText(ctx.slice(entity.outerSpan)),
+          recognizer: ctx.spoilerTap,
+        );
       }
       ctx.emojiCount++;
       return twemoji(unicode);
@@ -262,26 +295,65 @@ TextSpan buildTextSpan(Entity entity, MarkupRenderContext ctx) {
       return TextSpan(
         text: spans.isEmpty ? ctx.countText(content) : null,
         children: spans,
+        recognizer: spans.isEmpty ? ctx.spoilerTap : null,
       );
   }
 }
 
-class MarkupView extends ConsumerWidget {
+class MarkupView extends ConsumerStatefulWidget {
   final String? rawText;
   final Message? message;
 
   const MarkupView({super.key, this.rawText, this.message});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    Entity rootEntity = parseMarkup(rawText ?? '');
+  ConsumerState<MarkupView> createState() => _MarkupViewState();
+}
+
+class _MarkupViewState extends ConsumerState<MarkupView> {
+  final Set<int> _revealed = {};
+  final Map<int, TapGestureRecognizer> _recognizers = {};
+
+  @override
+  void didUpdateWidget(MarkupView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.rawText != widget.rawText) _resetSpoilers();
+  }
+
+  @override
+  void dispose() {
+    _resetSpoilers();
+    super.dispose();
+  }
+
+  void _resetSpoilers() {
+    for (final recognizer in _recognizers.values) {
+      recognizer.dispose();
+    }
+    _recognizers.clear();
+    _revealed.clear();
+  }
+
+  GestureRecognizer _spoilerRecognizer(int index) => _recognizers.putIfAbsent(
+    index,
+    () =>
+        TapGestureRecognizer()
+          ..onTap = () => setState(() => _revealed.add(index)),
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    Entity rootEntity = parseMarkup(widget.rawText ?? '');
 
     Entity fullEntityTree = addTextSpans(rootEntity);
 
     final ctx = MarkupRenderContext(
-      text: rawText ?? '',
+      text: widget.rawText ?? '',
       channels: ref.watch(channelsProvider),
-      message: message,
+      spoilerBackground: context.neri[NeriToken.markupSpoilerBackground],
+      revealedSpoilers: _revealed,
+      spoilerRecognizer: _spoilerRecognizer,
+      message: widget.message,
     );
     final span = buildTextSpan(fullEntityTree, ctx);
 
