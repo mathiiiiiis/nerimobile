@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import 'package:nerimobile/config.dart';
+import 'package:nerimobile/utils/caches.dart';
 import 'package:nerimobile/views/chat/message/emoji/emoji_size.dart';
 
 //ace==legacy animated, wace==same emoji as animated webp
@@ -57,6 +58,7 @@ class CustomEmoji extends StatelessWidget {
 
     return CachedNetworkImage(
       imageUrl: customEmojiUrl(id, kind, animate: true, size: pixels),
+      cacheManager: emojiCache,
       width: size,
       height: size,
       fit: BoxFit.contain,

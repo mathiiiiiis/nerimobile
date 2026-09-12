@@ -10,6 +10,7 @@ import 'package:nerimobile/theme/sizing/dimens.dart';
 import 'package:nerimobile/theme/sizing/radius.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/theme/typography/text_styles.dart';
+import 'package:nerimobile/utils/caches.dart';
 import 'package:nerimobile/utils/format.dart';
 import 'package:nerimobile/utils/image.dart';
 import 'package:nerimobile/utils/url.dart';
@@ -182,6 +183,7 @@ class _Media extends StatelessWidget {
           borderRadius: sizing.rounded(NeriRadiusRole.image),
           child: CachedNetworkImage(
             imageUrl: url,
+            cacheManager: mediaCache,
             width: size.width,
             height: size.height,
             fit: BoxFit.cover,

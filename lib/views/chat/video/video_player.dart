@@ -11,6 +11,7 @@ import 'package:nerimobile/theme/core/token.dart';
 import 'package:nerimobile/theme/sizing/dimens.dart';
 import 'package:nerimobile/theme/sizing/radius.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
+import 'package:nerimobile/utils/caches.dart';
 import 'package:nerimobile/utils/image.dart';
 import 'package:nerimobile/views/chat/video/video_fullscreen.dart';
 
@@ -63,6 +64,7 @@ class VideoPlayer extends ConsumerWidget {
                 else
                   CachedNetworkImage(
                     imageUrl: buildImageUrl('$path/thumb.webp'),
+                    cacheManager: mediaCache,
                     fit: BoxFit.cover,
                     fadeInDuration: Duration.zero,
                     fadeOutDuration: Duration.zero,

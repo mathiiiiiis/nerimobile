@@ -5,6 +5,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:nerimobile/models/channel.dart';
 import 'package:nerimobile/models/server_role.dart';
 import 'package:nerimobile/utils/cached_svg_loader.dart';
+import 'package:nerimobile/utils/caches.dart';
 import 'package:nerimobile/utils/emojis.dart';
 import 'package:nerimobile/utils/image.dart';
 
@@ -36,7 +37,7 @@ class CdnIcon extends StatelessWidget {
 
     if (isSvgIcon) {
       return SvgPicture(
-        CachedSvgLoader(unicodeToTwemojiUrl(icon)),
+        CachedSvgLoader(unicodeToTwemojiUrl(icon), cache: emojiCache),
         width: size,
         height: size,
         placeholderBuilder: (_) => SizedBox.square(dimension: size),
@@ -48,6 +49,7 @@ class CdnIcon extends StatelessWidget {
 
     return CachedNetworkImage(
       imageUrl: buildImageUrl('emojis/$icon', size: pixels.toInt()),
+      cacheManager: emojiCache,
       fit: BoxFit.scaleDown,
       width: size,
       height: size,

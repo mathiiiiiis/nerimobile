@@ -12,6 +12,7 @@ import 'package:nerimobile/stores/user/user_presence_store.dart';
 import 'package:nerimobile/theme/core/theme_data.dart';
 import 'package:nerimobile/theme/sizing/dimens.dart';
 import 'package:nerimobile/theme/sizing/radius.dart';
+import 'package:nerimobile/utils/caches.dart';
 import 'package:nerimobile/utils/colors.dart';
 import 'package:nerimobile/utils/image.dart';
 
@@ -51,6 +52,7 @@ class Avatar extends StatelessWidget {
       ),
       child: CachedNetworkImage(
         imageUrl: avatarUrl,
+        cacheManager: avatarCache,
         fit: BoxFit.cover,
         fadeInDuration: Duration.zero,
         fadeOutDuration: Duration.zero,
