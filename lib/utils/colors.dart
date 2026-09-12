@@ -80,8 +80,28 @@ Color parseHexColor(String hex) {
   }
 
   var h = hex.replaceFirst('#', '');
-  if (h.length == 3) h = h.split('').map((c) => '$c$c').join();
-  return Color(int.parse('FF$h', radix: 16));
+  if (h.length == 3 || h.length == 4) {
+    h = h.split('').map((c) => '$c$c').join();
+  }
+  //css order ≠ flutter order
+  if (h.length == 8) h = '${h.substring(6)}${h.substring(0, 6)}';
+  return Color(int.parse(h.length == 6 ? 'FF$h' : h, radix: 16));
+}
+
+const _hex = r'#(?:[a-fA-F0-9]{3,4}|[a-fA-F0-9]{6}|[a-fA-F0-9]{8})';
+final _colorExprPattern = RegExp(
+  '^($_hex(?:-$_hex)+)'
+  r'\s+(.*)$',
+);
+
+({List<Color> colors, String text})? parseColorExpr(String expr) {
+  final match = _colorExprPattern.firstMatch(expr.trim());
+  if (match == null) return null;
+
+  return (
+    colors: match.group(1)!.split('-').map(parseHexColor).toList(),
+    text: match.group(2)!,
+  );
 }
 
 LinearGradient _gradientFromDegree(
