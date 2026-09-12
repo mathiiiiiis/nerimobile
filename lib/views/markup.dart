@@ -186,6 +186,26 @@ TextSpan buildTextSpan(Entity entity, MarkupRenderContext ctx) {
         style: const TextStyle(color: Colors.blue),
       );
     case "color":
+      final textBefore = ctx.textCount;
+      final spans = children();
+      if (ctx.textCount == textBefore) {
+        final prefix = ctx.text.substring(
+          entity.outerSpan.start,
+          entity.innerSpan.start,
+        );
+        final suffix = ctx.text.substring(
+          entity.innerSpan.end,
+          entity.outerSpan.end,
+        );
+        return TextSpan(
+          children: [
+            TextSpan(text: ctx.countText(prefix)),
+            ...spans,
+            TextSpan(text: ctx.countText(suffix)),
+          ],
+        );
+      }
+
       final colorStr = entity.params["color"] as String;
       Color? color;
       if (colorStr == "reset") {
@@ -198,7 +218,7 @@ TextSpan buildTextSpan(Entity entity, MarkupRenderContext ctx) {
         color = Color(int.parse('0xFF$hexStr'));
       }
       return TextSpan(
-        children: children(),
+        children: spans,
         style: TextStyle(color: color),
       );
     case "code":
