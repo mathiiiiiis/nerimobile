@@ -52,6 +52,8 @@ class Avatar extends StatelessWidget {
       child: CachedNetworkImage(
         imageUrl: avatarUrl,
         fit: BoxFit.cover,
+        fadeInDuration: Duration.zero,
+        fadeOutDuration: Duration.zero,
         width: size,
         height: size,
         placeholder: (_, _) => fallback,

@@ -60,6 +60,8 @@ class CustomEmoji extends StatelessWidget {
       width: size,
       height: size,
       fit: BoxFit.contain,
+      fadeInDuration: Duration.zero,
+      fadeOutDuration: Duration.zero,
       placeholder: (_, _) => SizedBox(width: size, height: size),
       errorWidget: (_, _, _) => Text(':$name'),
     );
