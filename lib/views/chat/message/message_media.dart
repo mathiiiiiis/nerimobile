@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:nerimobile/theme/sizing/border.dart';
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -164,6 +165,7 @@ class _Media extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.neri;
     final sizing = context.neriSize;
 
     return LayoutBuilder(
@@ -178,12 +180,15 @@ class _Media extends StatelessWidget {
 
         return ClipRRect(
           borderRadius: sizing.rounded(NeriRadiusRole.image),
-          child: Image.network(
-            url,
+          child: CachedNetworkImage(
+            imageUrl: url,
             width: size.width,
             height: size.height,
             fit: BoxFit.cover,
-            errorBuilder: (context, error, stack) => const _FileCard(),
+            fadeInDuration: Duration.zero,
+            fadeOutDuration: Duration.zero,
+            placeholder: (_, _) => ColoredBox(color: colors[NeriToken.card]),
+            errorWidget: (_, _, _) => const _FileCard(),
           ),
         );
       },

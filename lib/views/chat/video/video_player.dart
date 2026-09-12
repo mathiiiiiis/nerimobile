@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -60,10 +61,14 @@ class VideoPlayer extends ConsumerWidget {
                     fit: BoxFit.contain,
                   )
                 else
-                  Image.network(
-                    buildImageUrl('$path/thumb.webp'),
+                  CachedNetworkImage(
+                    imageUrl: buildImageUrl('$path/thumb.webp'),
                     fit: BoxFit.cover,
-                    errorBuilder: (context, error, stack) =>
+                    fadeInDuration: Duration.zero,
+                    fadeOutDuration: Duration.zero,
+                    placeholder: (_, _) =>
+                        ColoredBox(color: context.neri[NeriToken.card]),
+                    errorWidget: (_, _, _) =>
                         ColoredBox(color: context.neri[NeriToken.card]),
                   ),
                 if (current)
