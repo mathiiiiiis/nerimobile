@@ -25,6 +25,7 @@ class MarkupRenderContext {
     required this.spoilerBackground,
     required this.spoilerPressedBackground,
     this.message,
+    this.inline = false,
   });
 
   final String text;
@@ -33,6 +34,7 @@ class MarkupRenderContext {
   final Color spoilerBackground;
   final Color spoilerPressedBackground;
   final Message? message;
+  final bool inline;
   int textCount = 0;
   int emojiCount = 0;
   int spoilerCount = 0;
@@ -40,7 +42,8 @@ class MarkupRenderContext {
   int? hiddenSpoiler;
   bool spoiledEmoji = false;
 
-  bool get largeEmoji => emojiCount <= 5 && textCount == 0 && !spoiledEmoji;
+  bool get largeEmoji =>
+      !inline && emojiCount <= 5 && textCount == 0 && !spoiledEmoji;
 
   bool get hidden => hiddenSpoiler != null;
 
@@ -341,7 +344,19 @@ class MarkupView extends ConsumerStatefulWidget {
   final String? rawText;
   final Message? message;
 
-  const MarkupView({super.key, this.rawText, this.message});
+  //keeps custom status markup on one text run
+  final bool inline;
+  final int? maxLines;
+  final TextOverflow? overflow;
+
+  const MarkupView({
+    super.key,
+    this.rawText,
+    this.message,
+    this.inline = false,
+    this.maxLines,
+    this.overflow,
+  });
 
   @override
   ConsumerState<MarkupView> createState() => _MarkupViewState();
@@ -376,12 +391,17 @@ class _MarkupViewState extends ConsumerState<MarkupView> {
       spoilerPressedBackground:
           context.neri[NeriToken.markupSpoilerBackgroundHover],
       message: widget.message,
+      inline: widget.inline,
     );
     final span = buildTextSpan(fullEntityTree, ctx);
 
     return EmojiSizeScope(
       size: ctx.largeEmoji ? largeEmojiSize : emojiSize,
-      child: Text.rich(span),
+      child: Text.rich(
+        span,
+        maxLines: widget.maxLines,
+        overflow: widget.overflow ?? TextOverflow.clip,
+      ),
     );
   }
 }
