@@ -9,6 +9,7 @@ import 'package:nerimobile/theme/core/token.dart';
 import 'package:nerimobile/theme/sizing/dimens.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/theme/typography/text_styles.dart';
+import 'package:nerimobile/views/markup/markup.dart';
 
 ActivityKind activityKindOf(ActivityStatus activity) {
   if (activity.action.startsWith('Listening to')) return ActivityKind.music;
@@ -52,14 +53,28 @@ class PresenceLine extends ConsumerWidget {
       );
     }
 
+    final placeholder = style.copyWith(
+      color: colors[NeriToken.textPlaceholder],
+    );
     final custom = presence?.custom;
-    final status = _statusOf(presence);
+
+    if (custom != null && custom.isNotEmpty) {
+      return DefaultTextStyle(
+        style: placeholder,
+        child: MarkupView(
+          rawText: _inline(custom),
+          inline: true,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      );
+    }
 
     return Text(
-      _inline(custom != null && custom.isNotEmpty ? custom : status.name),
+      _statusOf(presence).name,
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
-      style: style.copyWith(color: colors[NeriToken.textPlaceholder]),
+      style: placeholder,
     );
   }
 }
