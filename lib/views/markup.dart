@@ -12,30 +12,38 @@ import 'package:nerimobile/views/avatar.dart';
 import 'package:nerimobile/views/chat/message/emoji/custom_emoji.dart';
 import 'package:nerimobile/views/chat/message/emoji/twemoji.dart';
 
-TextSpan transformCustomTextSpan(
-  Entity entity,
-  String fullText,
-  Message? message,
-  Map<String, Channel> channels,
-) {
+class MarkupRenderContext {
+  MarkupRenderContext({
+    required this.text,
+    required this.channels,
+    this.message,
+  });
+
+  final String text;
+  final Map<String, Channel> channels;
+  final Message? message;
+
+  String slice(Span span) => text.substring(span.start, span.end);
+}
+
+TextSpan transformCustomTextSpan(Entity entity, MarkupRenderContext ctx) {
   final String customType = entity.params["type"] ?? "";
-  final String content = fullText.substring(
-    entity.innerSpan.start,
-    entity.innerSpan.end,
-  );
+  final String content = ctx.slice(entity.innerSpan);
 
   // debugPrint('$customType $content');
 
   switch (customType) {
     case "#":
-      final channel = channels[content];
+      final channel = ctx.channels[content];
 
       if (channel != null && channel.name != null) {
         return channelMention(channel);
       }
 
     case "@":
-      final user = message?.mentions.where((u) => u.id == content).firstOrNull;
+      final user = ctx.message?.mentions
+          .where((u) => u.id == content)
+          .firstOrNull;
 
       if (user != null) {
         return userMention(user);
@@ -121,19 +129,11 @@ TextSpan channelMention(Channel channel) {
   );
 }
 
-TextSpan buildTextSpan(
-  Entity entity,
-  String fullText,
-  Message? message,
-  Map<String, Channel> channels,
-) {
-  final String content = fullText.substring(
-    entity.innerSpan.start,
-    entity.innerSpan.end,
-  );
+TextSpan buildTextSpan(Entity entity, MarkupRenderContext ctx) {
+  final String content = ctx.slice(entity.innerSpan);
 
   List<InlineSpan> children = entity.entities
-      .map((e) => buildTextSpan(e, fullText, message, channels))
+      .map((e) => buildTextSpan(e, ctx))
       .toList();
 
   switch (entity.type) {
@@ -211,18 +211,13 @@ TextSpan buildTextSpan(
         ],
       );
     case "custom":
-      return transformCustomTextSpan(entity, fullText, message, channels);
+      return transformCustomTextSpan(entity, ctx);
     case "emoji":
       return twemoji(content);
     case "emoji_name":
       final unicode = emojiShortcodes[content];
       if (unicode == null) {
-        return TextSpan(
-          text: fullText.substring(
-            entity.outerSpan.start,
-            entity.outerSpan.end,
-          ),
-        );
+        return TextSpan(text: ctx.slice(entity.outerSpan));
       }
       return twemoji(unicode);
     case "text":
@@ -249,9 +244,11 @@ class MarkupView extends ConsumerWidget {
     return Text.rich(
       buildTextSpan(
         fullEntityTree,
-        rawText ?? '',
-        message,
-        ref.watch(channelsProvider),
+        MarkupRenderContext(
+          text: rawText ?? '',
+          channels: ref.watch(channelsProvider),
+          message: message,
+        ),
       ),
     );
   }
