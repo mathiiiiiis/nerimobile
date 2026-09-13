@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:nerimobile/db/cache_sync.dart';
 
 import 'package:nerimobile/stores/connection/connection_store.dart';
 import 'package:nerimobile/theme/core/theme_data.dart';
@@ -16,6 +17,7 @@ class MainApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     ref.watch(connectionProvider);
+    ref.watch(cacheSyncProvider);
 
     final theme = buildNeriTheme(spec: presetById(defaultPresetId));
 
