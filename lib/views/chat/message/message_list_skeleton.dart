@@ -4,7 +4,7 @@ import 'package:nerimobile/theme/core/theme_data.dart';
 import 'package:nerimobile/theme/sizing/dimens.dart';
 import 'package:nerimobile/theme/sizing/radius.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
-import 'package:nerimobile/views/skeleton.dart';
+import 'package:nerimobile/views/skeleton/skeleton.dart';
 
 const _groups = 5;
 const _nameWidth = 96.0;
