@@ -3,9 +3,9 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:nerimobile/stores/auth/auth_store.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
+import 'package:nerimobile/stores/auth/auth_store.dart';
 import 'package:nerimobile/services/socket_events.dart';
 import 'package:nerimobile/stores/connection/connection_store.dart';
 
