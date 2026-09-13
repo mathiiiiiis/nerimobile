@@ -109,4 +109,5 @@ final Map<NeriToken, TokenDerivation> _derivations = {
   NeriToken.unreadDot: (resolve) => resolve(NeriToken.text),
   NeriToken.mentionBadge: (resolve) => resolve(NeriToken.alert),
   NeriToken.avatarPlaceholder: (resolve) => resolve(NeriToken.primaryDark),
+  NeriToken.skeleton: (resolve) => dim(resolve(NeriToken.text), 0.07),
 };

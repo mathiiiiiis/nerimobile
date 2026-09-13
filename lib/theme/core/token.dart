@@ -88,7 +88,8 @@ enum NeriToken {
   focusRing(ThemeCategory.state),
   unreadDot(ThemeCategory.state),
   mentionBadge(ThemeCategory.state),
-  avatarPlaceholder(ThemeCategory.state);
+  avatarPlaceholder(ThemeCategory.state),
+  skeleton(ThemeCategory.state);
 
   const NeriToken(this.category);
 

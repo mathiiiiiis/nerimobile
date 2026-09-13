@@ -14,6 +14,7 @@ import 'package:nerimobile/stores/window/window_focus_store.dart';
 import 'package:nerimobile/theme/core/theme_data.dart';
 import 'package:nerimobile/theme/sizing/dimens.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
+import 'package:nerimobile/views/chat/message/message_list_skeleton.dart';
 import 'package:nerimobile/views/chat/message/message_row.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
@@ -188,6 +189,8 @@ class MessageListState extends ConsumerState<MessageList> {
     final sizing = context.neriSize;
     final channel = ref.watch(messagesProvider(widget.channelId));
     final messages = channel.messages;
+
+    if (!channel.loaded && messages.isEmpty) return const MessageListSkeleton();
 
     return ScrollablePositionedList.builder(
       itemScrollController: _scroll,

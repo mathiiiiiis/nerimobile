@@ -1,3 +1,4 @@
+import 'package:nerimobile/db/cache_hydration.dart';
 import 'package:nerimobile/theme/sizing/border.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -15,6 +16,7 @@ import 'package:nerimobile/theme/sizing/radius.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/theme/typography/text_styles.dart';
 import 'package:nerimobile/views/avatar.dart';
+import 'package:nerimobile/views/dashboard/widget/dm_list_skeleton.dart';
 import 'package:nerimobile/views/presence/presence_line.dart';
 import 'package:nerimobile/views/shell/widgets/scroll_fade.dart';
 
@@ -26,6 +28,8 @@ class DmListPane extends ConsumerWidget {
     final colors = context.neri;
     final sizing = context.neriSize;
     final inbox = ref.watch(sortedInboxProvider);
+    final unknown =
+        inbox.isEmpty && ref.watch(cacheHydrationProvider).isLoading;
     final framed = NeriWindow.of(context).isDualPane;
     final surface = framed
         ? colors[NeriToken.background]
@@ -47,13 +51,15 @@ class DmListPane extends ConsumerWidget {
         Expanded(
           child: ScrollFade(
             color: surface,
-            child: ListView.builder(
-              padding: EdgeInsets.only(
-                bottom: sizing.dimen(NeriDimen.fadeHeight),
-              ),
-              itemCount: inbox.length,
-              itemBuilder: (context, index) => DmRow(inbox: inbox[index]),
-            ),
+            child: unknown
+                ? const DmListSkeleton()
+                : ListView.builder(
+                    padding: EdgeInsets.only(
+                      bottom: sizing.dimen(NeriDimen.fadeHeight),
+                    ),
+                    itemCount: inbox.length,
+                    itemBuilder: (context, index) => DmRow(inbox: inbox[index]),
+                  ),
           ),
         ),
       ],
