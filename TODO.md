@@ -25,8 +25,8 @@
   - [ ] Writing
   - [ ] `ChannelHeader` for not just DM
 - [ ] YouTube Embed:
-  - [ ] Hyprlink Title (stripped tracking)
-  - [ ] Cover card: thumbnail, play button (`youtube_explore_dart` maybe?)
+  - [ ] Hyperlink Title (stripped tracking)
+  - [ ] Cover card: thumbnail, play button (`youtube_explode_dart` maybe?)
 
 ## Markup
 
