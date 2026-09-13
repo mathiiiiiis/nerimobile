@@ -10,6 +10,7 @@ import 'package:nerimobile/services/socket_events.dart';
 import 'package:nerimobile/stores/connection/connection_store.dart';
 
 const _maxBackoff = Duration(seconds: 30);
+const _defaultSilence = Duration(seconds: 45);
 const _attemptsBeforeError = 3;
 const _unreachable = "Couldn't connect"; //TODO: add l10n
 
@@ -22,6 +23,8 @@ class SocketService {
 
   WebSocketChannel? _channel;
   Timer? _retry;
+  Timer? _silence;
+  Duration _silenceLimit = _defaultSilence;
   int _attempts = 0;
   bool _dropped = false;
   bool _hasConnected = false;
@@ -44,6 +47,8 @@ class SocketService {
     );
 
     _channel = channel;
+    _silenceLimit = _defaultSilence;
+    _heard();
 
     //handshake failured dont reach the stream
     channel.ready.catchError((Object _) => _onDisconnect());
@@ -56,7 +61,10 @@ class SocketService {
   }
 
   void _onEvent(dynamic raw) {
+    _heard();
+
     if (raw[0] == '0') {
+      _silenceLimit = _silenceFrom(raw.substring(1));
       _channel?.sink.add("40");
       return;
     }
@@ -76,6 +84,22 @@ class SocketService {
     if (raw[0] == "4" && raw[1] == "2") {
       final event = jsonDecode(raw.substring(2)) as List<dynamic>;
       _handle(event[0] as String, event[1]);
+    }
+  }
+
+  void _heard() {
+    _silence?.cancel();
+    _silence = Timer(_silenceLimit, _onDisconnect);
+  }
+
+  Duration _silenceFrom(String handshake) {
+    try {
+      final data = jsonDecode(handshake) as Map<String, dynamic>;
+      final interval = data['pingInterval'] as int;
+      final timeout = data['pingTimeout'] as int;
+      return Duration(milliseconds: interval + timeout);
+    } catch (_) {
+      return _defaultSilence;
     }
   }
 
@@ -117,6 +141,7 @@ class SocketService {
     if (_closed || _dropped) return;
 
     _dropped = true;
+    _silence?.cancel();
     _channel?.sink.close();
     _channel = null;
     _attempts += 1;
@@ -133,6 +158,7 @@ class SocketService {
   void dispose() {
     _closed = true;
     _retry?.cancel();
+    _silence?.cancel();
     _channel?.sink.close();
   }
 }
