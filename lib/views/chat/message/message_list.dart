@@ -182,6 +182,11 @@ class MessageListState extends ConsumerState<MessageList> {
     ref.listen(windowFocusProvider, (_, focused) {
       if (focused) _dismiss();
     });
+    ref.listen(connectionProvider, (previous, next) {
+      if (next is Authenticated && previous is! Authenticated) {
+        ref.read(messagesProvider(widget.channelId).notifier).catchUp();
+      }
+    });
     ref.listen(messagesProvider(widget.channelId), (previous, next) {
       if (next.messages.length != previous?.messages.length) _dismiss();
     });
