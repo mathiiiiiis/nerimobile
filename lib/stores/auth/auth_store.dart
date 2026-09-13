@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:nerimobile/db/database.dart';
 import 'package:nerimobile/utils/secure_storage.dart';
 
 final authProvider = AsyncNotifierProvider<AuthNotifier, String?>(
@@ -16,6 +17,7 @@ class AuthNotifier extends AsyncNotifier<String?> {
 
   Future<void> signOut() async {
     await deleteToken();
+    await ref.read(databaseProvider).wipe();
     state = const AsyncData(null);
   }
 }

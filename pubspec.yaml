@@ -9,6 +9,7 @@ environment:
 dependencies:
   cached_network_image: ^3.4.1
   dio: ^5.9.2
+  drift: ^2.35.0
   flutter:
     sdk: flutter
   flutter_cache_manager: ^3.4.2
@@ -20,6 +21,8 @@ dependencies:
   media_kit: ^1.2.6
   media_kit_libs_video: ^1.0.7
   media_kit_video: ^2.0.1
+  path: ^1.9.1
+  path_provider: ^2.1.6
   scrollable_positioned_list: ^0.3.8
   web_socket_channel: ^3.0.3
 
@@ -27,6 +30,8 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  drift_dev: ^2.35.0
+  build_runner: ^2.16.1
 
 flutter:
   uses-material-design: true
