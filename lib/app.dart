@@ -19,7 +19,7 @@ class MainApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     ref.watch(connectionProvider);
     ref.watch(cacheSyncProvider);
-    ref.watch(chacheHydrationProvider);
+    ref.watch(cacheHydrationProvider);
 
     final theme = buildNeriTheme(spec: presetById(defaultPresetId));
 

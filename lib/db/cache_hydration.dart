@@ -10,7 +10,7 @@ import 'package:nerimobile/stores/inbox/inbox_store.dart';
 import 'package:nerimobile/stores/user/user_store.dart';
 
 //hydrates dms before socket connects
-final chacheHydrationProvider = FutureProvider<void>((ref) async {
+final cacheHydrationProvider = FutureProvider<void>((ref) async {
   final token = await ref.watch(authProvider.future);
   if (token == null) return;
 
