@@ -2,10 +2,11 @@
 
 ## Bugs
 
-- [ ] Connection drops some time after switching apps
-- [ ] Reconnect gets stuck on `Couldn't connect` until app is backgrounded
+- [x] Connection drops some time after switching apps
+- [x] Reconnect gets stuck on `Couldn't connect` until app is backgrounded
       and foregrounded a few times
-- [ ] Messages sent while away do not appear after a reconnect
+- [x] Messages sent while away do not appear after a reconnect
+- [ ] After a reconnect a deleted or edited message is never learned
 - [ ] Server channel mention counts undercount, `isMentioned` misses `[@:e]`,
       role mentions and reply mentions
 - [ ] Scroll to message does not paginate to a target that is not loaded yet
