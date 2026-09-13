@@ -7,6 +7,8 @@
       and foregrounded a few times
 - [x] Messages sent while away do not appear after a reconnect
 - [x] After a reconnect a deleted or edited message is never learned
+- [ ] A channel opened while offline fails its initial load and nothing retries,
+      so it sits on the skeleton until the user navigates away and back
 - [ ] Server channel mention counts undercount, `isMentioned` misses `[@:e]`,
       role mentions and reply mentions
 - [ ] Scroll to message does not paginate to a target that is not loaded yet
