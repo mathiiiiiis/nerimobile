@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:nerimobile/db/cache_sync.dart';
 
+import 'package:nerimobile/db/cache_hydration.dart';
+import 'package:nerimobile/db/cache_sync.dart';
 import 'package:nerimobile/stores/connection/connection_store.dart';
 import 'package:nerimobile/theme/core/theme_data.dart';
 import 'package:nerimobile/theme/presets/presets.dart';
@@ -18,6 +19,7 @@ class MainApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     ref.watch(connectionProvider);
     ref.watch(cacheSyncProvider);
+    ref.watch(chacheHydrationProvider);
 
     final theme = buildNeriTheme(spec: presetById(defaultPresetId));
 
