@@ -15,6 +15,7 @@
 ## Features
 
 - [ ] DM list caching and skeleton loading, plus pattern for every new list
+- [ ] Persist messages so they don't start empty on cold-start
 - [ ] Context menu(s)
 - [ ] Typing Indicator
 - [ ] Swipe to reply (short fast swipe), swipe to edit (longer swipe)
