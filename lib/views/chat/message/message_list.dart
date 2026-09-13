@@ -183,8 +183,8 @@ class MessageListState extends ConsumerState<MessageList> {
       if (focused) _dismiss();
     });
     ref.listen(connectionProvider, (previous, next) {
-      if (next is Authenticated && previous is! Authenticated) {
-        ref.read(messagesProvider(widget.channelId).notifier).catchUp();
+      if (next is Authenticated && next.reconnected) {
+        ref.read(messagesProvider(widget.channelId).notifier).reconcile();
       }
     });
     ref.listen(messagesProvider(widget.channelId), (previous, next) {

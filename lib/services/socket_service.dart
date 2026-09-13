@@ -28,6 +28,7 @@ class SocketService {
   int _attempts = 0;
   bool _dropped = false;
   bool _hasConnected = false;
+  bool _hasAuthenticated = false;
   bool _closed = false;
 
   void connect() {
@@ -106,7 +107,8 @@ class SocketService {
   void _handle(String event, dynamic payload) {
     switch (event) {
       case 'user:authenticated':
-        onState(const Authenticated());
+        onState(Authenticated(reconnected: _hasAuthenticated));
+        _hasAuthenticated = true;
       case 'user:auth_queue_position':
         onState(Authenticating(queuePosition: payload['pos'] as int?));
       case 'user:authenticate_error':

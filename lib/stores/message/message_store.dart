@@ -107,6 +107,39 @@ class MessagesNotifier extends Notifier<ChannelMessages> {
     }
   }
 
+  Future<void> reconcile() async {
+    final oldest = state.oldest;
+    if (!state.loaded || oldest == null) return;
+
+    final floor = BigInt.parse(oldest.id);
+    final server = <Message>[];
+    String? cursor;
+
+    while (true) {
+      final batch = await _fetch(limit: messagePageSize, before: cursor);
+      if (batch == null) return;
+
+      server.addAll(batch);
+      if (batch.length < messagePageSize) break;
+
+      cursor = _sorted(batch).first.id;
+      if (BigInt.parse(cursor) <= floor) break;
+    }
+
+    state = state.copyWith(messages: _reconciled(server, floor));
+  }
+
+  List<Message> _reconciled(List<Message> server, BigInt floor) {
+    final local = {...state.pending, ...state.failed};
+
+    return _sorted([
+      for (final message in server)
+        if (BigInt.parse(message.id) >= floor) message,
+      for (final message in state.messages)
+        if (local.contains(message.id)) message,
+    ]);
+  }
+
   Future<void> send(String content) async {
     final author = ref.read(currentUserProvider);
     if (author == null) return;

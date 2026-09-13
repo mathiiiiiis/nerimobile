@@ -25,7 +25,9 @@ final class Authenticating extends ConnectionState {
 }
 
 final class Authenticated extends ConnectionState {
-  const Authenticated();
+  const Authenticated({this.reconnected = false});
+
+  final bool reconnected;
 }
 
 final class ConnectionFailed extends ConnectionState {
