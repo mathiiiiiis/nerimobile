@@ -1,3 +1,5 @@
+import 'dart:ui' as ui;
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,13 +12,25 @@ import 'package:nerimobile/stores/channel/channel_store.dart';
 import 'package:nerimobile/theme/core/theme_data.dart';
 import 'package:nerimobile/theme/core/token.dart';
 import 'package:nerimobile/theme/sizing/dimens.dart';
+import 'package:nerimobile/utils/colors.dart';
 import 'package:nerimobile/utils/emoji_shortcodes.dart';
 import 'package:nerimobile/utils/nevula.dart';
 import 'package:nerimobile/views/avatar.dart';
 import 'package:nerimobile/views/chat/message/emoji/custom_emoji.dart';
 import 'package:nerimobile/views/chat/message/emoji/emoji_size.dart';
 import 'package:nerimobile/views/chat/message/emoji/twemoji.dart';
+import 'package:nerimobile/views/markup/gradient.dart';
+import 'package:nerimobile/views/markup/mention_chip.dart';
 import 'package:nerimobile/views/markup/spoiler.dart';
+
+const _headingSpacer = 20.0;
+
+class PlaceholderSlot {
+  const PlaceholderSlot({this.size, required this.alignment});
+
+  final Size? size;
+  final PlaceholderAlignment alignment;
+}
 
 class MarkupRenderContext {
   MarkupRenderContext({
@@ -25,8 +39,12 @@ class MarkupRenderContext {
     required this.spoilers,
     required this.spoilerBackground,
     required this.spoilerPressedBackground,
+    required this.baseStyle,
+    required this.textScaler,
+    required this.textDirection,
     this.message,
     this.inline = false,
+    this.shaders,
   });
 
   final String text;
@@ -34,8 +52,14 @@ class MarkupRenderContext {
   final SpoilerController spoilers;
   final Color spoilerBackground;
   final Color spoilerPressedBackground;
+  final TextStyle baseStyle;
+  final TextScaler textScaler;
+  final TextDirection textDirection;
   final Message? message;
   final bool inline;
+  final List<ui.Shader>? shaders;
+  final placeholders = <PlaceholderSlot>[];
+  int gradientCount = 0;
   int textCount = 0;
   int emojiCount = 0;
   int spoilerCount = 0;
@@ -87,6 +111,39 @@ class MarkupRenderContext {
     if (emojiSizeOverride != null) styledEmoji = true;
   }
 
+  //emoji size settles after spans are built
+  InlineSpan emojiSpan(Widget child) => widgetSpan(
+    cover(child),
+    size: emojiSizeOverride == null ? null : Size.square(emojiSizeOverride!),
+    alignment: PlaceholderAlignment.middle,
+  );
+
+  //tracks dimens for measurement pass
+  InlineSpan widgetSpan(
+    Widget child, {
+    Size? size,
+    PlaceholderAlignment alignment = PlaceholderAlignment.bottom,
+  }) {
+    placeholders.add(PlaceholderSlot(size: size, alignment: alignment));
+    return WidgetSpan(alignment: alignment, child: child);
+  }
+
+  List<PlaceholderDimensions> placeholderDimensions(double emojiSize) => [
+    for (final slot in placeholders)
+      PlaceholderDimensions(
+        size: slot.size ?? Size.square(emojiSize),
+        alignment: slot.alignment,
+      ),
+  ];
+
+  Size chipSize(String label, double leadingSize) => mentionChipSize(
+    label: label,
+    leadingSize: leadingSize,
+    style: baseStyle,
+    textScaler: textScaler,
+    textDirection: textDirection,
+  );
+
   //keeps emoji size in sync with resized text
   Widget scaleEmoji(Widget child) {
     final size = emojiSizeOverride;
@@ -121,6 +178,24 @@ TextSpan transformCustomTextSpan(Entity entity, MarkupRenderContext ctx) {
         return userMention(user, ctx);
       }
 
+    case "gradient":
+      final expr = parseColorExpr(content);
+      if (expr == null) break;
+
+      final index = ctx.gradientCount++;
+      final shader = ctx.shaders?.elementAtOrNull(index);
+
+      return GradientSpan(
+        colors: expr.colors,
+        text: ctx.countText(expr.text),
+        style: ctx.hidden
+            ? const TextStyle(color: Colors.transparent)
+            : shader == null
+            ? null
+            : TextStyle(foreground: Paint()..shader = shader),
+        recognizer: ctx.spoilerTap,
+      );
+
     case "ce":
     case "ace":
     case "wace":
@@ -143,11 +218,8 @@ TextSpan customEmoji(
 ) {
   return TextSpan(
     children: [
-      WidgetSpan(
-        alignment: PlaceholderAlignment.middle,
-        child: ctx.cover(
-          ctx.scaleEmoji(CustomEmoji(id: id, name: name, kind: kind)),
-        ),
+      ctx.emojiSpan(
+        ctx.scaleEmoji(CustomEmoji(id: id, name: name, kind: kind)),
       ),
     ],
   );
@@ -155,36 +227,21 @@ TextSpan customEmoji(
 
 TextSpan twemoji(String unicode, MarkupRenderContext ctx) {
   return TextSpan(
-    children: [
-      WidgetSpan(
-        alignment: PlaceholderAlignment.middle,
-        child: ctx.cover(ctx.scaleEmoji(Twemoji(unicode: unicode))),
-      ),
-    ],
+    children: [ctx.emojiSpan(ctx.scaleEmoji(Twemoji(unicode: unicode)))],
   );
 }
 
 TextSpan userMention(User user, MarkupRenderContext ctx) {
   return TextSpan(
     children: [
-      WidgetSpan(
-        child: ctx.cover(
-          Container(
-            padding: const EdgeInsets.only(left: 4.0, right: 4.0),
-            decoration: BoxDecoration(
-              color: const Color.fromARGB(28, 255, 255, 255),
-              borderRadius: BorderRadius.circular(99),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              spacing: 4,
-              children: [
-                Avatar(size: 16, user: user),
-                Text(user.username),
-              ],
-            ),
+      ctx.widgetSpan(
+        ctx.cover(
+          MentionChip(
+            leading: Avatar(size: mentionLeadingSize, user: user),
+            label: user.username,
           ),
         ),
+        size: ctx.chipSize(user.username, mentionLeadingSize),
       ),
     ],
   );
@@ -193,24 +250,14 @@ TextSpan userMention(User user, MarkupRenderContext ctx) {
 TextSpan channelMention(Channel channel, MarkupRenderContext ctx) {
   return TextSpan(
     children: [
-      WidgetSpan(
-        child: ctx.cover(
-          Container(
-            padding: const EdgeInsets.only(left: 4.0, right: 4.0),
-            decoration: BoxDecoration(
-              color: const Color.fromARGB(28, 255, 255, 255),
-              borderRadius: BorderRadius.circular(99),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              spacing: 4,
-              children: [
-                Icon(Symbols.tag_rounded, size: 14),
-                Text(channel.name!),
-              ],
-            ),
+      ctx.widgetSpan(
+        ctx.cover(
+          MentionChip(
+            leading: Icon(Symbols.tag_rounded, size: mentionIconSize),
+            label: channel.name!,
           ),
         ),
+        size: ctx.chipSize(channel.name!, mentionIconSize),
       ),
     ],
   );
@@ -330,7 +377,10 @@ TextSpan buildTextSpan(Entity entity, MarkupRenderContext ctx) {
 
       return TextSpan(
         children: [
-          const WidgetSpan(child: SizedBox(height: 20)),
+          ctx.widgetSpan(
+            const SizedBox(height: _headingSpacer),
+            size: const Size(0, _headingSpacer),
+          ),
           TextSpan(
             children: headingSpans,
             style: TextStyle(fontSize: fontSize, fontWeight: FontWeight.w600),
@@ -400,33 +450,69 @@ class _MarkupViewState extends ConsumerState<MarkupView> {
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    Entity rootEntity = parseMarkup(widget.rawText ?? '');
-
-    Entity fullEntityTree = addTextSpans(rootEntity);
-
-    final ctx = MarkupRenderContext(
+  MarkupRenderContext _context(
+    BuildContext context, {
+    List<ui.Shader>? shaders,
+  }) {
+    return MarkupRenderContext(
       text: widget.rawText ?? '',
-      channels: ref.watch(channelsProvider),
+      channels: ref.read(channelsProvider),
       spoilers: _spoilers,
       spoilerBackground: context.neri[NeriToken.markupSpoilerBackground],
       spoilerPressedBackground:
           context.neri[NeriToken.markupSpoilerBackgroundHover],
+      baseStyle: DefaultTextStyle.of(context).style,
+      textScaler: MediaQuery.textScalerOf(context),
+      textDirection: Directionality.of(context),
       message: widget.message,
       inline: widget.inline,
+      shaders: shaders,
     );
-    final span = buildTextSpan(fullEntityTree, ctx);
+  }
 
-    return EmojiSizeScope(
-      size: ctx.largeEmoji
-          ? context.neriSize.dimen(NeriDimen.emojiLg)
-          : emojiSizeFor(context),
-      child: Text.rich(
-        span,
-        maxLines: widget.maxLines,
-        overflow: widget.overflow ?? TextOverflow.clip,
-      ),
+  Widget _text(InlineSpan span, double emojiSize) => EmojiSizeScope(
+    size: emojiSize,
+    child: Text.rich(
+      span,
+      maxLines: widget.maxLines,
+      overflow: widget.overflow ?? TextOverflow.clip,
+    ),
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    ref.watch(channelsProvider);
+
+    final tree = addTextSpans(parseMarkup(widget.rawText ?? ''));
+    final ctx = _context(context);
+    final span = buildTextSpan(tree, ctx);
+    final emojiSize = ctx.largeEmoji
+        ? context.neriSize.dimen(NeriDimen.emojiLg)
+        : emojiSizeFor(context);
+
+    if (ctx.gradientCount == 0) return _text(span, emojiSize);
+
+    //shaded pass is needed to resolve gradient bounds
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final painter =
+            TextPainter(
+                text: TextSpan(style: ctx.baseStyle, children: [span]),
+                textDirection: ctx.textDirection,
+                textScaler: ctx.textScaler,
+                maxLines: widget.maxLines,
+                ellipsis: widget.overflow == TextOverflow.ellipsis ? '…' : null,
+              )
+              ..setPlaceholderDimensions(ctx.placeholderDimensions(emojiSize))
+              ..layout(maxWidth: constraints.maxWidth);
+
+        final shaders = gradientShaders(span, painter);
+        painter.dispose();
+
+        final shaded = buildTextSpan(tree, _context(context, shaders: shaders));
+
+        return RepaintBoundary(child: _text(shaded, emojiSize));
+      },
     );
   }
 }
