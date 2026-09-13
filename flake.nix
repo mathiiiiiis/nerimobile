@@ -40,7 +40,7 @@
     {
       devShells.${system}.default = pkgs.mkShell {
         buildInputs = [
-          pkgs.flutter341
+          pkgs.flutter347
           pkgs.jdk21
           androidSdk
 
