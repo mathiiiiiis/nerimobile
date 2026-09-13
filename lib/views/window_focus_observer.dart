@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:nerimobile/stores/connection/connection_store.dart';
 
 import 'package:nerimobile/stores/window/window_focus_store.dart';
 
@@ -27,9 +28,10 @@ class _FocusObserverState extends ConsumerState<FocusObserver>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    ref
-        .read(windowFocusProvider.notifier)
-        .setFocused(state == AppLifecycleState.resumed);
+    final resumed = state == AppLifecycleState.resumed;
+
+    ref.read(windowFocusProvider.notifier).setFocused(resumed);
+    if (resumed) ref.read(connectionProvider.notifier).resume();
   }
 
   @override

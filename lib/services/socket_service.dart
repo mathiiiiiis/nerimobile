@@ -30,6 +30,7 @@ class SocketService {
   void connect() {
     if (_closed) return;
 
+    _retry?.cancel();
     _dropped = false;
     onState(
       Connecting(
@@ -101,6 +102,13 @@ class SocketService {
     _ref.read(authProvider.notifier).signOut();
   }
 
+  void resume() {
+    if (_closed || _channel != null) return;
+
+    _attempts = 0;
+    connect();
+  }
+
   void send(String event, Map<String, dynamic> payload) {
     _channel?.sink.add("42${jsonEncode([event, payload])}");
   }
@@ -109,6 +117,7 @@ class SocketService {
     if (_closed || _dropped) return;
 
     _dropped = true;
+    _channel?.sink.close();
     _channel = null;
     _attempts += 1;
     _retry = Timer(_backoff(), connect);

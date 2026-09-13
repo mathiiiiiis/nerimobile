@@ -64,4 +64,6 @@ class ConnectionNotifier extends Notifier<ConnectionState> {
     if (state is! Authenticated) return;
     _socket?.send(event, payload);
   }
+
+  void resume() => _socket?.resume();
 }
