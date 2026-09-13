@@ -3,7 +3,8 @@
 part of 'database.dart';
 
 // ignore_for_file: type=lint
-class $ChannelsTable extends Channels with TableInfo<$ChannelsTable, Channel> {
+class $ChannelsTable extends Channels
+    with TableInfo<$ChannelsTable, ChannelRow> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -104,7 +105,7 @@ class $ChannelsTable extends Channels with TableInfo<$ChannelsTable, Channel> {
   static const String $name = 'channels';
   @override
   VerificationContext validateIntegrity(
-    Insertable<Channel> instance, {
+    Insertable<ChannelRow> instance, {
     bool isInserting = false,
   }) {
     final context = VerificationContext();
@@ -167,9 +168,9 @@ class $ChannelsTable extends Channels with TableInfo<$ChannelsTable, Channel> {
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  Channel map(Map<String, dynamic> data, {String? tablePrefix}) {
+  ChannelRow map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return Channel(
+    return ChannelRow(
       id: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}id'],
@@ -211,7 +212,7 @@ class $ChannelsTable extends Channels with TableInfo<$ChannelsTable, Channel> {
   }
 }
 
-class Channel extends DataClass implements Insertable<Channel> {
+class ChannelRow extends DataClass implements Insertable<ChannelRow> {
   final String id;
   final int type;
   final String? name;
@@ -220,7 +221,7 @@ class Channel extends DataClass implements Insertable<Channel> {
   final String? icon;
   final String? categoryId;
   final int? lastMessagedAt;
-  const Channel({
+  const ChannelRow({
     required this.id,
     required this.type,
     this.name,
@@ -277,12 +278,12 @@ class Channel extends DataClass implements Insertable<Channel> {
     );
   }
 
-  factory Channel.fromJson(
+  factory ChannelRow.fromJson(
     Map<String, dynamic> json, {
     ValueSerializer? serializer,
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return Channel(
+    return ChannelRow(
       id: serializer.fromJson<String>(json['id']),
       type: serializer.fromJson<int>(json['type']),
       name: serializer.fromJson<String?>(json['name']),
@@ -308,7 +309,7 @@ class Channel extends DataClass implements Insertable<Channel> {
     };
   }
 
-  Channel copyWith({
+  ChannelRow copyWith({
     String? id,
     int? type,
     Value<String?> name = const Value.absent(),
@@ -317,7 +318,7 @@ class Channel extends DataClass implements Insertable<Channel> {
     Value<String?> icon = const Value.absent(),
     Value<String?> categoryId = const Value.absent(),
     Value<int?> lastMessagedAt = const Value.absent(),
-  }) => Channel(
+  }) => ChannelRow(
     id: id ?? this.id,
     type: type ?? this.type,
     name: name.present ? name.value : this.name,
@@ -329,8 +330,8 @@ class Channel extends DataClass implements Insertable<Channel> {
         ? lastMessagedAt.value
         : this.lastMessagedAt,
   );
-  Channel copyWithCompanion(ChannelsCompanion data) {
-    return Channel(
+  ChannelRow copyWithCompanion(ChannelsCompanion data) {
+    return ChannelRow(
       id: data.id.present ? data.id.value : this.id,
       type: data.type.present ? data.type.value : this.type,
       name: data.name.present ? data.name.value : this.name,
@@ -348,7 +349,7 @@ class Channel extends DataClass implements Insertable<Channel> {
 
   @override
   String toString() {
-    return (StringBuffer('Channel(')
+    return (StringBuffer('ChannelRow(')
           ..write('id: $id, ')
           ..write('type: $type, ')
           ..write('name: $name, ')
@@ -375,7 +376,7 @@ class Channel extends DataClass implements Insertable<Channel> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is Channel &&
+      (other is ChannelRow &&
           other.id == this.id &&
           other.type == this.type &&
           other.name == this.name &&
@@ -386,7 +387,7 @@ class Channel extends DataClass implements Insertable<Channel> {
           other.lastMessagedAt == this.lastMessagedAt);
 }
 
-class ChannelsCompanion extends UpdateCompanion<Channel> {
+class ChannelsCompanion extends UpdateCompanion<ChannelRow> {
   final Value<String> id;
   final Value<int> type;
   final Value<String?> name;
@@ -419,7 +420,7 @@ class ChannelsCompanion extends UpdateCompanion<Channel> {
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        type = Value(type);
-  static Insertable<Channel> custom({
+  static Insertable<ChannelRow> custom({
     Expression<String>? id,
     Expression<int>? type,
     Expression<String>? name,
@@ -517,7 +518,7 @@ class ChannelsCompanion extends UpdateCompanion<Channel> {
   }
 }
 
-class $InboxesTable extends Inboxes with TableInfo<$InboxesTable, Inboxe> {
+class $InboxesTable extends Inboxes with TableInfo<$InboxesTable, InboxRow> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -590,7 +591,7 @@ class $InboxesTable extends Inboxes with TableInfo<$InboxesTable, Inboxe> {
   static const String $name = 'inboxes';
   @override
   VerificationContext validateIntegrity(
-    Insertable<Inboxe> instance, {
+    Insertable<InboxRow> instance, {
     bool isInserting = false,
   }) {
     final context = VerificationContext();
@@ -639,9 +640,9 @@ class $InboxesTable extends Inboxes with TableInfo<$InboxesTable, Inboxe> {
   @override
   Set<GeneratedColumn> get $primaryKey => {channelId};
   @override
-  Inboxe map(Map<String, dynamic> data, {String? tablePrefix}) {
+  InboxRow map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return Inboxe(
+    return InboxRow(
       id: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}id'],
@@ -671,13 +672,13 @@ class $InboxesTable extends Inboxes with TableInfo<$InboxesTable, Inboxe> {
   }
 }
 
-class Inboxe extends DataClass implements Insertable<Inboxe> {
+class InboxRow extends DataClass implements Insertable<InboxRow> {
   final String id;
   final String channelId;
   final String recipientId;
   final int? lastSeen;
   final int createdAt;
-  const Inboxe({
+  const InboxRow({
     required this.id,
     required this.channelId,
     required this.recipientId,
@@ -709,12 +710,12 @@ class Inboxe extends DataClass implements Insertable<Inboxe> {
     );
   }
 
-  factory Inboxe.fromJson(
+  factory InboxRow.fromJson(
     Map<String, dynamic> json, {
     ValueSerializer? serializer,
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return Inboxe(
+    return InboxRow(
       id: serializer.fromJson<String>(json['id']),
       channelId: serializer.fromJson<String>(json['channelId']),
       recipientId: serializer.fromJson<String>(json['recipientId']),
@@ -734,21 +735,21 @@ class Inboxe extends DataClass implements Insertable<Inboxe> {
     };
   }
 
-  Inboxe copyWith({
+  InboxRow copyWith({
     String? id,
     String? channelId,
     String? recipientId,
     Value<int?> lastSeen = const Value.absent(),
     int? createdAt,
-  }) => Inboxe(
+  }) => InboxRow(
     id: id ?? this.id,
     channelId: channelId ?? this.channelId,
     recipientId: recipientId ?? this.recipientId,
     lastSeen: lastSeen.present ? lastSeen.value : this.lastSeen,
     createdAt: createdAt ?? this.createdAt,
   );
-  Inboxe copyWithCompanion(InboxesCompanion data) {
-    return Inboxe(
+  InboxRow copyWithCompanion(InboxesCompanion data) {
+    return InboxRow(
       id: data.id.present ? data.id.value : this.id,
       channelId: data.channelId.present ? data.channelId.value : this.channelId,
       recipientId: data.recipientId.present
@@ -761,7 +762,7 @@ class Inboxe extends DataClass implements Insertable<Inboxe> {
 
   @override
   String toString() {
-    return (StringBuffer('Inboxe(')
+    return (StringBuffer('InboxRow(')
           ..write('id: $id, ')
           ..write('channelId: $channelId, ')
           ..write('recipientId: $recipientId, ')
@@ -777,7 +778,7 @@ class Inboxe extends DataClass implements Insertable<Inboxe> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is Inboxe &&
+      (other is InboxRow &&
           other.id == this.id &&
           other.channelId == this.channelId &&
           other.recipientId == this.recipientId &&
@@ -785,7 +786,7 @@ class Inboxe extends DataClass implements Insertable<Inboxe> {
           other.createdAt == this.createdAt);
 }
 
-class InboxesCompanion extends UpdateCompanion<Inboxe> {
+class InboxesCompanion extends UpdateCompanion<InboxRow> {
   final Value<String> id;
   final Value<String> channelId;
   final Value<String> recipientId;
@@ -811,7 +812,7 @@ class InboxesCompanion extends UpdateCompanion<Inboxe> {
        channelId = Value(channelId),
        recipientId = Value(recipientId),
        createdAt = Value(createdAt);
-  static Insertable<Inboxe> custom({
+  static Insertable<InboxRow> custom({
     Expression<String>? id,
     Expression<String>? channelId,
     Expression<String>? recipientId,
@@ -885,7 +886,7 @@ class InboxesCompanion extends UpdateCompanion<Inboxe> {
   }
 }
 
-class $UsersTable extends Users with TableInfo<$UsersTable, User> {
+class $UsersTable extends Users with TableInfo<$UsersTable, UserRow> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -939,7 +940,7 @@ class $UsersTable extends Users with TableInfo<$UsersTable, User> {
   static const String $name = 'users';
   @override
   VerificationContext validateIntegrity(
-    Insertable<User> instance, {
+    Insertable<UserRow> instance, {
     bool isInserting = false,
   }) {
     final context = VerificationContext();
@@ -977,9 +978,9 @@ class $UsersTable extends Users with TableInfo<$UsersTable, User> {
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  User map(Map<String, dynamic> data, {String? tablePrefix}) {
+  UserRow map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return User(
+    return UserRow(
       id: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}id'],
@@ -1005,12 +1006,12 @@ class $UsersTable extends Users with TableInfo<$UsersTable, User> {
   }
 }
 
-class User extends DataClass implements Insertable<User> {
+class UserRow extends DataClass implements Insertable<UserRow> {
   final String id;
   final String username;
   final String hexColor;
   final String? avatar;
-  const User({
+  const UserRow({
     required this.id,
     required this.username,
     required this.hexColor,
@@ -1039,12 +1040,12 @@ class User extends DataClass implements Insertable<User> {
     );
   }
 
-  factory User.fromJson(
+  factory UserRow.fromJson(
     Map<String, dynamic> json, {
     ValueSerializer? serializer,
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return User(
+    return UserRow(
       id: serializer.fromJson<String>(json['id']),
       username: serializer.fromJson<String>(json['username']),
       hexColor: serializer.fromJson<String>(json['hexColor']),
@@ -1062,19 +1063,19 @@ class User extends DataClass implements Insertable<User> {
     };
   }
 
-  User copyWith({
+  UserRow copyWith({
     String? id,
     String? username,
     String? hexColor,
     Value<String?> avatar = const Value.absent(),
-  }) => User(
+  }) => UserRow(
     id: id ?? this.id,
     username: username ?? this.username,
     hexColor: hexColor ?? this.hexColor,
     avatar: avatar.present ? avatar.value : this.avatar,
   );
-  User copyWithCompanion(UsersCompanion data) {
-    return User(
+  UserRow copyWithCompanion(UsersCompanion data) {
+    return UserRow(
       id: data.id.present ? data.id.value : this.id,
       username: data.username.present ? data.username.value : this.username,
       hexColor: data.hexColor.present ? data.hexColor.value : this.hexColor,
@@ -1084,7 +1085,7 @@ class User extends DataClass implements Insertable<User> {
 
   @override
   String toString() {
-    return (StringBuffer('User(')
+    return (StringBuffer('UserRow(')
           ..write('id: $id, ')
           ..write('username: $username, ')
           ..write('hexColor: $hexColor, ')
@@ -1098,14 +1099,14 @@ class User extends DataClass implements Insertable<User> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is User &&
+      (other is UserRow &&
           other.id == this.id &&
           other.username == this.username &&
           other.hexColor == this.hexColor &&
           other.avatar == this.avatar);
 }
 
-class UsersCompanion extends UpdateCompanion<User> {
+class UsersCompanion extends UpdateCompanion<UserRow> {
   final Value<String> id;
   final Value<String> username;
   final Value<String> hexColor;
@@ -1127,7 +1128,7 @@ class UsersCompanion extends UpdateCompanion<User> {
   }) : id = Value(id),
        username = Value(username),
        hexColor = Value(hexColor);
-  static Insertable<User> custom({
+  static Insertable<UserRow> custom({
     Expression<String>? id,
     Expression<String>? username,
     Expression<String>? hexColor,
@@ -1378,14 +1379,17 @@ class $$ChannelsTableTableManager
         RootTableManager<
           _$NeriDatabase,
           $ChannelsTable,
-          Channel,
+          ChannelRow,
           $$ChannelsTableFilterComposer,
           $$ChannelsTableOrderingComposer,
           $$ChannelsTableAnnotationComposer,
           $$ChannelsTableCreateCompanionBuilder,
           $$ChannelsTableUpdateCompanionBuilder,
-          (Channel, BaseReferences<_$NeriDatabase, $ChannelsTable, Channel>),
-          Channel,
+          (
+            ChannelRow,
+            BaseReferences<_$NeriDatabase, $ChannelsTable, ChannelRow>,
+          ),
+          ChannelRow,
           PrefetchHooks Function()
         > {
   $$ChannelsTableTableManager(_$NeriDatabase db, $ChannelsTable table)
@@ -1446,8 +1450,8 @@ class $$ChannelsTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable<$ChannelsTable, Channel>(table),
-                  BaseReferences<_$NeriDatabase, $ChannelsTable, Channel>(
+                  e.readTable<$ChannelsTable, ChannelRow>(table),
+                  BaseReferences<_$NeriDatabase, $ChannelsTable, ChannelRow>(
                     db,
                     table,
                     e,
@@ -1464,14 +1468,14 @@ typedef $$ChannelsTableProcessedTableManager =
     ProcessedTableManager<
       _$NeriDatabase,
       $ChannelsTable,
-      Channel,
+      ChannelRow,
       $$ChannelsTableFilterComposer,
       $$ChannelsTableOrderingComposer,
       $$ChannelsTableAnnotationComposer,
       $$ChannelsTableCreateCompanionBuilder,
       $$ChannelsTableUpdateCompanionBuilder,
-      (Channel, BaseReferences<_$NeriDatabase, $ChannelsTable, Channel>),
-      Channel,
+      (ChannelRow, BaseReferences<_$NeriDatabase, $ChannelsTable, ChannelRow>),
+      ChannelRow,
       PrefetchHooks Function()
     >;
 typedef $$InboxesTableCreateCompanionBuilder =
@@ -1595,14 +1599,14 @@ class $$InboxesTableTableManager
         RootTableManager<
           _$NeriDatabase,
           $InboxesTable,
-          Inboxe,
+          InboxRow,
           $$InboxesTableFilterComposer,
           $$InboxesTableOrderingComposer,
           $$InboxesTableAnnotationComposer,
           $$InboxesTableCreateCompanionBuilder,
           $$InboxesTableUpdateCompanionBuilder,
-          (Inboxe, BaseReferences<_$NeriDatabase, $InboxesTable, Inboxe>),
-          Inboxe,
+          (InboxRow, BaseReferences<_$NeriDatabase, $InboxesTable, InboxRow>),
+          InboxRow,
           PrefetchHooks Function()
         > {
   $$InboxesTableTableManager(_$NeriDatabase db, $InboxesTable table)
@@ -1651,8 +1655,8 @@ class $$InboxesTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable<$InboxesTable, Inboxe>(table),
-                  BaseReferences<_$NeriDatabase, $InboxesTable, Inboxe>(
+                  e.readTable<$InboxesTable, InboxRow>(table),
+                  BaseReferences<_$NeriDatabase, $InboxesTable, InboxRow>(
                     db,
                     table,
                     e,
@@ -1669,14 +1673,14 @@ typedef $$InboxesTableProcessedTableManager =
     ProcessedTableManager<
       _$NeriDatabase,
       $InboxesTable,
-      Inboxe,
+      InboxRow,
       $$InboxesTableFilterComposer,
       $$InboxesTableOrderingComposer,
       $$InboxesTableAnnotationComposer,
       $$InboxesTableCreateCompanionBuilder,
       $$InboxesTableUpdateCompanionBuilder,
-      (Inboxe, BaseReferences<_$NeriDatabase, $InboxesTable, Inboxe>),
-      Inboxe,
+      (InboxRow, BaseReferences<_$NeriDatabase, $InboxesTable, InboxRow>),
+      InboxRow,
       PrefetchHooks Function()
     >;
 typedef $$UsersTableCreateCompanionBuilder =
@@ -1782,14 +1786,14 @@ class $$UsersTableTableManager
         RootTableManager<
           _$NeriDatabase,
           $UsersTable,
-          User,
+          UserRow,
           $$UsersTableFilterComposer,
           $$UsersTableOrderingComposer,
           $$UsersTableAnnotationComposer,
           $$UsersTableCreateCompanionBuilder,
           $$UsersTableUpdateCompanionBuilder,
-          (User, BaseReferences<_$NeriDatabase, $UsersTable, User>),
-          User,
+          (UserRow, BaseReferences<_$NeriDatabase, $UsersTable, UserRow>),
+          UserRow,
           PrefetchHooks Function()
         > {
   $$UsersTableTableManager(_$NeriDatabase db, $UsersTable table)
@@ -1834,8 +1838,8 @@ class $$UsersTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable<$UsersTable, User>(table),
-                  BaseReferences<_$NeriDatabase, $UsersTable, User>(
+                  e.readTable<$UsersTable, UserRow>(table),
+                  BaseReferences<_$NeriDatabase, $UsersTable, UserRow>(
                     db,
                     table,
                     e,
@@ -1852,14 +1856,14 @@ typedef $$UsersTableProcessedTableManager =
     ProcessedTableManager<
       _$NeriDatabase,
       $UsersTable,
-      User,
+      UserRow,
       $$UsersTableFilterComposer,
       $$UsersTableOrderingComposer,
       $$UsersTableAnnotationComposer,
       $$UsersTableCreateCompanionBuilder,
       $$UsersTableUpdateCompanionBuilder,
-      (User, BaseReferences<_$NeriDatabase, $UsersTable, User>),
-      User,
+      (UserRow, BaseReferences<_$NeriDatabase, $UsersTable, UserRow>),
+      UserRow,
       PrefetchHooks Function()
     >;
 

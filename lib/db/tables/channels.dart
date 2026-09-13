@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 
+@DataClassName('ChannelRow')
 class Channels extends Table {
   TextColumn get id => text()();
   IntColumn get type => integer()();

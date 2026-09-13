@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 
+@DataClassName('InboxRow')
 class Inboxes extends Table {
   TextColumn get id => text()();
   TextColumn get channelId => text()();
