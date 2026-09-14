@@ -3,6 +3,267 @@
 part of 'database.dart';
 
 // ignore_for_file: type=lint
+class $AnnouncementsTable extends Announcements
+    with TableInfo<$AnnouncementsTable, AnnouncementRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $AnnouncementsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _payloadMeta = const VerificationMeta(
+    'payload',
+  );
+  @override
+  late final GeneratedColumn<String> payload = GeneratedColumn<String>(
+    'payload',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _positionMeta = const VerificationMeta(
+    'position',
+  );
+  @override
+  late final GeneratedColumn<int> position = GeneratedColumn<int>(
+    'position',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, payload, position];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'announcements';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<AnnouncementRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('payload')) {
+      context.handle(
+        _payloadMeta,
+        payload.isAcceptableOrUnknown(data['payload']!, _payloadMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_payloadMeta);
+    }
+    if (data.containsKey('position')) {
+      context.handle(
+        _positionMeta,
+        position.isAcceptableOrUnknown(data['position']!, _positionMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_positionMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  AnnouncementRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return AnnouncementRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      payload: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}payload'],
+      )!,
+      position: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}position'],
+      )!,
+    );
+  }
+
+  @override
+  $AnnouncementsTable createAlias(String alias) {
+    return $AnnouncementsTable(attachedDatabase, alias);
+  }
+}
+
+class AnnouncementRow extends DataClass implements Insertable<AnnouncementRow> {
+  final String id;
+  final String payload;
+  final int position;
+  const AnnouncementRow({
+    required this.id,
+    required this.payload,
+    required this.position,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['payload'] = Variable<String>(payload);
+    map['position'] = Variable<int>(position);
+    return map;
+  }
+
+  AnnouncementsCompanion toCompanion(bool nullToAbsent) {
+    return AnnouncementsCompanion(
+      id: Value(id),
+      payload: Value(payload),
+      position: Value(position),
+    );
+  }
+
+  factory AnnouncementRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return AnnouncementRow(
+      id: serializer.fromJson<String>(json['id']),
+      payload: serializer.fromJson<String>(json['payload']),
+      position: serializer.fromJson<int>(json['position']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'payload': serializer.toJson<String>(payload),
+      'position': serializer.toJson<int>(position),
+    };
+  }
+
+  AnnouncementRow copyWith({String? id, String? payload, int? position}) =>
+      AnnouncementRow(
+        id: id ?? this.id,
+        payload: payload ?? this.payload,
+        position: position ?? this.position,
+      );
+  AnnouncementRow copyWithCompanion(AnnouncementsCompanion data) {
+    return AnnouncementRow(
+      id: data.id.present ? data.id.value : this.id,
+      payload: data.payload.present ? data.payload.value : this.payload,
+      position: data.position.present ? data.position.value : this.position,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AnnouncementRow(')
+          ..write('id: $id, ')
+          ..write('payload: $payload, ')
+          ..write('position: $position')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, payload, position);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is AnnouncementRow &&
+          other.id == this.id &&
+          other.payload == this.payload &&
+          other.position == this.position);
+}
+
+class AnnouncementsCompanion extends UpdateCompanion<AnnouncementRow> {
+  final Value<String> id;
+  final Value<String> payload;
+  final Value<int> position;
+  final Value<int> rowid;
+  const AnnouncementsCompanion({
+    this.id = const Value.absent(),
+    this.payload = const Value.absent(),
+    this.position = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  AnnouncementsCompanion.insert({
+    required String id,
+    required String payload,
+    required int position,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       payload = Value(payload),
+       position = Value(position);
+  static Insertable<AnnouncementRow> custom({
+    Expression<String>? id,
+    Expression<String>? payload,
+    Expression<int>? position,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (payload != null) 'payload': payload,
+      if (position != null) 'position': position,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  AnnouncementsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? payload,
+    Value<int>? position,
+    Value<int>? rowid,
+  }) {
+    return AnnouncementsCompanion(
+      id: id ?? this.id,
+      payload: payload ?? this.payload,
+      position: position ?? this.position,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (payload.present) {
+      map['payload'] = Variable<String>(payload.value);
+    }
+    if (position.present) {
+      map['position'] = Variable<int>(position.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AnnouncementsCompanion(')
+          ..write('id: $id, ')
+          ..write('payload: $payload, ')
+          ..write('position: $position, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $ChannelsTable extends Channels
     with TableInfo<$ChannelsTable, ChannelRow> {
   @override
@@ -512,6 +773,175 @@ class ChannelsCompanion extends UpdateCompanion<ChannelRow> {
           ..write('icon: $icon, ')
           ..write('categoryId: $categoryId, ')
           ..write('lastMessagedAt: $lastMessagedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $DismissedAnnouncementsTable extends DismissedAnnouncements
+    with TableInfo<$DismissedAnnouncementsTable, DismissedAnnouncementRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $DismissedAnnouncementsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'dismissed_announcements';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<DismissedAnnouncementRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  DismissedAnnouncementRow map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return DismissedAnnouncementRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+    );
+  }
+
+  @override
+  $DismissedAnnouncementsTable createAlias(String alias) {
+    return $DismissedAnnouncementsTable(attachedDatabase, alias);
+  }
+}
+
+class DismissedAnnouncementRow extends DataClass
+    implements Insertable<DismissedAnnouncementRow> {
+  final String id;
+  const DismissedAnnouncementRow({required this.id});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    return map;
+  }
+
+  DismissedAnnouncementsCompanion toCompanion(bool nullToAbsent) {
+    return DismissedAnnouncementsCompanion(id: Value(id));
+  }
+
+  factory DismissedAnnouncementRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return DismissedAnnouncementRow(
+      id: serializer.fromJson<String>(json['id']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{'id': serializer.toJson<String>(id)};
+  }
+
+  DismissedAnnouncementRow copyWith({String? id}) =>
+      DismissedAnnouncementRow(id: id ?? this.id);
+  DismissedAnnouncementRow copyWithCompanion(
+    DismissedAnnouncementsCompanion data,
+  ) {
+    return DismissedAnnouncementRow(
+      id: data.id.present ? data.id.value : this.id,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DismissedAnnouncementRow(')
+          ..write('id: $id')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => id.hashCode;
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is DismissedAnnouncementRow && other.id == this.id);
+}
+
+class DismissedAnnouncementsCompanion
+    extends UpdateCompanion<DismissedAnnouncementRow> {
+  final Value<String> id;
+  final Value<int> rowid;
+  const DismissedAnnouncementsCompanion({
+    this.id = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  DismissedAnnouncementsCompanion.insert({
+    required String id,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id);
+  static Insertable<DismissedAnnouncementRow> custom({
+    Expression<String>? id,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  DismissedAnnouncementsCompanion copyWith({
+    Value<String>? id,
+    Value<int>? rowid,
+  }) {
+    return DismissedAnnouncementsCompanion(
+      id: id ?? this.id,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DismissedAnnouncementsCompanion(')
+          ..write('id: $id, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -1197,7 +1627,10 @@ class UsersCompanion extends UpdateCompanion<UserRow> {
 abstract class _$NeriDatabase extends GeneratedDatabase {
   _$NeriDatabase(QueryExecutor e) : super(e);
   $NeriDatabaseManager get managers => $NeriDatabaseManager(this);
+  late final $AnnouncementsTable announcements = $AnnouncementsTable(this);
   late final $ChannelsTable channels = $ChannelsTable(this);
+  late final $DismissedAnnouncementsTable dismissedAnnouncements =
+      $DismissedAnnouncementsTable(this);
   late final $InboxesTable inboxes = $InboxesTable(this);
   late final $UsersTable users = $UsersTable(this);
   @override
@@ -1205,12 +1638,189 @@ abstract class _$NeriDatabase extends GeneratedDatabase {
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
   List<DatabaseSchemaEntity> get allSchemaEntities => [
+    announcements,
     channels,
+    dismissedAnnouncements,
     inboxes,
     users,
   ];
 }
 
+typedef $$AnnouncementsTableCreateCompanionBuilder =
+    AnnouncementsCompanion Function({
+      required String id,
+      required String payload,
+      required int position,
+      Value<int> rowid,
+    });
+typedef $$AnnouncementsTableUpdateCompanionBuilder =
+    AnnouncementsCompanion Function({
+      Value<String> id,
+      Value<String> payload,
+      Value<int> position,
+      Value<int> rowid,
+    });
+
+class $$AnnouncementsTableFilterComposer
+    extends Composer<_$NeriDatabase, $AnnouncementsTable> {
+  $$AnnouncementsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get payload => $composableBuilder(
+    column: $table.payload,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get position => $composableBuilder(
+    column: $table.position,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$AnnouncementsTableOrderingComposer
+    extends Composer<_$NeriDatabase, $AnnouncementsTable> {
+  $$AnnouncementsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get payload => $composableBuilder(
+    column: $table.payload,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get position => $composableBuilder(
+    column: $table.position,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$AnnouncementsTableAnnotationComposer
+    extends Composer<_$NeriDatabase, $AnnouncementsTable> {
+  $$AnnouncementsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get payload =>
+      $composableBuilder(column: $table.payload, builder: (column) => column);
+
+  GeneratedColumn<int> get position =>
+      $composableBuilder(column: $table.position, builder: (column) => column);
+}
+
+class $$AnnouncementsTableTableManager
+    extends
+        RootTableManager<
+          _$NeriDatabase,
+          $AnnouncementsTable,
+          AnnouncementRow,
+          $$AnnouncementsTableFilterComposer,
+          $$AnnouncementsTableOrderingComposer,
+          $$AnnouncementsTableAnnotationComposer,
+          $$AnnouncementsTableCreateCompanionBuilder,
+          $$AnnouncementsTableUpdateCompanionBuilder,
+          (
+            AnnouncementRow,
+            BaseReferences<
+              _$NeriDatabase,
+              $AnnouncementsTable,
+              AnnouncementRow
+            >,
+          ),
+          AnnouncementRow,
+          PrefetchHooks Function()
+        > {
+  $$AnnouncementsTableTableManager(_$NeriDatabase db, $AnnouncementsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$AnnouncementsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$AnnouncementsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$AnnouncementsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> payload = const Value.absent(),
+                Value<int> position = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => AnnouncementsCompanion(
+                id: id,
+                payload: payload,
+                position: position,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String payload,
+                required int position,
+                Value<int> rowid = const Value.absent(),
+              }) => AnnouncementsCompanion.insert(
+                id: id,
+                payload: payload,
+                position: position,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$AnnouncementsTable, AnnouncementRow>(table),
+                  BaseReferences<
+                    _$NeriDatabase,
+                    $AnnouncementsTable,
+                    AnnouncementRow
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$AnnouncementsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$NeriDatabase,
+      $AnnouncementsTable,
+      AnnouncementRow,
+      $$AnnouncementsTableFilterComposer,
+      $$AnnouncementsTableOrderingComposer,
+      $$AnnouncementsTableAnnotationComposer,
+      $$AnnouncementsTableCreateCompanionBuilder,
+      $$AnnouncementsTableUpdateCompanionBuilder,
+      (
+        AnnouncementRow,
+        BaseReferences<_$NeriDatabase, $AnnouncementsTable, AnnouncementRow>,
+      ),
+      AnnouncementRow,
+      PrefetchHooks Function()
+    >;
 typedef $$ChannelsTableCreateCompanionBuilder =
     ChannelsCompanion Function({
       required String id,
@@ -1476,6 +2086,153 @@ typedef $$ChannelsTableProcessedTableManager =
       $$ChannelsTableUpdateCompanionBuilder,
       (ChannelRow, BaseReferences<_$NeriDatabase, $ChannelsTable, ChannelRow>),
       ChannelRow,
+      PrefetchHooks Function()
+    >;
+typedef $$DismissedAnnouncementsTableCreateCompanionBuilder =
+    DismissedAnnouncementsCompanion Function({
+      required String id,
+      Value<int> rowid,
+    });
+typedef $$DismissedAnnouncementsTableUpdateCompanionBuilder =
+    DismissedAnnouncementsCompanion Function({
+      Value<String> id,
+      Value<int> rowid,
+    });
+
+class $$DismissedAnnouncementsTableFilterComposer
+    extends Composer<_$NeriDatabase, $DismissedAnnouncementsTable> {
+  $$DismissedAnnouncementsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$DismissedAnnouncementsTableOrderingComposer
+    extends Composer<_$NeriDatabase, $DismissedAnnouncementsTable> {
+  $$DismissedAnnouncementsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$DismissedAnnouncementsTableAnnotationComposer
+    extends Composer<_$NeriDatabase, $DismissedAnnouncementsTable> {
+  $$DismissedAnnouncementsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+}
+
+class $$DismissedAnnouncementsTableTableManager
+    extends
+        RootTableManager<
+          _$NeriDatabase,
+          $DismissedAnnouncementsTable,
+          DismissedAnnouncementRow,
+          $$DismissedAnnouncementsTableFilterComposer,
+          $$DismissedAnnouncementsTableOrderingComposer,
+          $$DismissedAnnouncementsTableAnnotationComposer,
+          $$DismissedAnnouncementsTableCreateCompanionBuilder,
+          $$DismissedAnnouncementsTableUpdateCompanionBuilder,
+          (
+            DismissedAnnouncementRow,
+            BaseReferences<
+              _$NeriDatabase,
+              $DismissedAnnouncementsTable,
+              DismissedAnnouncementRow
+            >,
+          ),
+          DismissedAnnouncementRow,
+          PrefetchHooks Function()
+        > {
+  $$DismissedAnnouncementsTableTableManager(
+    _$NeriDatabase db,
+    $DismissedAnnouncementsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$DismissedAnnouncementsTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$DismissedAnnouncementsTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$DismissedAnnouncementsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => DismissedAnnouncementsCompanion(id: id, rowid: rowid),
+          createCompanionCallback:
+              ({required String id, Value<int> rowid = const Value.absent()}) =>
+                  DismissedAnnouncementsCompanion.insert(id: id, rowid: rowid),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<
+                    $DismissedAnnouncementsTable,
+                    DismissedAnnouncementRow
+                  >(table),
+                  BaseReferences<
+                    _$NeriDatabase,
+                    $DismissedAnnouncementsTable,
+                    DismissedAnnouncementRow
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$DismissedAnnouncementsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$NeriDatabase,
+      $DismissedAnnouncementsTable,
+      DismissedAnnouncementRow,
+      $$DismissedAnnouncementsTableFilterComposer,
+      $$DismissedAnnouncementsTableOrderingComposer,
+      $$DismissedAnnouncementsTableAnnotationComposer,
+      $$DismissedAnnouncementsTableCreateCompanionBuilder,
+      $$DismissedAnnouncementsTableUpdateCompanionBuilder,
+      (
+        DismissedAnnouncementRow,
+        BaseReferences<
+          _$NeriDatabase,
+          $DismissedAnnouncementsTable,
+          DismissedAnnouncementRow
+        >,
+      ),
+      DismissedAnnouncementRow,
       PrefetchHooks Function()
     >;
 typedef $$InboxesTableCreateCompanionBuilder =
@@ -1870,8 +2627,15 @@ typedef $$UsersTableProcessedTableManager =
 class $NeriDatabaseManager {
   final _$NeriDatabase _db;
   $NeriDatabaseManager(this._db);
+  $$AnnouncementsTableTableManager get announcements =>
+      $$AnnouncementsTableTableManager(_db, _db.announcements);
   $$ChannelsTableTableManager get channels =>
       $$ChannelsTableTableManager(_db, _db.channels);
+  $$DismissedAnnouncementsTableTableManager get dismissedAnnouncements =>
+      $$DismissedAnnouncementsTableTableManager(
+        _db,
+        _db.dismissedAnnouncements,
+      );
   $$InboxesTableTableManager get inboxes =>
       $$InboxesTableTableManager(_db, _db.inboxes);
   $$UsersTableTableManager get users =>

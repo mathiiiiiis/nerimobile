@@ -1,9 +1,9 @@
 import 'package:dio/dio.dart';
 import 'package:nerimobile/models/post.dart';
 
-Future<List<Post>> fetchAnnouncementPosts(Dio dio) async {
+Future<List<Map<String, dynamic>>> fetchAnnouncementPayloads(Dio dio) async {
   final response = await dio.get('/posts/announcement');
-  return _posts(response.data);
+  return (response.data as List<dynamic>).cast<Map<String, dynamic>>();
 }
 
 Future<List<Post>> fetchFeedPosts(
