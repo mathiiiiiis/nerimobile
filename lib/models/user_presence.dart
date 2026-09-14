@@ -23,6 +23,7 @@ class ActivityStatus {
   final String? title;
   final String? subtitle;
   final String? imgSrc;
+  final String? emoji;
   final String? link;
   final int? startedAt;
   final int? endsAt;
@@ -34,6 +35,7 @@ class ActivityStatus {
     this.title,
     this.subtitle,
     this.imgSrc,
+    this.emoji,
     this.link,
     this.startedAt,
     this.endsAt,
@@ -46,6 +48,7 @@ class ActivityStatus {
     title: json['title'],
     subtitle: json['subtitle'],
     imgSrc: json['imgSrc'],
+    emoji: json['emoji'],
     link: json['link'],
     startedAt: json['startedAt'],
     endsAt: json['endsAt'],

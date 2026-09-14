@@ -3,6 +3,15 @@ import 'package:nerimobile/config.dart';
 const _u200d = '\u200D';
 final _uFE0Fg = RegExp('\uFE0F');
 
+//custom emoji == file name, anything else == unicode
+bool isCustomEmoji(String emoji) => emoji.contains('.');
+
+String customEmojiUrlOf(String emoji, {bool animate = false}) {
+  final animated = emoji.endsWith('.gif');
+  final query = animated && !animate ? '?type=webp' : '';
+  return '${cdnUrl}emojis/$emoji$query';
+}
+
 String unicodeToTwemojiUrl(String unicode) {
   final input = unicode.contains(_u200d)
       ? unicode
