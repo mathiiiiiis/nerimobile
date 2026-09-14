@@ -1,8 +1,8 @@
 import 'package:nerimobile/models/user.dart';
 
 enum FriendStatus {
-  pending(0),
-  sent(1),
+  sent(0),
+  pending(1),
   friends(2),
   blocked(3);
 
@@ -15,7 +15,7 @@ enum FriendStatus {
 
 class Friend {
   final String id;
-  final int status;
+  final FriendStatus status;
   final String userId;
   final String recipientId;
   final User recipient;
@@ -30,9 +30,18 @@ class Friend {
     required this.createdAt,
   });
 
+  Friend copyWith({FriendStatus? status}) => Friend(
+    id: id,
+    status: status ?? this.status,
+    userId: userId,
+    recipientId: recipientId,
+    recipient: recipient,
+    createdAt: createdAt,
+  );
+
   factory Friend.fromJson(Map<String, dynamic> json) => Friend(
     id: json['id'],
-    status: json['status'],
+    status: FriendStatus.fromInt(json['status'] as int),
     userId: json['userId'],
     recipientId: json['recipientId'],
     recipient: User.fromJson(json['recipient']),

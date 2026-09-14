@@ -17,4 +17,20 @@ class FriendsNotifier extends Notifier<Map<String, Friend>> {
 
   void removeFriend(String recipientId) =>
       state = {...state}..remove(recipientId);
+
+  void setStatus(String recipientId, FriendStatus status) {
+    final friend = state[recipientId];
+    if (friend == null) return;
+
+    state = {...state, recipientId: friend.copyWith(status: status)};
+  }
 }
+
+final blockedProvider = Provider<Set<String>>((ref) {
+  final friends = ref.watch(friendsProvider);
+
+  return {
+    for (final friend in friends.values)
+      if (friend.status == FriendStatus.blocked) friend.recipientId,
+  };
+});
