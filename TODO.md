@@ -23,6 +23,7 @@
 - [ ] Typing Indicator
 - [ ] Swipe to reply (short fast swipe), swipe to edit (longer swipe)
 - [ ] Dashboard
+- [ ] Add Post Polls Support
 - [ ] Servers:
   - [ ] Channel listing
   - [ ] Members list
