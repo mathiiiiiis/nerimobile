@@ -42,13 +42,13 @@ class ActivityList extends ConsumerWidget {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: EdgeInsets.symmetric(
-          horizontal: sizing.space(NeriSpacingRole.sm),
+          horizontal: sizing.space(NeriSpacingRole.md),
         ),
         itemCount: activities.length,
-        itemBuilder: (_, _) =>
-            SizedBox(width: sizing.space(NeriSpacingRole.sm)),
-        separatorBuilder: (context, index) =>
+        itemBuilder: (context, index) =>
             _ActivityCard(activity: activities[index]),
+        separatorBuilder: (_, _) =>
+            SizedBox(width: sizing.space(NeriSpacingRole.sm)),
       ),
     );
   }
