@@ -25,6 +25,9 @@ String buildImageUrl(
   return uri.replace(queryParameters: newParams).toString();
 }
 
+String proxiedImageUrl(String url) =>
+    '${cdnUrl}proxy/${Uri.encodeComponent(url)}/a';
+
 ({double width, double height}) constrainDimensions({
   required double width,
   required double height,

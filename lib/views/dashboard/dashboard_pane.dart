@@ -8,9 +8,9 @@ import 'package:nerimobile/theme/sizing/breakpoints.dart';
 import 'package:nerimobile/theme/sizing/radius.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/views/dashboard/dm_list.dart';
+import 'package:nerimobile/views/dashboard/widget/activity_list.dart';
 import 'package:nerimobile/views/shell/app_scaffold.dart';
 import 'package:nerimobile/views/shell/destinations.dart';
-import 'package:nerimobile/views/shell/widgets/panes.dart';
 
 const _indicatorHeight = 8.0;
 const _indicatorInactiveWidth = 12.0;
@@ -34,8 +34,14 @@ class DashboardContent extends StatelessWidget {
   const DashboardContent({super.key});
 
   @override
-  Widget build(BuildContext context) =>
-      const PlaceholderPane(label: 'Dashboard');
+  Widget build(BuildContext context) {
+    final sizing = context.neriSize;
+
+    return ListView(
+      padding: EdgeInsets.symmetric(vertical: sizing.space(NeriSpacingRole.md)),
+      children: const [ActivityList()],
+    );
+  }
 }
 
 class _DashboardPager extends ConsumerStatefulWidget {
