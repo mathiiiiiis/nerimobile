@@ -47,6 +47,5 @@
 
 ## Improvements
 
-- [ ] Chat open is laggy, cache parse markup per message id(?)
 - [ ] Cap decoded size for small avatars with `memCacheWidth`
 - [ ] Add tests in all areas some day

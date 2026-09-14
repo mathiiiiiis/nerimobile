@@ -2,18 +2,18 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+import 'package:nerimobile/utils/caches.dart';
+
 class CachedSvgLoader extends SvgLoader<Uint8List> {
-  const CachedSvgLoader(this.url, {required this.cache});
+  const CachedSvgLoader(this.url);
 
   final String url;
-  final BaseCacheManager cache;
 
   @override
   Future<Uint8List?> prepareMessage(BuildContext? context) async {
-    final file = await cache.getSingleFile(url);
+    final file = await emojiCache.getSingleFile(url);
     return file.readAsBytes();
   }
 
@@ -23,9 +23,9 @@ class CachedSvgLoader extends SvgLoader<Uint8List> {
 
   //uses by flutter_svgs picture cache
   @override
-  int get hashCode => Object.hash(url, cache);
+  int get hashCode => url.hashCode;
 
   @override
   bool operator ==(Object other) =>
-      other is CachedSvgLoader && other.url == url && other.cache == cache;
+      other is CachedSvgLoader && other.url == url && other.url == url;
 }

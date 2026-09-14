@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:nerimobile/utils/cached_svg_loader.dart';
-import 'package:nerimobile/utils/caches.dart';
 import 'package:nerimobile/utils/emojis.dart';
 import 'package:nerimobile/views/chat/message/emoji/emoji_size.dart';
 
@@ -17,7 +16,7 @@ class Twemoji extends StatelessWidget {
     final size = this.size ?? EmojiSizeScope.of(context);
 
     return SvgPicture(
-      CachedSvgLoader(unicodeToTwemojiUrl(unicode), cache: emojiCache),
+      CachedSvgLoader(unicodeToTwemojiUrl(unicode)),
       width: size,
       height: size,
       placeholderBuilder: (_) => SizedBox.square(dimension: size),

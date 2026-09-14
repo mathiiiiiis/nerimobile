@@ -37,7 +37,7 @@ class CdnIcon extends StatelessWidget {
 
     if (isSvgIcon) {
       return SvgPicture(
-        CachedSvgLoader(unicodeToTwemojiUrl(icon), cache: emojiCache),
+        CachedSvgLoader(unicodeToTwemojiUrl(icon)),
         width: size,
         height: size,
         placeholderBuilder: (_) => SizedBox.square(dimension: size),
