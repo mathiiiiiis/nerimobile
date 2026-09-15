@@ -22,8 +22,16 @@
 - [ ] Context menu(s)
 - [ ] Typing Indicator
 - [ ] Swipe to reply (short fast swipe), swipe to edit (longer swipe)
-- [ ] Dashboard
-- [ ] Add Post Polls Support
+- [ ] Dashboard:
+  - [x] Activity list
+  - [x] Pinned announcement
+  - [x] Feed with paging
+  - [ ] Post Composer
+  - [ ] Feed, Discover and Notifications tabs
+  - [ ] Refresh on reconnect
+- Posts:
+  - [ ] Add Polls Support
+  - [ ] Post interactions (like, comment, repost, more)
 - [ ] Servers:
   - [ ] Channel listing
   - [ ] Members list
