@@ -11,6 +11,7 @@ import 'package:nerimobile/theme/sizing/radius.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/theme/typography/text_styles.dart';
 import 'package:nerimobile/views/avatar.dart';
+import 'package:nerimobile/views/chat/message/message_context_menu.dart';
 import 'package:nerimobile/views/chat/message/message_media.dart';
 import 'package:nerimobile/views/chat/message/message_replies.dart';
 import 'package:nerimobile/views/markup/markup.dart';
@@ -96,15 +97,26 @@ class MessageRow extends ConsumerWidget {
         if (unread) _UnreadDivider(onTap: onClearUnread),
         if (_newDay) _DayDivider(timestamp: message.createdAt),
         if (!_newDay) SizedBox(height: gap),
-        _Highlight(
-          mentioned: mentioned,
-          flashed: flashed,
-          gap: _newDay ? 0.0 : gap,
-          child: _isSystem
-              ? _SystemMessages(message: message)
-              : _compact
-              ? _CompactMessage(message: message, pending: pending)
-              : _FullMessage(message: message, pending: pending),
+        GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onLongPress: () {
+            Feedback.forLongPress(context);
+            showMessageContextMenu(
+              context,
+              message: message,
+              local: pending || failed,
+            );
+          },
+          child: _Highlight(
+            mentioned: mentioned,
+            flashed: flashed,
+            gap: _newDay ? 0.0 : gap,
+            child: _isSystem
+                ? _SystemMessages(message: message)
+                : _compact
+                ? _CompactMessage(message: message, pending: pending)
+                : _FullMessage(message: message, pending: pending),
+          ),
         ),
         if (failed) _FailedNotice(onRetry: onRetry),
       ],
