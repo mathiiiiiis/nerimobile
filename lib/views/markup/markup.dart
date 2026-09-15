@@ -43,6 +43,7 @@ class MarkupRenderContext {
     required this.textScaler,
     required this.textDirection,
     this.message,
+    this.mentions = const [],
     this.inline = false,
     this.shaders,
   });
@@ -56,6 +57,7 @@ class MarkupRenderContext {
   final TextScaler textScaler;
   final TextDirection textDirection;
   final Message? message;
+  final List<User> mentions;
   final bool inline;
   final List<ui.Shader>? shaders;
   final placeholders = <PlaceholderSlot>[];
@@ -169,9 +171,10 @@ TextSpan transformCustomTextSpan(Entity entity, MarkupRenderContext ctx) {
       }
 
     case "@":
-      final user = ctx.message?.mentions
-          .where((u) => u.id == content)
-          .firstOrNull;
+      final user = [
+        ...?ctx.message?.mentions,
+        ...ctx.mentions,
+      ].where((u) => u.id == content).firstOrNull;
 
       if (user != null) {
         ctx.countText(content);
@@ -416,6 +419,7 @@ TextSpan buildTextSpan(Entity entity, MarkupRenderContext ctx) {
 class MarkupView extends ConsumerStatefulWidget {
   final String? rawText;
   final Message? message;
+  final List<User> mentions;
 
   //keeps custom status markup on one text run
   final bool inline;
@@ -426,6 +430,7 @@ class MarkupView extends ConsumerStatefulWidget {
     super.key,
     this.rawText,
     this.message,
+    this.mentions = const [],
     this.inline = false,
     this.maxLines,
     this.overflow,
@@ -465,6 +470,7 @@ class _MarkupViewState extends ConsumerState<MarkupView> {
       textScaler: MediaQuery.textScalerOf(context),
       textDirection: Directionality.of(context),
       message: widget.message,
+      mentions: widget.mentions,
       inline: widget.inline,
       shaders: shaders,
     );

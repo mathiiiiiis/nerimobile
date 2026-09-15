@@ -9,6 +9,7 @@ import 'package:nerimobile/theme/sizing/radius.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/views/dashboard/dm_list.dart';
 import 'package:nerimobile/views/dashboard/widget/activity_list.dart';
+import 'package:nerimobile/views/dashboard/widget/announcement_list.dart';
 import 'package:nerimobile/views/shell/app_scaffold.dart';
 import 'package:nerimobile/views/shell/destinations.dart';
 
@@ -39,7 +40,7 @@ class DashboardContent extends StatelessWidget {
 
     return ListView(
       padding: EdgeInsets.symmetric(vertical: sizing.space(NeriSpacingRole.md)),
-      children: const [ActivityList()],
+      children: const [ActivityList(), AnnouncementList()],
     );
   }
 }

@@ -17,6 +17,7 @@ class Post {
   final String? commentToId;
   final Post? commentTo;
   final Post? repost;
+  final List<User> reposts;
 
   final bool likedByMe;
   final int likeCount;
@@ -38,6 +39,7 @@ class Post {
     this.commentToId,
     this.commentTo,
     this.repost,
+    this.reposts = const [],
     this.likedByMe = false,
     this.likeCount = 0,
     this.commentCount = 0,
@@ -67,6 +69,7 @@ class Post {
       commentToId: json['commentToId'] as String?,
       commentTo: _post(json['commentTo']),
       repost: _post(json['repost']),
+      reposts: _reposters(json['reposts']),
       likedByMe: (json['likedBy'] as List?)?.isNotEmpty ?? false,
       likeCount: (counts['likedBy'] ?? 0) as int,
       commentCount: (counts['comments'] ?? 0) as int,
@@ -78,6 +81,13 @@ class Post {
 
 Post? _post(dynamic json) =>
     json == null ? null : Post.fromJson(json as Map<String, dynamic>);
+
+List<User> _reposters(dynamic json) => [
+  for (final item in (json as List?) ?? const [])
+    User.fromJson(
+      (item as Map<String, dynamic>)['createdBy'] as Map<String, dynamic>,
+    ),
+];
 
 List<T> _list<T>(dynamic json, T Function(Map<String, dynamic>) parse) => [
   for (final item in (json as List?) ?? const [])

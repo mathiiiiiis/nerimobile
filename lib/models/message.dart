@@ -1,3 +1,4 @@
+import 'package:mime/mime.dart';
 import 'package:nerimobile/models/user.dart';
 
 enum MessageType {
@@ -107,9 +108,18 @@ class Attachment {
   bool get isExpired =>
       expireAt != null && expireAt! <= DateTime.now().millisecondsSinceEpoch;
 
-  bool get isImage => mime?.startsWith('image/') ?? false;
-  bool get isVideo => mime?.startsWith('video/') ?? false;
-  bool get isAudio => mime?.startsWith('audio/') ?? false;
+  bool get isImage => _isKind('image');
+  bool get isVideo => _isKind('video');
+  bool get isAudio => _isKind('audio');
+
+  bool _isKind(String kind) {
+    final ownMime = mime;
+    final ownPath = path;
+    final mimeType = (ownMime != null && ownMime.isNotEmpty)
+        ? ownMime
+        : (ownPath != null ? lookupMimeType(ownPath) : null);
+    return mimeType?.startsWith('$kind/') ?? false;
+  }
 
   factory Attachment.fromJson(Map<String, dynamic> json) => Attachment(
     id: json['id'],

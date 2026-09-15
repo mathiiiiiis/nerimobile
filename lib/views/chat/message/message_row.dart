@@ -276,7 +276,7 @@ class _Body extends StatelessWidget {
         children: [
           if (showsContent(message))
             MarkupView(rawText: message.content, message: message),
-          MessageMedia(message: message),
+          MediaPreview(attachments: message.attachments, embed: message.embed),
         ],
       ),
     );

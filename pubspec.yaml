@@ -22,6 +22,7 @@ dependencies:
   media_kit: ^1.2.6
   media_kit_libs_video: ^1.0.7
   media_kit_video: ^2.0.1
+  mime: ^2.1.0
   path: ^1.9.1
   path_provider: ^2.1.6
   scrollable_positioned_list: ^0.3.8

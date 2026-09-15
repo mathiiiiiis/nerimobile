@@ -22,16 +22,17 @@ const _maxWidth = 600.0;
 const _maxHeight = 350.0;
 const _fallbackRatio = 4 / 3;
 
-class MessageMedia extends StatelessWidget {
-  const MessageMedia({super.key, required this.message});
+class MediaPreview extends StatelessWidget {
+  const MediaPreview({super.key, required this.attachments, this.embed});
 
-  final Message message;
+  final List<Attachment> attachments;
+  final Embed? embed;
 
   @override
   Widget build(BuildContext context) {
     final sizing = context.neriSize;
-    final attachment = message.attachments.firstOrNull;
-    final embed = message.embed;
+    final attachment = attachments.firstOrNull;
+    final embed = this.embed;
 
     final media = <Widget>[
       if (attachment != null) _Attachment(attachment: attachment),
