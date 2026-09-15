@@ -51,10 +51,11 @@ class DashboardContent extends ConsumerWidget {
         return false;
       },
       child: RefreshIndicator(
-        onRefresh: () => _refesh(ref),
+        onRefresh: () => _refresh(ref),
         color: context.neri[NeriToken.primary],
         backgroundColor: context.neri[NeriToken.card],
         child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
             SliverPadding(
               padding: EdgeInsets.only(top: sizing.space(NeriSpacingRole.md)),
@@ -72,7 +73,7 @@ class DashboardContent extends ConsumerWidget {
   }
 }
 
-Future<void> _refesh(WidgetRef ref) async {
+Future<void> _refresh(WidgetRef ref) async {
   await Future.wait([
     ref.read(feedProvider.notifier).refresh(),
     ref.read(announcementsProvider.notifier).refresh(),
