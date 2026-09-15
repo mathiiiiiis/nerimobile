@@ -103,8 +103,10 @@ class MessageRow extends ConsumerWidget {
             Feedback.forLongPress(context);
             showMessageContextMenu(
               context,
+              ref,
               message: message,
-              local: pending || failed,
+              pending: pending,
+              failed: failed,
             );
           },
           child: _Highlight(

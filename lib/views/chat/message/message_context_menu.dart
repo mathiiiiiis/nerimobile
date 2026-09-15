@@ -1,15 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import 'package:nerimobile/models/message.dart';
+import 'package:nerimobile/stores/message/message_store.dart';
+import 'package:nerimobile/stores/user/user_store.dart';
 import 'package:nerimobile/views/modal/bottom_sheet.dart';
+import 'package:nerimobile/views/modal/confirm_dialog.dart';
 
 Future<void> showMessageContextMenu(
-  BuildContext context, {
+  BuildContext context,
+  WidgetRef ref, {
   required Message message,
-  required bool local,
+  required bool pending,
+  required bool failed,
 }) async {
+  final local = pending || failed;
+  final own = message.createdBy.id == ref.read(currentUserProvider)?.id;
+  final canDelete = own && !pending && message.type == MessageType.content;
   final actions = [
     if (message.content.isNotEmpty)
       SheetAction(
@@ -23,8 +32,39 @@ Future<void> showMessageContextMenu(
         label: 'Copy ID', //TODO: add l10n
         onTap: () => Clipboard.setData(ClipboardData(text: message.id)),
       ),
+    if (canDelete)
+      SheetAction(
+        icon: Symbols.delete_rounded,
+        label: 'Delete', //TODO: add l10n
+        destructive: true,
+        onTap: () => _delete(context, ref, message, confirm: !failed),
+      ),
   ];
   if (actions.isEmpty) return;
 
   await showActionSheet(context, actions: actions);
+}
+
+Future<void> _delete(
+  BuildContext context,
+  WidgetRef ref,
+  Message message, {
+  required bool confirm,
+}) async {
+  final messages = ref.read(messagesProvider(message.channelId).notifier);
+
+  if (confirm) {
+    if (!context.mounted) return;
+    final confirmed = await showConfirmDialog(
+      context,
+      title: 'Delete message?', //TODO: add l10n
+      message:
+          'This will delete the message and cannot be undone.', //TODO: add l10n
+      confirmLabel: 'Delete', //TODO: add l10n
+      destructive: true,
+    );
+    if (!confirmed) return;
+  }
+
+  await messages.delete(message.id);
 }
