@@ -3,9 +3,10 @@ import 'dart:ui';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:nerimobile/models/user_presence.dart';
 
+import 'package:nerimobile/models/user_presence.dart';
 import 'package:nerimobile/stores/dashboard/activity_store.dart';
+import 'package:nerimobile/stores/user/user_store.dart';
 import 'package:nerimobile/theme/core/theme_data.dart';
 import 'package:nerimobile/theme/core/token.dart';
 import 'package:nerimobile/theme/sizing/border.dart';
@@ -18,7 +19,9 @@ import 'package:nerimobile/utils/emojis.dart';
 import 'package:nerimobile/utils/image.dart';
 import 'package:nerimobile/views/avatar.dart';
 import 'package:nerimobile/views/chat/message/emoji/twemoji.dart';
+import 'package:nerimobile/views/empty_state.dart';
 import 'package:nerimobile/views/presence/presence_line.dart';
+import 'package:nerimobile/views/skeleton/skeleton.dart';
 
 const _cardWidth = 240.0;
 const _cardHeight = 90.0;
@@ -26,6 +29,7 @@ const _avatarSize = 20.0;
 const _blur = 10.0;
 const _backdropScale = 2.0;
 const _backdropOpacity = 0.7;
+const _skeletonCards = 5;
 
 class ActivityList extends ConsumerWidget {
   const ActivityList({super.key});
@@ -35,7 +39,23 @@ class ActivityList extends ConsumerWidget {
     final activities = ref.watch(activitiesProvider);
     final sizing = context.neriSize;
 
-    if (activities.isEmpty) return const SizedBox.shrink();
+    if (activities.isEmpty) {
+      if (ref.watch(currentUserProvider) == null) {
+        return const SizedBox(height: _cardHeight, child: _ActivitySkeleton());
+      }
+
+      return Padding(
+        padding: EdgeInsets.symmetric(
+          horizontal: sizing.space(NeriSpacingRole.md),
+        ),
+        child: const SizedBox(
+          height: _cardHeight,
+          child: EmptyState(
+            message: 'No one is active right now',
+          ), //TODO: add l10n
+        ),
+      );
+    }
 
     return SizedBox(
       height: _cardHeight,
@@ -47,6 +67,33 @@ class ActivityList extends ConsumerWidget {
         itemCount: activities.length,
         itemBuilder: (context, index) =>
             _ActivityCard(activity: activities[index]),
+        separatorBuilder: (_, _) =>
+            SizedBox(width: sizing.space(NeriSpacingRole.sm)),
+      ),
+    );
+  }
+}
+
+class _ActivitySkeleton extends StatelessWidget {
+  const _ActivitySkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    final sizing = context.neriSize;
+
+    return SkeletonScope(
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        physics: const NeverScrollableScrollPhysics(),
+        padding: EdgeInsets.symmetric(
+          horizontal: sizing.space(NeriSpacingRole.md),
+        ),
+        itemCount: _skeletonCards,
+        itemBuilder: (_, _) => const SkeletonBlock(
+          width: _cardWidth,
+          height: _cardHeight,
+          shape: NeriRadiusRole.lg,
+        ),
         separatorBuilder: (_, _) =>
             SizedBox(width: sizing.space(NeriSpacingRole.sm)),
       ),
