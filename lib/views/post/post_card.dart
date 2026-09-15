@@ -76,7 +76,7 @@ class _RepostedBy extends StatelessWidget {
           color: colors[NeriToken.success],
         ),
         Text(
-          'Reposted by ${users.map((u) => u.username).join(', ')}', //TODO: add l10n
+          _summary(users), //TODO: add l10n
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: context.neriText[NeriTextRole.bodySmall].copyWith(
@@ -86,6 +86,17 @@ class _RepostedBy extends StatelessWidget {
       ],
     );
   }
+}
+
+String _summary(List<User> users) {
+  final names = users.map((user) => user.username).toList();
+
+  return switch (names.length) {
+    0 => 'Reposted',
+    1 => 'Reposted by ${names.first}',
+    2 => 'Reposted by ${names.first}, ${names.last}',
+    _ => 'Reposted by ${names.first} and ${names.length - 1} others',
+  };
 }
 
 class _Author extends StatelessWidget {
