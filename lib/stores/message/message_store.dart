@@ -241,9 +241,6 @@ class MessagesNotifier extends Notifier<ChannelMessages> {
   }
 
   void updateMessage(String messageId, Map<String, dynamic> partial) {
-    final index = state.messages.indexWhere((m) => m.id == messageId);
-    if (index == -1) return;
-
     final message = _find(messageId);
     if (message == null) return;
     _replace(message.copyWith(partial));

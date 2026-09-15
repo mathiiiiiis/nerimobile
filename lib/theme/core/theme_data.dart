@@ -75,10 +75,10 @@ ThemeData buildNeriTheme({
     canvasColor: colors[NeriToken.background],
     dividerColor: colors[NeriToken.divider],
     extensions: [colors, text, size],
+    textTheme: _textTheme(text, colors[NeriToken.text]),
     bottomSheetTheme: BottomSheetThemeData(
       dragHandleColor: colors[NeriToken.divider],
     ),
-    textTheme: _textTheme(text, colors[NeriToken.text]),
     colorScheme: ColorScheme(
       brightness: brightness,
       primary: colors[NeriToken.primary],
