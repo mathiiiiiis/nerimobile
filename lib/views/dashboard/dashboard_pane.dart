@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nerimobile/stores/dashboard/dashboard_page_store.dart';
+import 'package:nerimobile/stores/dashboard/feed_store.dart';
 
 import 'package:nerimobile/theme/core/theme_data.dart';
 import 'package:nerimobile/theme/core/token.dart';
@@ -10,6 +11,7 @@ import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/views/dashboard/dm_list.dart';
 import 'package:nerimobile/views/dashboard/widget/activity_list.dart';
 import 'package:nerimobile/views/dashboard/widget/announcement_list.dart';
+import 'package:nerimobile/views/dashboard/widget/feed/feed_list.dart';
 import 'package:nerimobile/views/shell/app_scaffold.dart';
 import 'package:nerimobile/views/shell/destinations.dart';
 
@@ -17,6 +19,7 @@ const _indicatorHeight = 8.0;
 const _indicatorInactiveWidth = 12.0;
 const _indicatorActiveWidth = 40.0;
 const _pageAnimation = Duration(milliseconds: 200);
+const _loadMoreExtent = 400.0;
 
 class DashboardPane extends StatelessWidget {
   const DashboardPane({super.key});
@@ -31,18 +34,46 @@ class DashboardPane extends StatelessWidget {
   );
 }
 
-class DashboardContent extends StatelessWidget {
+class DashboardContent extends ConsumerWidget {
   const DashboardContent({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final sizing = context.neriSize;
 
-    return ListView(
-      padding: EdgeInsets.symmetric(vertical: sizing.space(NeriSpacingRole.md)),
-      children: const [ActivityList(), AnnouncementList()],
+    return NotificationListener<ScrollNotification>(
+      onNotification: (notification) {
+        if (notification.depth == 0 &&
+            notification.metrics.extentAfter < _loadMoreExtent) {
+          ref.read(feedProvider.notifier).loadMore();
+        }
+        return false;
+      },
+      child: CustomScrollView(
+        slivers: [
+          SliverPadding(
+            padding: EdgeInsets.only(top: sizing.space(NeriSpacingRole.md)),
+            sliver: const SliverToBoxAdapter(child: ActivityList()),
+          ),
+          const SliverToBoxAdapter(child: AnnouncementList()),
+          SliverPadding(
+            padding: EdgeInsets.only(bottom: _indicatorClearance(context)),
+            sliver: const FeedList(),
+          ),
+        ],
+      ),
     );
   }
+}
+
+double _indicatorClearance(BuildContext context) {
+  if (NeriWindow.of(context).isDualPane) return 0;
+
+  final sizing = context.neriSize;
+
+  return _indicatorHeight +
+      sizing.space(NeriSpacingRole.sm) * 2 +
+      sizing.space(NeriSpacingRole.md) * 2;
 }
 
 class _DashboardPager extends ConsumerStatefulWidget {

@@ -18,11 +18,12 @@ class AnnouncementList extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final posts = ref.watch(announcementsProvider).value ?? const [];
     final sizing = context.neriSize;
+    final gap = sizing.space(NeriSpacingRole.md);
 
     if (posts.isEmpty) return const SizedBox.shrink();
 
     return Padding(
-      padding: EdgeInsets.all(sizing.space(NeriSpacingRole.md)),
+      padding: EdgeInsets.fromLTRB(gap, gap, gap, 0),
       child: Column(
         spacing: sizing.space(NeriSpacingRole.md),
         children: [
