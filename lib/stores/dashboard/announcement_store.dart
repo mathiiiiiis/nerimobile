@@ -7,6 +7,7 @@ import 'package:nerimobile/db/database.dart';
 import 'package:nerimobile/models/post.dart';
 import 'package:nerimobile/services/api_client.dart';
 import 'package:nerimobile/services/post_service.dart';
+import 'package:nerimobile/stores/auth/auth_store.dart';
 
 final announcementsProvider =
     AsyncNotifierProvider<AnnouncementNotifier, List<Post>>(
@@ -18,6 +19,9 @@ class AnnouncementNotifier extends AsyncNotifier<List<Post>> {
 
   @override
   Future<List<Post>> build() async {
+    final token = await ref.watch(authProvider.future);
+    if (token == null) return const [];
+
     final cached = await _visible(await _dao.all());
     if (cached.isNotEmpty) state = AsyncData(cached);
 
