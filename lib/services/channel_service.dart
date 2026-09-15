@@ -28,3 +28,19 @@ Future<Map<String, dynamic>> postMessage(
   );
   return response.data as Map<String, dynamic>;
 }
+
+Future<Map<String, dynamic>> updateMessage(
+  Dio dio,
+  String channelId,
+  String messageId,
+  String content,
+) async {
+  final response = await dio.patch(
+    '/channels/$channelId/messages/$messageId',
+    data: {'content': content},
+  );
+  return response.data as Map<String, dynamic>;
+}
+
+Future<void> deleteMessage(Dio dio, String channelId, String messageId) =>
+    dio.delete('/channels/$channelId/messages/$messageId');
