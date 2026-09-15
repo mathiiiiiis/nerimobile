@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:nerimobile/stores/dashboard/announcement_store.dart';
 import 'package:nerimobile/stores/dashboard/dashboard_page_store.dart';
 import 'package:nerimobile/stores/dashboard/feed_store.dart';
 
@@ -49,21 +50,33 @@ class DashboardContent extends ConsumerWidget {
         }
         return false;
       },
-      child: CustomScrollView(
-        slivers: [
-          SliverPadding(
-            padding: EdgeInsets.only(top: sizing.space(NeriSpacingRole.md)),
-            sliver: const SliverToBoxAdapter(child: ActivityList()),
-          ),
-          const SliverToBoxAdapter(child: AnnouncementList()),
-          SliverPadding(
-            padding: EdgeInsets.only(bottom: _indicatorClearance(context)),
-            sliver: const FeedList(),
-          ),
-        ],
+      child: RefreshIndicator(
+        onRefresh: () => _refesh(ref),
+        color: context.neri[NeriToken.primary],
+        backgroundColor: context.neri[NeriToken.card],
+        child: CustomScrollView(
+          slivers: [
+            SliverPadding(
+              padding: EdgeInsets.only(top: sizing.space(NeriSpacingRole.md)),
+              sliver: const SliverToBoxAdapter(child: ActivityList()),
+            ),
+            const SliverToBoxAdapter(child: AnnouncementList()),
+            SliverPadding(
+              padding: EdgeInsets.only(bottom: _indicatorClearance(context)),
+              sliver: const FeedList(),
+            ),
+          ],
+        ),
       ),
     );
   }
+}
+
+Future<void> _refesh(WidgetRef ref) async {
+  await Future.wait([
+    ref.read(feedProvider.notifier).refresh(),
+    ref.read(announcementsProvider.notifier).refresh(),
+  ]);
 }
 
 double _indicatorClearance(BuildContext context) {
