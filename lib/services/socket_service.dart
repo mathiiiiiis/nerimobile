@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:nerimobile/config.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 import 'package:nerimobile/stores/auth/auth_store.dart';
@@ -43,9 +44,7 @@ class SocketService {
       ),
     );
 
-    final channel = WebSocketChannel.connect(
-      Uri.parse('wss://nerimity.com/socket.io/?EIO=4&transport=websocket'),
-    );
+    final channel = WebSocketChannel.connect(Uri.parse(wssUrl));
 
     _channel = channel;
     _silenceLimit = _defaultSilence;
