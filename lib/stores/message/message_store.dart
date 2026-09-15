@@ -20,6 +20,7 @@ class ChannelMessages {
     this.hasMore = true,
     this.pending = const {},
     this.failed = const {},
+    this.editing = const {},
   });
 
   final List<Message> messages;
@@ -28,6 +29,7 @@ class ChannelMessages {
   final bool hasMore;
   final Set<String> pending;
   final Set<String> failed;
+  final Set<String> editing;
 
   Message? get newest => messages.isEmpty ? null : messages.last;
   Message? get oldest => messages.isEmpty ? null : messages.first;
@@ -39,6 +41,7 @@ class ChannelMessages {
     bool? hasMore,
     Set<String>? pending,
     Set<String>? failed,
+    Set<String>? editing,
   }) => ChannelMessages(
     messages: messages ?? this.messages,
     loaded: loaded ?? this.loaded,
@@ -46,6 +49,7 @@ class ChannelMessages {
     hasMore: hasMore ?? this.hasMore,
     pending: pending ?? this.pending,
     failed: failed ?? this.failed,
+    editing: editing ?? this.editing,
   );
 }
 
@@ -172,11 +176,63 @@ class MessagesNotifier extends Notifier<ChannelMessages> {
   }
 
   void retry(String localId) {
-    final local = state.messages.where((m) => m.id == localId).firstOrNull;
+    final local = _find(localId);
     if (local == null) return;
 
     _remove(localId);
     send(local.content);
+  }
+
+  Future<bool> edit(String messageId, String content) async {
+    if (_isLocal(messageId)) return false;
+
+    final original = _find(messageId);
+    if (original == null) return false;
+    if (original.content == content) return true;
+
+    _replace(original.copyWith({'content': content}));
+    state = state.copyWith(editing: {...state.editing, messageId});
+
+    try {
+      final updated = await patchMessage(
+        ref.read(dioProvider),
+        channelId,
+        messageId,
+        content,
+      );
+      updateMessage(messageId, updated);
+      return true;
+    } catch (e) {
+      debugPrint('patchMessage($channelId, $messageId) failed: $e');
+      final current = _find(messageId);
+      if (current != null) {
+        _replace(current.copyWith({'content': original.content}));
+      }
+      return false;
+    } finally {
+      state = state.copyWith(editing: {...state.editing}..remove(messageId));
+    }
+  }
+
+  Future<bool> delete(String messageId) async {
+    if (state.pending.contains(messageId)) return false;
+    if (state.failed.contains(messageId)) {
+      _remove(messageId);
+      return true;
+    }
+
+    final original = _find(messageId);
+    if (original == null) return false;
+    removeMessage(messageId);
+
+    try {
+      await deleteMessage(ref.read(dioProvider), channelId, messageId);
+      return true;
+    } catch (e) {
+      debugPrint('deleteMessage($channelId, $messageId) failed: $e');
+      addMessage(original);
+      return false;
+    }
   }
 
   void addMessage(Message message) {
@@ -188,9 +244,9 @@ class MessagesNotifier extends Notifier<ChannelMessages> {
     final index = state.messages.indexWhere((m) => m.id == messageId);
     if (index == -1) return;
 
-    final updated = List<Message>.from(state.messages);
-    updated[index] = updated[index].copyWith(partial);
-    state = state.copyWith(messages: updated);
+    final message = _find(messageId);
+    if (message == null) return;
+    _replace(message.copyWith(partial));
   }
 
   void removeMessage(String messageId) => state = state.copyWith(
@@ -214,6 +270,21 @@ class MessagesNotifier extends Notifier<ChannelMessages> {
       debugPrint('fetchMessages($channelId) failed: $e');
       return null;
     }
+  }
+
+  bool _isLocal(String messageId) =>
+      state.pending.contains(messageId) || state.failed.contains(messageId);
+
+  Message? _find(String messageId) =>
+      state.messages.where((m) => m.id == messageId).firstOrNull;
+
+  void _replace(Message message) {
+    final index = state.messages.indexWhere((m) => m.id == message.id);
+    if (index == -1) return;
+
+    final updated = List<Message>.from(state.messages);
+    updated[index] = message;
+    state = state.copyWith(messages: updated);
   }
 
   void _replaceLocal(String localId, Message sent) {

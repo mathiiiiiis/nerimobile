@@ -29,7 +29,7 @@ Future<Map<String, dynamic>> postMessage(
   return response.data as Map<String, dynamic>;
 }
 
-Future<Map<String, dynamic>> updateMessage(
+Future<Map<String, dynamic>> patchMessage(
   Dio dio,
   String channelId,
   String messageId,
