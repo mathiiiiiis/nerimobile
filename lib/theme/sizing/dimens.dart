@@ -13,6 +13,7 @@ enum NeriDimen {
   fadeHeight,
   replyHeight,
   channelHeaderHeight,
+  dialogWidth,
 }
 
 const neriDimentDefaults = <NeriDimen, double>{
@@ -30,4 +31,5 @@ const neriDimentDefaults = <NeriDimen, double>{
   NeriDimen.fadeHeight: 31,
   NeriDimen.replyHeight: 26,
   NeriDimen.channelHeaderHeight: 57,
+  NeriDimen.dialogWidth: 360,
 };
