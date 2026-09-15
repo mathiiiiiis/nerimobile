@@ -42,8 +42,8 @@ class PostCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         spacing: sizing.space(NeriSpacingRole.sm),
         children: [
-          if (post.reposts.isNotEmpty)
-            _RepostedBy(users: post.reposts)
+          if (body.reposts.isNotEmpty)
+            _RepostedBy(users: body.reposts)
           else if (post.isRepost)
             _RepostedBy(users: [post.createdBy]),
           _Author(post: body, action: action),
