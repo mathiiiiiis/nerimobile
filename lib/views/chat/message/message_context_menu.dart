@@ -6,20 +6,35 @@ import 'package:material_symbols_icons/symbols.dart';
 import 'package:nerimobile/models/message.dart';
 import 'package:nerimobile/stores/message/message_store.dart';
 import 'package:nerimobile/stores/user/user_store.dart';
+import 'package:nerimobile/utils/url.dart';
 import 'package:nerimobile/views/modal/bottom_sheet.dart';
 import 'package:nerimobile/views/modal/confirm_dialog.dart';
 
 Future<void> showMessageContextMenu(
   BuildContext context,
-  WidgetRef ref, {
-  required Message message,
-  required bool pending,
-  required bool failed,
+  WidgetRef ref,
+  Message message, {
+  String? mediaUrl,
 }) async {
+  final channel = ref.read(messagesProvider(message.channelId));
+  final pending = channel.pending.contains(message.id);
+  final failed = channel.failed.contains(message.id);
   final local = pending || failed;
   final own = message.createdBy.id == ref.read(currentUserProvider)?.id;
   final canDelete = own && !pending && message.type == MessageType.content;
   final actions = [
+    if (mediaUrl != null) ...[
+      SheetAction(
+        icon: Symbols.open_in_new_rounded,
+        label: 'Open in browser', //TODO: add l10n
+        onTap: () => openExternal(mediaUrl),
+      ),
+      SheetAction(
+        icon: Symbols.link_rounded,
+        label: 'Copy media link', //TODO: add l10n
+        onTap: () => Clipboard.setData(ClipboardData(text: mediaUrl)),
+      ),
+    ],
     if (message.content.isNotEmpty)
       SheetAction(
         icon: Symbols.content_copy_rounded,

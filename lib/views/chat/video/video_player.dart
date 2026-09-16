@@ -22,9 +22,10 @@ const _fade = Duration(milliseconds: 200);
 const _scrimOpacity = 0.35;
 
 class VideoPlayer extends ConsumerWidget {
-  const VideoPlayer({super.key, required this.attachment});
+  const VideoPlayer({super.key, required this.attachment, this.onOptions});
 
   final Attachment attachment;
+  final OptionsCallback? onOptions;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -76,7 +77,8 @@ class VideoPlayer extends ConsumerWidget {
                 if (current)
                   GestureDetector(
                     behavior: HitTestBehavior.opaque,
-                    onTap: () => openVideoFullscreen(context, url),
+                    onTap: () =>
+                        openVideoFullscreen(context, url, onOptions: onOptions),
                   ),
                 _PlayOverlay(
                   visible: !current || !media.playing,

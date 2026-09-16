@@ -16,6 +16,7 @@ import 'package:nerimobile/utils/image.dart';
 import 'package:nerimobile/utils/url.dart';
 import 'package:nerimobile/views/chat/attachment_expiry.dart';
 import 'package:nerimobile/views/chat/audio/audio_player.dart';
+import 'package:nerimobile/views/chat/video/video_fullscreen.dart';
 import 'package:nerimobile/views/chat/video/video_player.dart';
 
 const _maxWidth = 600.0;
@@ -23,10 +24,16 @@ const _maxHeight = 350.0;
 const _fallbackRatio = 4 / 3;
 
 class MediaPreview extends StatelessWidget {
-  const MediaPreview({super.key, required this.attachments, this.embed});
+  const MediaPreview({
+    super.key,
+    required this.attachments,
+    this.embed,
+    this.onOptions,
+  });
 
   final List<Attachment> attachments;
   final Embed? embed;
+  final OptionsCallback? onOptions;
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +42,8 @@ class MediaPreview extends StatelessWidget {
     final embed = this.embed;
 
     final media = <Widget>[
-      if (attachment != null) _Attachment(attachment: attachment),
+      if (attachment != null)
+        _Attachment(attachment: attachment, onOptions: onOptions),
       if (attachment == null && embed != null) _EmbedView(embed: embed),
     ];
     if (media.isEmpty) return const SizedBox.shrink();
@@ -52,9 +60,10 @@ class MediaPreview extends StatelessWidget {
 }
 
 class _Attachment extends StatelessWidget {
-  const _Attachment({required this.attachment});
+  const _Attachment({required this.attachment, this.onOptions});
 
   final Attachment attachment;
+  final OptionsCallback? onOptions;
 
   @override
   Widget build(BuildContext context) {
@@ -63,7 +72,9 @@ class _Attachment extends StatelessWidget {
 
     if (attachment.isExpired) return _FileCard(attachment: attachment);
     if (attachment.isAudio) return AudioPlayer(attachment: attachment);
-    if (attachment.isVideo) return VideoPlayer(attachment: attachment);
+    if (attachment.isVideo) {
+      return VideoPlayer(attachment: attachment, onOptions: onOptions);
+    }
     if (!attachment.isImage) return _FileCard(attachment: attachment);
 
     return _Media(

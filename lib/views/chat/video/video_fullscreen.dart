@@ -20,14 +20,21 @@ const _buttonOpacity = 0.4;
 const _dismissDistance = 120.0;
 const _dismissVelocity = 700.9;
 
-Future<void> openVideoFullscreen(BuildContext context, String url) {
+typedef OptionsCallback =
+    void Function(BuildContext context, WidgetRef ref, String url);
+
+Future<void> openVideoFullscreen(
+  BuildContext context,
+  String url, {
+  OptionsCallback? onOptions,
+}) {
   return Navigator.of(context, rootNavigator: true).push(
     PageRouteBuilder<void>(
       opaque: false,
       barrierColor: Colors.black,
       transitionDuration: _open,
       reverseTransitionDuration: _open,
-      pageBuilder: (_, _, _) => VideoFullscreen(url: url),
+      pageBuilder: (_, _, _) => VideoFullscreen(url: url, onOptions: onOptions),
       transitionsBuilder: (_, animation, _, child) =>
           FadeTransition(opacity: animation, child: child),
     ),
@@ -35,9 +42,10 @@ Future<void> openVideoFullscreen(BuildContext context, String url) {
 }
 
 class VideoFullscreen extends ConsumerStatefulWidget {
-  const VideoFullscreen({super.key, required this.url});
+  const VideoFullscreen({super.key, required this.url, this.onOptions});
 
   final String url;
+  final OptionsCallback? onOptions;
 
   @override
   ConsumerState<VideoFullscreen> createState() => _VideoFullscreenState();
@@ -88,6 +96,7 @@ class _VideoFullscreenState extends ConsumerState<VideoFullscreen> {
   @override
   Widget build(BuildContext context) {
     final media = ref.watch(mediaProvider);
+    final onOptions = widget.onOptions;
     final opacity = (1 - _drag / (_dismissDistance * 3)).clamp(0.0, 1.0);
 
     return Scaffold(
@@ -114,6 +123,9 @@ class _VideoFullscreenState extends ConsumerState<VideoFullscreen> {
                 media: media,
                 notifier: _media,
                 url: widget.url,
+                onOptions: onOptions == null
+                    ? null
+                    : () => onOptions(context, ref, widget.url),
               ),
             ],
           ),
@@ -129,12 +141,14 @@ class _Controls extends StatelessWidget {
     required this.media,
     required this.notifier,
     required this.url,
+    this.onOptions,
   });
 
   final bool visible;
   final MediaState media;
   final MediaNotifier notifier;
   final String url;
+  final VoidCallback? onOptions;
 
   @override
   Widget build(BuildContext context) {
@@ -154,16 +168,24 @@ class _Controls extends StatelessWidget {
                 sizing.space(NeriSpacingRole.md),
                 sizing.space(NeriSpacingRole.md),
               ),
-              child: Align(
-                alignment: Alignment.topLeft,
-                child: ControlButton(
-                  icon: Symbols.close_rounded,
-                  size: sizing.dimen(NeriDimen.avatarSm),
-                  onTap: () => Navigator.of(context).pop(),
-                ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  ControlButton(
+                    icon: Symbols.close_rounded,
+                    size: sizing.dimen(NeriDimen.avatarSm),
+                    onTap: () => Navigator.of(context).pop(),
+                  ),
+                  if (onOptions case final onOptions?)
+                    ControlButton(
+                      icon: Symbols.more_vert_rounded,
+                      size: sizing.dimen(NeriDimen.avatarSm),
+                      onTap: onOptions,
+                    ),
+                ],
               ),
             ),
-            //TODO: message options once context menu exists
             Align(
               alignment: Alignment.bottomCenter,
               child: _BottomBar(media: media, notifier: notifier, url: url),

@@ -101,13 +101,7 @@ class MessageRow extends ConsumerWidget {
           behavior: HitTestBehavior.opaque,
           onLongPress: () {
             Feedback.forLongPress(context);
-            showMessageContextMenu(
-              context,
-              ref,
-              message: message,
-              pending: pending,
-              failed: failed,
-            );
+            showMessageContextMenu(context, ref, message);
           },
           child: _Highlight(
             mentioned: mentioned,
@@ -290,7 +284,12 @@ class _Body extends StatelessWidget {
         children: [
           if (showsContent(message))
             MarkupView(rawText: message.content, message: message),
-          MediaPreview(attachments: message.attachments, embed: message.embed),
+          MediaPreview(
+            attachments: message.attachments,
+            embed: message.embed,
+            onOptions: (context, ref, url) =>
+                showMessageContextMenu(context, ref, message, mediaUrl: url),
+          ),
         ],
       ),
     );
