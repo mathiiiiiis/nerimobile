@@ -63,6 +63,8 @@ class MessagesNotifier extends Notifier<ChannelMessages> {
 
   final String channelId;
 
+  final _mentionReplies = <String>{};
+
   @override
   ChannelMessages build() => const ChannelMessages();
 
@@ -144,7 +146,11 @@ class MessagesNotifier extends Notifier<ChannelMessages> {
     ]);
   }
 
-  Future<void> send(String content) async {
+  Future<void> send(
+    String content, {
+    List<PartialMessage> replyTo = const [],
+    bool mentionReplies = false,
+  }) async {
     final author = ref.read(currentUserProvider);
     if (author == null) return;
 
@@ -156,15 +162,26 @@ class MessagesNotifier extends Notifier<ChannelMessages> {
       createdBy: author,
       attachments: const [],
       createdAt: DateTime.now().millisecondsSinceEpoch,
+      replyMessages: [
+        for (final reply in replyTo) ReplyMessage(replyToMessage: reply),
+      ],
     );
 
+    if (mentionReplies) _mentionReplies.add(localId);
     state = state.copyWith(
       messages: [...state.messages, local],
       pending: {...state.pending, localId},
     );
 
     try {
-      final sent = await postMessage(ref.read(dioProvider), channelId, content);
+      final sent = await postMessage(
+        ref.read(dioProvider),
+        channelId,
+        content,
+        replyToMessageIds: [for (final reply in replyTo) reply.id],
+        mentionReplies: mentionReplies,
+      );
+      _mentionReplies.remove(localId);
       _replaceLocal(localId, Message.fromJson(sent['message'] ?? sent));
     } catch (e) {
       debugPrint('postMessage($channelId) failed: $e');
@@ -179,8 +196,13 @@ class MessagesNotifier extends Notifier<ChannelMessages> {
     final local = _find(localId);
     if (local == null) return;
 
+    final mentionReplies = _mentionReplies.contains(localId);
     _remove(localId);
-    send(local.content);
+    send(
+      local.content,
+      replyTo: [for (final reply in local.replyMessages) ?reply.replyToMessage],
+      mentionReplies: mentionReplies,
+    );
   }
 
   Future<bool> edit(String messageId, String content) async {
@@ -294,11 +316,14 @@ class MessagesNotifier extends Notifier<ChannelMessages> {
     );
   }
 
-  void _remove(String localId) => state = state.copyWith(
-    messages: state.messages.where((m) => m.id != localId).toList(),
-    pending: {...state.pending}..remove(localId),
-    failed: {...state.failed}..remove(localId),
-  );
+  void _remove(String localId) {
+    _mentionReplies.remove(localId);
+    state = state.copyWith(
+      messages: state.messages.where((m) => m.id != localId).toList(),
+      pending: {...state.pending}..remove(localId),
+      failed: {...state.failed}..remove(localId),
+    );
+  }
 
   List<Message> _merge(List<Message> batch) {
     final byId = {for (final m in state.messages) m.id: m};

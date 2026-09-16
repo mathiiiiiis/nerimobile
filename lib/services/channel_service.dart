@@ -20,11 +20,19 @@ Future<List<Message>> fetchMessages(
 Future<Map<String, dynamic>> postMessage(
   Dio dio,
   String channelId,
-  String content,
-) async {
+  String content, {
+  List<String> replyToMessageIds = const [],
+  bool mentionReplies = false,
+}) async {
   final response = await dio.post(
     '/channels/$channelId/messages',
-    data: {'content': content},
+    data: {
+      'content': content,
+      if (replyToMessageIds.isNotEmpty) ...{
+        'replyToMessageIds': replyToMessageIds,
+        'mentionReplies': mentionReplies,
+      },
+    },
   );
   return response.data as Map<String, dynamic>;
 }

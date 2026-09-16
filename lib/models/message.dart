@@ -227,6 +227,14 @@ class PartialMessage {
     required this.attachments,
   });
 
+  factory PartialMessage.of(Message message) => PartialMessage(
+    id: message.id,
+    content: message.content,
+    createdAt: message.createdAt,
+    createdBy: message.createdBy,
+    attachments: message.attachments,
+  );
+
   factory PartialMessage.fromJson(Map<String, dynamic> json) => PartialMessage(
     id: json['id'],
     content: json['content'],
