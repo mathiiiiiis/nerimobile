@@ -69,7 +69,7 @@ class MessageReplies extends StatelessWidget {
                     message: reply.replyToMessage,
                     child: Padding(
                       padding: const EdgeInsets.only(left: _contentLeft),
-                      child: _ReplyContent(message: reply.replyToMessage),
+                      child: ReplyPreview(message: reply.replyToMessage),
                     ),
                   ),
                 ),
@@ -81,8 +81,8 @@ class MessageReplies extends StatelessWidget {
   }
 }
 
-class _ReplyContent extends ConsumerWidget {
-  const _ReplyContent({required this.message});
+class ReplyPreview extends ConsumerWidget {
+  const ReplyPreview({super.key, required this.message});
 
   final PartialMessage? message;
 

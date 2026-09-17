@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import 'package:nerimobile/models/message.dart';
+import 'package:nerimobile/stores/composer/composer_store.dart';
 import 'package:nerimobile/stores/message/message_store.dart';
 import 'package:nerimobile/stores/user/user_store.dart';
 import 'package:nerimobile/utils/url.dart';
@@ -21,7 +22,8 @@ Future<void> showMessageContextMenu(
   final failed = channel.failed.contains(message.id);
   final local = pending || failed;
   final own = message.createdBy.id == ref.read(currentUserProvider)?.id;
-  final canDelete = own && !pending && message.type == MessageType.content;
+  final isContent = message.type == MessageType.content;
+  final canDelete = own && !pending && isContent;
   final actions = [
     if (mediaUrl != null) ...[
       SheetAction(
@@ -35,6 +37,14 @@ Future<void> showMessageContextMenu(
         onTap: () => Clipboard.setData(ClipboardData(text: mediaUrl)),
       ),
     ],
+    if (!local && isContent)
+      SheetAction(
+        icon: Symbols.reply_rounded,
+        label: 'Reply', //TODO: add l10n
+        onTap: () => ref
+            .read(composerProvider(message.channelId).notifier)
+            .reply(message),
+      ),
     if (message.content.isNotEmpty)
       SheetAction(
         icon: Symbols.content_copy_rounded,

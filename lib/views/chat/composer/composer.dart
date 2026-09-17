@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';
+
+import 'package:nerimobile/models/message.dart';
 import 'package:nerimobile/stores/channel/channel_store.dart';
+import 'package:nerimobile/stores/composer/composer_store.dart';
 import 'package:nerimobile/stores/inbox/inbox_store.dart';
 
 import 'package:nerimobile/stores/message/message_store.dart';
@@ -13,6 +16,7 @@ import 'package:nerimobile/theme/sizing/dimens.dart';
 import 'package:nerimobile/theme/sizing/radius.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/theme/typography/text_styles.dart';
+import 'package:nerimobile/views/chat/composer/composer_bar.dart';
 
 const _fieldHeight = 48.0;
 const _maxFieldLines = 6;
@@ -33,6 +37,7 @@ class Composer extends ConsumerStatefulWidget {
 
 class _ComposerState extends ConsumerState<Composer> {
   final _controller = TextEditingController();
+  final _focus = FocusNode();
   bool _sending = false;
 
   @override
@@ -44,6 +49,7 @@ class _ComposerState extends ConsumerState<Composer> {
   @override
   void dispose() {
     _controller.dispose();
+    _focus.dispose();
     super.dispose();
   }
 
@@ -53,10 +59,18 @@ class _ComposerState extends ConsumerState<Composer> {
     if (!_canSend) return;
 
     final content = _controller.text.trim();
+    final composer = ref.read(composerProvider(widget.channelId));
     _controller.clear();
+    ref.read(composerProvider(widget.channelId).notifier).clearReplies();
     setState(() => _sending = true);
 
-    await ref.read(messagesProvider(widget.channelId).notifier).send(content);
+    await ref
+        .read(messagesProvider(widget.channelId).notifier)
+        .send(
+          content,
+          replyTo: [for (final m in composer.replyTo) PartialMessage.of(m)],
+          mentionReplies: composer.mentionReplies,
+        );
     if (mounted) setState(() => _sending = false);
   }
 
@@ -66,6 +80,13 @@ class _ComposerState extends ConsumerState<Composer> {
     final sizing = context.neriSize;
     final dual = NeriWindow.of(context).isDualPane;
     final radius = Radius.circular(sizing.radius(NeriRadiusRole.xl));
+
+    ref.listen(
+      composerProvider(widget.channelId).select((c) => c.replyTo.length),
+      (previous, next) {
+        if (next > (previous ?? 0)) _focus.requestFocus();
+      },
+    );
 
     return Container(
       margin: dual
@@ -90,21 +111,28 @@ class _ComposerState extends ConsumerState<Composer> {
         bottom: !dual,
         child: Padding(
           padding: EdgeInsets.all(sizing.space(NeriSpacingRole.sm)),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              _ActionButton(
-                icon: Symbols.add_rounded,
-                //TODO: attachment menu
-                onTap: () {},
+              ComposerBar(channelId: widget.channelId),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  _ActionButton(
+                    icon: Symbols.add_rounded,
+                    //TODO: attachment menu
+                    onTap: () {},
+                  ),
+                  Expanded(
+                    child: _Field(
+                      controller: _controller,
+                      focusNode: _focus,
+                      hint: _hint(ref, widget.channelId),
+                    ),
+                  ),
+                  _SendButton(visible: _canSend, onTap: _send),
+                ],
               ),
-              Expanded(
-                child: _Field(
-                  controller: _controller,
-                  hint: _hint(ref, widget.channelId),
-                ),
-              ),
-              _SendButton(visible: _canSend, onTap: _send),
             ],
           ),
         ),
@@ -114,9 +142,14 @@ class _ComposerState extends ConsumerState<Composer> {
 }
 
 class _Field extends StatelessWidget {
-  const _Field({required this.controller, required this.hint});
+  const _Field({
+    required this.controller,
+    required this.focusNode,
+    required this.hint,
+  });
 
   final TextEditingController controller;
+  final FocusNode focusNode;
   final String hint;
 
   @override
@@ -136,6 +169,7 @@ class _Field extends StatelessWidget {
       ),
       child: TextField(
         controller: controller,
+        focusNode: focusNode,
         maxLines: _maxFieldLines,
         minLines: 1,
         textInputAction: TextInputAction.newline,
