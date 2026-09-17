@@ -14,6 +14,7 @@ import 'package:nerimobile/models/user.dart';
 import 'package:nerimobile/models/user_presence.dart';
 //stores
 import 'package:nerimobile/stores/channel/channel_store.dart';
+import 'package:nerimobile/stores/channel/typing_store.dart';
 import 'package:nerimobile/stores/inbox/inbox_store.dart';
 import 'package:nerimobile/stores/message/message_mention_store.dart';
 import 'package:nerimobile/stores/message/message_store.dart';
@@ -42,6 +43,8 @@ void handleSocketEvent(Ref ref, String event, dynamic payload) {
       onInboxOpened(ref, payload);
     case 'inbox:closed':
       onInboxClosed(ref, payload);
+    case 'channel:typing':
+      onChannelTyping(ref, payload);
   }
 }
 
@@ -119,6 +122,7 @@ Future<void> onUserAuthenticated(Ref ref, dynamic payload) async {
   ref.read(messageMentionsProvider.notifier).setMentions(data.messageMentions);
   ref.read(inboxProvider.notifier).setInbox(data.inbox);
   ref.read(friendsProvider.notifier).setFriends(data.friends);
+  ref.read(typingProvider.notifier).clear();
   for (final item in data.inbox) {
     ref.read(usersProvider.notifier).addUser(item.recipient);
   }
@@ -157,6 +161,15 @@ void onMessageCreated(Ref ref, dynamic payload) {
   }
 
   ref.read(messagesProvider(message.channelId).notifier).addMessage(message);
+  ref
+      .read(typingProvider.notifier)
+      .stopped(message.channelId, message.createdBy.id);
+}
+
+void onChannelTyping(Ref ref, dynamic payload) {
+  ref
+      .read(typingProvider.notifier)
+      .started(payload['channelId'], payload['userId']);
 }
 
 void onMessageUpdated(Ref ref, dynamic payload) {
