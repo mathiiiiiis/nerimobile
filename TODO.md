@@ -19,9 +19,12 @@
 
 - [x] DM list caching and skeleton loading, plus pattern for every new list
 - [ ] Persist messages so they don't start empty on cold-start
-- [ ] Context menu(s)
-- [ ] Typing Indicator
-- [ ] Swipe to reply (short fast swipe), swipe to edit (longer swipe)
+- [x] Context menu(s)
+  - [ ] Reactions, pin and mark unread
+  - [ ] Delete other people's messages with manage messages permission
+- [x] Typing Indicator
+- [x] Swipe to reply (short fast swipe), swipe to edit (longer swipe)
+- [ ] Toast for copies, failed deletes, edits and sends
 - [ ] Dashboard:
   - [x] Activity list
   - [x] Pinned announcement
