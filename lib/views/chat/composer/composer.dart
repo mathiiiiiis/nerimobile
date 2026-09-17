@@ -17,6 +17,7 @@ import 'package:nerimobile/theme/sizing/radius.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/theme/typography/text_styles.dart';
 import 'package:nerimobile/views/chat/composer/composer_bar.dart';
+import 'package:nerimobile/views/chat/composer/typing_indicator.dart';
 
 const _fieldHeight = 48.0;
 const _maxFieldLines = 6;
@@ -204,6 +205,7 @@ class _ComposerState extends ConsumerState<Composer>
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                TypingIndicator(channelId: widget.channelId),
                 TextFieldTapRegion(
                   child: ComposerBar(channelId: widget.channelId),
                 ),
