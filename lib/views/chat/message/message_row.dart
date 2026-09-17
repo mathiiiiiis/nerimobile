@@ -105,6 +105,10 @@ class MessageRow extends ConsumerWidget {
           onReply: () => ref
               .read(composerProvider(message.channelId).notifier)
               .reply(message),
+          canEdit: () => MessageAccess.read(ref, message).canEdit,
+          onEdit: () => ref
+              .read(composerProvider(message.channelId).notifier)
+              .edit(message),
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
             onLongPress: () {

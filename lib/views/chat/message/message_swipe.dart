@@ -9,6 +9,7 @@ import 'package:nerimobile/theme/sizing/dimens.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
 
 const _replyAt = 0.15;
+const _editAt = 0.35;
 const _overdragResistance = 0.25;
 const _settle = Duration(milliseconds: 200);
 
@@ -17,11 +18,15 @@ class MessageSwipe extends StatefulWidget {
     super.key,
     required this.canReply,
     required this.onReply,
+    required this.canEdit,
+    required this.onEdit,
     required this.child,
   });
 
   final bool Function() canReply;
   final VoidCallback onReply;
+  final bool Function() canEdit;
+  final VoidCallback onEdit;
   final Widget child;
 
   @override
@@ -37,10 +42,17 @@ class _MessageSwipeState extends State<MessageSwipe>
   double _offset = 0;
   double _settleFrom = 0;
   bool _active = false;
+  bool _editable = false;
+  _SwipeAction _action = _SwipeAction.none;
 
   double get _curve => Curves.easeOut.transform(_settleController.value);
   double get _threshold => _width * _replyAt;
-  bool get _armed => _drag >= _threshold;
+
+  _SwipeAction get _actionForDrag {
+    if (_editable && _drag >= _width * _editAt) return _SwipeAction.edit;
+    if (_drag >= _threshold) return _SwipeAction.reply;
+    return _SwipeAction.none;
+  }
 
   @override
   void initState() {
@@ -58,6 +70,8 @@ class _MessageSwipeState extends State<MessageSwipe>
   void _onStart(DragStartDetails details) {
     _active = widget.canReply();
     if (!_active) return;
+    _editable = widget.canEdit();
+    _action = _SwipeAction.none;
     _settleController.stop();
     _drag = -_offset;
   }
@@ -65,16 +79,26 @@ class _MessageSwipeState extends State<MessageSwipe>
   void _onUpdate(DragUpdateDetails details) {
     if (!_active) return;
 
-    final wasArmed = _armed;
+    final previous = _action;
     _drag = (_drag - details.delta.dx).clamp(0.0, _width);
-    if (_armed && !wasArmed) HapticFeedback.lightImpact();
+    _action = _actionForDrag;
+    if (_action.index > previous.index) HapticFeedback.lightImpact();
 
     final overdrag = (_drag - _threshold).clamp(0.0, double.infinity);
     setState(() => _offset = -(_drag - overdrag * (1 - _overdragResistance)));
   }
 
   void _onEnd(DragEndDetails details) {
-    if (_active && _armed) widget.onReply();
+    if (_active) {
+      switch (_action) {
+        case _SwipeAction.reply:
+          widget.onReply();
+        case _SwipeAction.edit:
+          widget.onEdit();
+        case _SwipeAction.none:
+          break;
+      }
+    }
     _settleBack();
   }
 
@@ -126,7 +150,9 @@ class _MessageSwipeState extends State<MessageSwipe>
                         child: Transform.scale(
                           scale: 0.5 + progress / 2,
                           child: Icon(
-                            Symbols.reply_rounded,
+                            _action == _SwipeAction.edit
+                                ? Symbols.edit_rounded
+                                : Symbols.reply_rounded,
                             size: sizing.dimen(NeriDimen.iconMd),
                             color: progress == 1
                                 ? context.neri[NeriToken.primary]
@@ -148,6 +174,8 @@ class _MessageSwipeState extends State<MessageSwipe>
     );
   }
 }
+
+enum _SwipeAction { none, reply, edit }
 
 class _LeftwardDragRecognizer extends HorizontalDragGestureRecognizer {
   double _dx = 0;
