@@ -21,17 +21,54 @@ class ComposerBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final replyTo = ref.watch(
-      composerProvider(channelId).select((c) => c.replyTo),
+    final sizing = context.neriSize;
+    final (:replyTo, :editing) = ref.watch(
+      composerProvider(
+        channelId,
+      ).select((c) => (replyTo: c.replyTo, editing: c.editing)),
     );
+
+    final bar = editing != null
+        ? _EditBar(channelId: channelId)
+        : replyTo.isNotEmpty
+        ? _ReplyBar(channelId: channelId, replyTo: replyTo)
+        : null;
 
     return AnimatedSize(
       duration: _resize,
       curve: Curves.easeOut,
       alignment: Alignment.bottomCenter,
-      child: replyTo.isEmpty
+      child: bar == null
           ? const SizedBox(width: double.infinity)
-          : _ReplyBar(channelId: channelId, replyTo: replyTo),
+          : Padding(
+              padding: EdgeInsets.fromLTRB(
+                sizing.space(NeriSpacingRole.md),
+                0,
+                0,
+                sizing.space(NeriSpacingRole.xs),
+              ),
+              child: bar,
+            ),
+    );
+  }
+}
+
+class _EditBar extends ConsumerWidget {
+  const _EditBar({required this.channelId});
+
+  final String channelId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return _BarHeader(
+      icon: Symbols.edit_rounded,
+      label: 'Editing message', //TODO: add l10n
+      actions: [
+        _BarButton(
+          icon: Symbols.close_rounded,
+          onTap: ref.read(composerProvider(channelId).notifier).cancelEdit,
+        ),
+      ],
     );
   }
 }
@@ -46,7 +83,7 @@ class _ReplyBar extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.neri;
     final sizing = context.neriSize;
-    final rowHeight = sizing.dimen(NeriDimen.replyHeight);
+
     final composer = ref.read(composerProvider(channelId).notifier);
     final mention = ref.watch(
       composerProvider(channelId).select((c) => c.mentionReplies),
@@ -63,45 +100,29 @@ class _ReplyBar extends ConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          SizedBox(
-            height: rowHeight,
-            child: Row(
-              spacing: sizing.space(NeriSpacingRole.xs),
-              children: [
-                Icon(
-                  Symbols.reply_rounded,
-                  size: sizing.dimen(NeriDimen.iconSm),
-                  color: colors[NeriToken.textSecondary],
-                ),
-                Expanded(
-                  //TODO: add l10n
-                  child: Text(
-                    replyTo.length == 1
-                        ? 'Replying to'
-                        : 'Replying to ${replyTo.length} messages',
-                    style: context.neriText[NeriTextRole.bodySmall].copyWith(
-                      color: colors[NeriToken.textSecondary],
-                    ),
-                  ),
-                ),
-                _BarButton(
-                  icon: Symbols.alternate_email_rounded,
-                  label: mention ? 'On' : 'Off', //TODO: add l10n
-                  color: mention
-                      ? colors[NeriToken.primary]
-                      : colors[NeriToken.textPlaceholder],
-                  onTap: composer.toggleMentionReplies,
-                ),
-                _BarButton(
-                  icon: Symbols.close_rounded,
-                  onTap: composer.clearReplies,
-                ),
-              ],
-            ),
+          _BarHeader(
+            icon: Symbols.reply_rounded,
+            label: replyTo.length == 1
+                ? 'Replying to'
+                : 'Replying to ${replyTo.length} messages',
+            actions: [
+              _BarButton(
+                icon: Symbols.alternate_email_rounded,
+                label: mention ? 'On' : 'Off', //TODO: add l10n
+                color: mention
+                    ? colors[NeriToken.primary]
+                    : colors[NeriToken.textPlaceholder],
+                onTap: composer.toggleMentionReplies,
+              ),
+              _BarButton(
+                icon: Symbols.close_rounded,
+                onTap: composer.clearReplies,
+              ),
+            ],
           ),
           for (final message in replyTo)
             SizedBox(
-              height: rowHeight,
+              height: context.neriSize.dimen(NeriDimen.replyHeight),
               child: Row(
                 children: [
                   Expanded(
@@ -115,6 +136,47 @@ class _ReplyBar extends ConsumerWidget {
                 ],
               ),
             ),
+        ],
+      ),
+    );
+  }
+}
+
+class _BarHeader extends StatelessWidget {
+  const _BarHeader({
+    required this.icon,
+    required this.label,
+    required this.actions,
+  });
+
+  final IconData icon;
+  final String label;
+  final List<Widget> actions;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.neri;
+    final sizing = context.neriSize;
+
+    return SizedBox(
+      height: sizing.dimen(NeriDimen.replyHeight),
+      child: Row(
+        spacing: sizing.space(NeriSpacingRole.xs),
+        children: [
+          Icon(
+            icon,
+            size: sizing.dimen(NeriDimen.iconSm),
+            color: colors[NeriToken.textSecondary],
+          ),
+          Expanded(
+            child: Text(
+              label,
+              style: context.neriText[NeriTextRole.bodySmall].copyWith(
+                color: colors[NeriToken.textSecondary],
+              ),
+            ),
+          ),
+          ...actions,
         ],
       ),
     );

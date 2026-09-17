@@ -218,7 +218,9 @@ class MessageListState extends ConsumerState<MessageList> {
           onClearUnread: _clearUnread,
           message: message,
           before: before,
-          pending: channel.pending.contains(message.id),
+          pending:
+              channel.pending.contains(message.id) ||
+              channel.editing.contains(message.id),
           failed: channel.failed.contains(message.id),
           onRetry: () => ref
               .read(messagesProvider(widget.channelId).notifier)

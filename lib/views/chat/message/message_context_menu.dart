@@ -53,6 +53,14 @@ Future<void> showMessageContextMenu(
             .read(composerProvider(message.channelId).notifier)
             .insert('[q:${message.id}]'),
       ),
+    if (own && !local && isContent)
+      SheetAction(
+        icon: Symbols.edit_rounded,
+        label: 'Edit', //TODO: add l10n
+        onTap: () => ref
+            .read(composerProvider(message.channelId).notifier)
+            .edit(message),
+      ),
     if (message.content.isNotEmpty)
       SheetAction(
         icon: Symbols.content_copy_rounded,

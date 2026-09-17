@@ -39,6 +39,7 @@ class _ComposerState extends ConsumerState<Composer> {
   final _controller = TextEditingController();
   final _focus = FocusNode();
   bool _sending = false;
+  String? _draft;
 
   @override
   void initState() {
@@ -60,6 +61,8 @@ class _ComposerState extends ConsumerState<Composer> {
 
     final content = _controller.text.trim();
     final composer = ref.read(composerProvider(widget.channelId));
+    if (composer.editing case final editing?) return _save(editing, content);
+
     _controller.clear();
     ref.read(composerProvider(widget.channelId).notifier).clearReplies();
     setState(() => _sending = true);
@@ -72,6 +75,33 @@ class _ComposerState extends ConsumerState<Composer> {
           mentionReplies: composer.mentionReplies,
         );
     if (mounted) setState(() => _sending = false);
+  }
+
+  Future<void> _save(Message editing, String content) async {
+    setState(() => _sending = true);
+    final saved = await ref
+        .read(messagesProvider(widget.channelId).notifier)
+        .edit(editing.id, content);
+    if (!mounted) return;
+
+    setState(() => _sending = false);
+    final current = ref.read(composerProvider(widget.channelId)).editing;
+    if (!saved || current?.id != editing.id) return;
+    ref.read(composerProvider(widget.channelId).notifier).cancelEdit();
+  }
+
+  void _startEdit(Message message, {required bool fromDraft}) {
+    if (fromDraft) _draft = _controller.text;
+    _controller.value = TextEditingValue(
+      text: message.content,
+      selection: TextSelection.collapsed(offset: message.content.length),
+    );
+    _focus.requestFocus();
+  }
+
+  void _endEdit() {
+    _controller.text = _draft ?? '';
+    _draft = null;
   }
 
   void _insert(String text) {
@@ -97,6 +127,14 @@ class _ComposerState extends ConsumerState<Composer> {
         if (next > (previous ?? 0)) _focus.requestFocus();
       },
     );
+    ref.listen(composerProvider(widget.channelId).select((c) => c.editing), (
+      previous,
+      next,
+    ) {
+      if (next == null) return _endEdit();
+      if (next.id == previous?.id) return;
+      _startEdit(next, fromDraft: previous == null);
+    });
     ref.listen(
       composerProvider(widget.channelId).select((c) => c.pendingInsert),
       (_, next) {
@@ -108,52 +146,70 @@ class _ComposerState extends ConsumerState<Composer> {
       },
     );
 
-    return Container(
-      margin: dual
-          ? EdgeInsets.all(sizing.space(NeriSpacingRole.sm))
-          : EdgeInsets.zero,
-      decoration: BoxDecoration(
-        color: colors[NeriToken.pane],
-        borderRadius: dual
-            ? BorderRadius.all(
-                Radius.circular(sizing.radius(NeriRadiusRole.image)),
-              )
-            : BorderRadius.only(topLeft: radius, topRight: radius),
-        border: dual
-            ? Border.all(
-                color: colors[NeriToken.border],
-                width: sizing.border(NeriBorderRole.hairline),
-              )
-            : null,
-      ),
-      child: SafeArea(
-        top: false,
-        bottom: !dual,
-        child: Padding(
-          padding: EdgeInsets.all(sizing.space(NeriSpacingRole.sm)),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ComposerBar(channelId: widget.channelId),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  _ActionButton(
-                    icon: Symbols.add_rounded,
-                    //TODO: attachment menu
-                    onTap: () {},
-                  ),
-                  Expanded(
-                    child: _Field(
-                      controller: _controller,
-                      focusNode: _focus,
-                      hint: _hint(ref, widget.channelId),
+    final editing = ref.watch(
+      composerProvider(widget.channelId).select((c) => c.editing != null),
+    );
+
+    return PopScope(
+      canPop: !editing,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) {
+          ref.read(composerProvider(widget.channelId).notifier).cancelEdit();
+        }
+      },
+      child: Container(
+        margin: dual
+            ? EdgeInsets.all(sizing.space(NeriSpacingRole.sm))
+            : EdgeInsets.zero,
+        decoration: BoxDecoration(
+          color: colors[NeriToken.pane],
+          borderRadius: dual
+              ? BorderRadius.all(
+                  Radius.circular(sizing.radius(NeriRadiusRole.image)),
+                )
+              : BorderRadius.only(topLeft: radius, topRight: radius),
+          border: dual
+              ? Border.all(
+                  color: colors[NeriToken.border],
+                  width: sizing.border(NeriBorderRole.hairline),
+                )
+              : null,
+        ),
+        child: SafeArea(
+          top: false,
+          bottom: !dual,
+          child: Padding(
+            padding: EdgeInsets.all(sizing.space(NeriSpacingRole.sm)),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ComposerBar(channelId: widget.channelId),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    _ActionButton(
+                      icon: Symbols.add_rounded,
+                      //TODO: attachment menu
+                      onTap: () {},
                     ),
-                  ),
-                  _SendButton(visible: _canSend, onTap: _send),
-                ],
-              ),
-            ],
+                    Expanded(
+                      child: _Field(
+                        controller: _controller,
+                        focusNode: _focus,
+                        hint: _hint(ref, widget.channelId),
+                      ),
+                    ),
+                    _SendButton(
+                      visible: _canSend,
+                      icon: editing
+                          ? Symbols.check_rounded
+                          : Symbols.send_rounded,
+                      onTap: _send,
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -249,9 +305,14 @@ class _ActionButton extends StatelessWidget {
 }
 
 class _SendButton extends StatefulWidget {
-  const _SendButton({required this.visible, required this.onTap});
+  const _SendButton({
+    required this.visible,
+    required this.icon,
+    required this.onTap,
+  });
 
   final bool visible;
+  final IconData icon;
   final VoidCallback onTap;
 
   @override
@@ -298,7 +359,7 @@ class _SendButtonState extends State<_SendButton> {
                         : sizing.rounded(NeriRadiusRole.xl),
                   ),
                   child: Icon(
-                    Symbols.send_rounded,
+                    widget.icon,
                     fill: 1,
                     size: sizing.dimen(NeriDimen.iconSm),
                     color: colors[NeriToken.text],
