@@ -74,6 +74,16 @@ class _ComposerState extends ConsumerState<Composer> {
     if (mounted) setState(() => _sending = false);
   }
 
+  void _insert(String text) {
+    final value = _controller.value;
+    final selection = value.selection.isValid
+        ? value.selection
+        : TextSelection.collapsed(offset: value.text.length);
+
+    _controller.value = value.replaced(selection, text);
+    _focus.requestFocus();
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = context.neri;
@@ -85,6 +95,16 @@ class _ComposerState extends ConsumerState<Composer> {
       composerProvider(widget.channelId).select((c) => c.replyTo.length),
       (previous, next) {
         if (next > (previous ?? 0)) _focus.requestFocus();
+      },
+    );
+    ref.listen(
+      composerProvider(widget.channelId).select((c) => c.pendingInsert),
+      (_, next) {
+        if (next == null) return;
+        final text = ref
+            .read(composerProvider(widget.channelId).notifier)
+            .takeInsert();
+        if (text != null) _insert(text);
       },
     );
 

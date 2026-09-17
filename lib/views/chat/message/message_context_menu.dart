@@ -45,6 +45,14 @@ Future<void> showMessageContextMenu(
             .read(composerProvider(message.channelId).notifier)
             .reply(message),
       ),
+    if (!local)
+      SheetAction(
+        icon: Symbols.format_quote_rounded,
+        label: 'Quote', //TODO: add l10n
+        onTap: () => ref
+            .read(composerProvider(message.channelId).notifier)
+            .insert('[q:${message.id}]'),
+      ),
     if (message.content.isNotEmpty)
       SheetAction(
         icon: Symbols.content_copy_rounded,
