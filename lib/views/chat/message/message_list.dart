@@ -25,9 +25,10 @@ const _scrollDuration = Duration(milliseconds: 250);
 const _flashDuration = Duration(seconds: 1);
 
 class MessageList extends ConsumerStatefulWidget {
-  const MessageList({super.key, required this.channelId});
+  const MessageList({super.key, required this.channelId, this.bottomInset = 0});
 
   final String channelId;
+  final double bottomInset;
 
   @override
   ConsumerState<MessageList> createState() => MessageListState();
@@ -195,14 +196,16 @@ class MessageListState extends ConsumerState<MessageList> {
     final channel = ref.watch(messagesProvider(widget.channelId));
     final messages = channel.messages;
 
-    if (!channel.loaded && messages.isEmpty) return const MessageListSkeleton();
+    if (!channel.loaded && messages.isEmpty) {
+      return MessageListSkeleton(bottomInset: widget.bottomInset);
+    }
 
     return ScrollablePositionedList.builder(
       itemScrollController: _scroll,
       itemPositionsListener: _positions,
       reverse: true,
       padding: EdgeInsets.only(
-        bottom: sizing.space(NeriSpacingRole.xl),
+        bottom: widget.bottomInset + sizing.space(NeriSpacingRole.xl),
         top:
             sizing.dimen(NeriDimen.channelHeaderHeight) +
             sizing.space(NeriSpacingRole.md) * 2,

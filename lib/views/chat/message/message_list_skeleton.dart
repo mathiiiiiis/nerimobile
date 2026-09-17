@@ -19,7 +19,9 @@ const _lines = [
 ];
 
 class MessageListSkeleton extends StatelessWidget {
-  const MessageListSkeleton({super.key});
+  const MessageListSkeleton({super.key, this.bottomInset = 0});
+
+  final double bottomInset;
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +33,7 @@ class MessageListSkeleton extends StatelessWidget {
         physics: const NeverScrollableScrollPhysics(),
         reverse: true,
         padding: EdgeInsets.only(
-          bottom: sizing.space(NeriSpacingRole.xl),
+          bottom: bottomInset + sizing.space(NeriSpacingRole.xl),
           top:
               sizing.dimen(NeriDimen.channelHeaderHeight) +
               sizing.space(NeriSpacingRole.md) * 2,

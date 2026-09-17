@@ -12,6 +12,7 @@ import 'package:nerimobile/views/chat/message/message_list.dart';
 import 'package:nerimobile/views/dashboard/dm_list.dart';
 import 'package:nerimobile/views/shell/app_scaffold.dart';
 import 'package:nerimobile/views/shell/destinations.dart';
+import 'package:nerimobile/views/size_reporter.dart';
 
 class ChannelPane extends StatelessWidget {
   const ChannelPane({super.key, required this.channelId});
@@ -27,7 +28,7 @@ class ChannelPane extends StatelessWidget {
     if (!dualPane) {
       return ColoredBox(
         color: context.neri[NeriToken.background],
-        child: SafeArea(child: chat),
+        child: SafeArea(bottom: false, child: chat),
       );
     }
 
@@ -57,30 +58,49 @@ class ChannelPane extends StatelessWidget {
   }
 }
 
-class _Chat extends StatelessWidget {
+class _Chat extends StatefulWidget {
   const _Chat({required this.channelId, required this.showBack});
 
   final String channelId;
   final bool showBack;
 
   @override
+  State<_Chat> createState() => _ChatState();
+}
+
+class _ChatState extends State<_Chat> {
+  double _composerHeight = 0;
+
+  @override
   Widget build(BuildContext context) {
-    return Column(
+    return Stack(
       children: [
-        Expanded(
-          child: Stack(
-            children: [
-              Positioned.fill(child: MessageList(channelId: channelId)),
-              Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                child: ChannelHeader(channelId: channelId, showBack: showBack),
-              ),
-            ],
+        Positioned.fill(
+          child: MessageList(
+            channelId: widget.channelId,
+            bottomInset: _composerHeight,
           ),
         ),
-        Composer(channelId: channelId),
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          child: ChannelHeader(
+            channelId: widget.channelId,
+            showBack: widget.showBack,
+          ),
+        ),
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 0,
+          child: SizeReporter(
+            onSize: (size) {
+              if (mounted) setState(() => _composerHeight = size.height);
+            },
+            child: Composer(channelId: widget.channelId),
+          ),
+        ),
       ],
     );
   }
