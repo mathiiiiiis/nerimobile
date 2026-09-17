@@ -407,10 +407,7 @@ Entity parseMarkup(String text) {
         break;
       case "code":
         final markerIndex = tokens.indexWhere(
-          (t) =>
-              t.start > token.start &&
-              types[tokens.indexOf(t)] == "code" &&
-              t.group(0) == token.group(0),
+          (t) => getTokenType(t) == "code" && t.group(0) == token.group(0),
           pos + 1,
         );
         if (markerIndex >= 0) {

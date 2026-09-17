@@ -12,7 +12,7 @@
 - [ ] Server channel mention counts undercount, `isMentioned` misses `[@:e]`,
       role mentions and reply mentions
 - [ ] Scroll to message does not paginate to a target that is not loaded yet
-- [ ] Inline code spans never form
+- [x] Inline code spans never form
 - [ ] Heading in a custom status keeps its block spacer and font size
 
 ## Features
