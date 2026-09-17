@@ -47,7 +47,7 @@ class _ComposerState extends ConsumerState<Composer>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _controller.addListener(() => setState(() {}));
+    _controller.addListener(_onChanged);
   }
 
   //system keyboard dismissal doesnt clear focus
@@ -68,6 +68,13 @@ class _ComposerState extends ConsumerState<Composer>
 
   bool get _canSend => _controller.text.trim().isNotEmpty && !_sending;
 
+  void _onChanged() {
+    setState(() {});
+    if (_controller.text.isNotEmpty) {
+      ref.read(composerProvider(widget.channelId).notifier).typing();
+    }
+  }
+
   Future<void> _send() async {
     if (!_canSend) return;
 
@@ -76,7 +83,9 @@ class _ComposerState extends ConsumerState<Composer>
     if (composer.editing case final editing?) return _save(editing, content);
 
     _controller.clear();
-    ref.read(composerProvider(widget.channelId).notifier).clearReplies();
+    ref.read(composerProvider(widget.channelId).notifier)
+      ..resetTyping()
+      ..clearReplies();
     setState(() => _sending = true);
 
     await ref

@@ -2,8 +2,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:nerimobile/models/message.dart';
+import 'package:nerimobile/services/api_client.dart';
+import 'package:nerimobile/services/channel_service.dart';
 
 const maxReplies = 5;
+const _typingInterval = Duration(seconds: 4);
 
 class ComposerState {
   const ComposerState({
@@ -41,8 +44,26 @@ class ComposerNotifier extends Notifier<ComposerState> {
 
   final String channelId;
 
+  DateTime? _typingSeenAt;
+
   @override
   ComposerState build() => ComposerState();
+
+  void typing() {
+    if (state.editing != null) return;
+
+    final seenAt = _typingSeenAt;
+    final now = DateTime.now();
+    if (seenAt != null && now.difference(seenAt) < _typingInterval) return;
+
+    _typingSeenAt = now;
+    postTyping(
+      ref.read(dioProvider),
+      channelId,
+    ).catchError((e) => debugPrint('postTyping($channelId) failed: $e'));
+  }
+
+  void resetTyping() => _typingSeenAt = null;
 
   void reply(Message message) {
     final replyTo = state.replyTo;

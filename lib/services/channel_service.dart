@@ -37,6 +37,9 @@ Future<Map<String, dynamic>> postMessage(
   return response.data as Map<String, dynamic>;
 }
 
+Future<void> postTyping(Dio dio, String channelId) =>
+    dio.post('/channels/$channelId/typing');
+
 Future<Map<String, dynamic>> patchMessage(
   Dio dio,
   String channelId,
