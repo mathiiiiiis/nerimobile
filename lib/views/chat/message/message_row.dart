@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import 'package:nerimobile/models/message.dart';
+import 'package:nerimobile/stores/composer/composer_store.dart';
 import 'package:nerimobile/stores/user/user_store.dart';
 import 'package:nerimobile/theme/core/theme_data.dart';
 import 'package:nerimobile/theme/core/token.dart';
@@ -11,9 +12,11 @@ import 'package:nerimobile/theme/sizing/radius.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/theme/typography/text_styles.dart';
 import 'package:nerimobile/views/avatar.dart';
+import 'package:nerimobile/views/chat/message/message_access.dart';
 import 'package:nerimobile/views/chat/message/message_context_menu.dart';
 import 'package:nerimobile/views/chat/message/message_media.dart';
 import 'package:nerimobile/views/chat/message/message_replies.dart';
+import 'package:nerimobile/views/chat/message/message_swipe.dart';
 import 'package:nerimobile/views/markup/markup.dart';
 
 //avoid showing an image url twice
@@ -97,21 +100,27 @@ class MessageRow extends ConsumerWidget {
         if (unread) _UnreadDivider(onTap: onClearUnread),
         if (_newDay) _DayDivider(timestamp: message.createdAt),
         if (!_newDay) SizedBox(height: gap),
-        GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onLongPress: () {
-            Feedback.forLongPress(context);
-            showMessageContextMenu(context, ref, message);
-          },
-          child: _Highlight(
-            mentioned: mentioned,
-            flashed: flashed,
-            gap: _newDay ? 0.0 : gap,
-            child: _isSystem
-                ? _SystemMessages(message: message)
-                : _compact
-                ? _CompactMessage(message: message, pending: pending)
-                : _FullMessage(message: message, pending: pending),
+        MessageSwipe(
+          canReply: () => MessageAccess.read(ref, message).canReply,
+          onReply: () => ref
+              .read(composerProvider(message.channelId).notifier)
+              .reply(message),
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onLongPress: () {
+              Feedback.forLongPress(context);
+              showMessageContextMenu(context, ref, message);
+            },
+            child: _Highlight(
+              mentioned: mentioned,
+              flashed: flashed,
+              gap: _newDay ? 0.0 : gap,
+              child: _isSystem
+                  ? _SystemMessages(message: message)
+                  : _compact
+                  ? _CompactMessage(message: message, pending: pending)
+                  : _FullMessage(message: message, pending: pending),
+            ),
           ),
         ),
         if (failed) _FailedNotice(onRetry: onRetry),
