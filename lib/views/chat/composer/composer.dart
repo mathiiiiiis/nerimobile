@@ -35,20 +35,32 @@ class Composer extends ConsumerStatefulWidget {
   ConsumerState<Composer> createState() => _ComposerState();
 }
 
-class _ComposerState extends ConsumerState<Composer> {
+class _ComposerState extends ConsumerState<Composer>
+    with WidgetsBindingObserver {
   final _controller = TextEditingController();
   final _focus = FocusNode();
   bool _sending = false;
   String? _draft;
+  double _keyboardHeight = 0;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _controller.addListener(() => setState(() {}));
+  }
+
+  //system keyboard dismissal doesnt clear focus
+  @override
+  void didChangeMetrics() {
+    final height = View.of(context).viewInsets.bottom;
+    if (height == 0 && _keyboardHeight > 0) _focus.unfocus();
+    _keyboardHeight = height;
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _controller.dispose();
     _focus.dispose();
     super.dispose();
@@ -183,7 +195,9 @@ class _ComposerState extends ConsumerState<Composer> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                ComposerBar(channelId: widget.channelId),
+                TextFieldTapRegion(
+                  child: ComposerBar(channelId: widget.channelId),
+                ),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
@@ -193,18 +207,22 @@ class _ComposerState extends ConsumerState<Composer> {
                       onTap: () {},
                     ),
                     Expanded(
-                      child: _Field(
-                        controller: _controller,
-                        focusNode: _focus,
-                        hint: _hint(ref, widget.channelId),
+                      child: TextFieldTapRegion(
+                        child: _Field(
+                          controller: _controller,
+                          focusNode: _focus,
+                          hint: _hint(ref, widget.channelId),
+                        ),
                       ),
                     ),
-                    _SendButton(
-                      visible: _canSend,
-                      icon: editing
-                          ? Symbols.check_rounded
-                          : Symbols.send_rounded,
-                      onTap: _send,
+                    TextFieldTapRegion(
+                      child: _SendButton(
+                        visible: _canSend,
+                        icon: editing
+                            ? Symbols.check_rounded
+                            : Symbols.send_rounded,
+                        onTap: _send,
+                      ),
                     ),
                   ],
                 ),
@@ -246,6 +264,7 @@ class _Field extends StatelessWidget {
       child: TextField(
         controller: controller,
         focusNode: focusNode,
+        onTapOutside: (_) => focusNode.unfocus(),
         maxLines: _maxFieldLines,
         minLines: 1,
         textInputAction: TextInputAction.newline,
