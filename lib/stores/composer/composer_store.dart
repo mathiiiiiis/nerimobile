@@ -44,7 +44,7 @@ class ComposerNotifier extends Notifier<ComposerState> {
 
   final String channelId;
 
-  DateTime? _typingSeenAt;
+  DateTime? _typingSentAt;
 
   @override
   ComposerState build() => ComposerState();
@@ -52,18 +52,18 @@ class ComposerNotifier extends Notifier<ComposerState> {
   void typing() {
     if (state.editing != null) return;
 
-    final seenAt = _typingSeenAt;
+    final seenAt = _typingSentAt;
     final now = DateTime.now();
     if (seenAt != null && now.difference(seenAt) < _typingInterval) return;
 
-    _typingSeenAt = now;
+    _typingSentAt = now;
     postTyping(
       ref.read(dioProvider),
       channelId,
     ).catchError((e) => debugPrint('postTyping($channelId) failed: $e'));
   }
 
-  void resetTyping() => _typingSeenAt = null;
+  void resetTyping() => _typingSentAt = null;
 
   void reply(Message message) {
     final replyTo = state.replyTo;
