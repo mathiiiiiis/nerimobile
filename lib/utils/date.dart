@@ -1,3 +1,35 @@
+import 'package:timezone/timezone.dart' as tz;
+
+//nerimiy uses +HHMM offsets
+final _offsetPattern = RegExp(r'^([+-])(\d{2})(\d{2})$');
+
+String? formatZoneTime(String zone) {
+  final offset = _offsetPattern.firstMatch(zone);
+
+  if (offset != null) {
+    final shift = Duration(
+      hours: int.parse(offset.group(2)!),
+      minutes: int.parse(offset.group(3)!),
+    );
+    final now = DateTime.now().toUtc();
+    return _clock(
+      offset.group(1) == '-' ? now.subtract(shift) : now.add(shift),
+    );
+  }
+
+  try {
+    return _clock(tz.TZDateTime.now(tz.getLocation(zone)));
+  } catch (e) {
+    return null;
+  }
+}
+
+String _clock(DateTime time) => [
+  time.hour,
+  time.minute,
+  time.second,
+].map((part) => part.toString().padLeft(2, '0')).join(':');
+
 const _relativeSteps = [
   (60.0, 'second'),
   (60.0, 'minute'),

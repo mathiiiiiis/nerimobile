@@ -226,6 +226,15 @@ TextSpan transformCustomTextSpan(Entity entity, MarkupRenderContext ctx) {
 
       return linkSpan(target, label, ctx);
 
+    case "to":
+      final clock = formatZoneTime(content.trim());
+      if (clock == null) break;
+
+      ctx.countText(content);
+      ctx.relativeCount++;
+      ctx.countingSeconds = true;
+      return timestampChip(clock, ctx);
+
     case "tr":
       final seconds = double.tryParse(content.trim());
       if (seconds == null) break;
@@ -339,12 +348,15 @@ TextSpan linkSpan(String url, String label, MarkupRenderContext ctx) {
 
 //TODO: tapping a future timestamp should offer a reminder (nerimity web behaviour)
 TextSpan timestampMention(int milliseconds, MarkupRenderContext ctx) {
-  final label = formatRelative(milliseconds);
   final target = DateTime.fromMillisecondsSinceEpoch(milliseconds);
   if (target.difference(DateTime.now()).abs() < _countdownRange) {
     ctx.countingSeconds = true;
   }
 
+  return timestampChip(formatRelative(milliseconds), ctx);
+}
+
+TextSpan timestampChip(String label, MarkupRenderContext ctx) {
   return TextSpan(
     children: [
       ctx.widgetSpan(

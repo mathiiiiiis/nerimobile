@@ -26,6 +26,7 @@ dependencies:
   path: ^1.9.1
   path_provider: ^2.1.6
   scrollable_positioned_list: ^0.3.8
+  timezone: ^0.11.1
   url_launcher: ^6.3.2
   web_socket_channel: ^3.0.3
 

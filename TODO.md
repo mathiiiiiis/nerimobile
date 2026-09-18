@@ -51,7 +51,7 @@
   - [x] `r` role mentions
   - [ ] `q` quoted messages
   - [x] `link` (with `->` syntax)
-  - [ ] any kind of timestamp
+  - [x] any kind of timestamp
   - [ ] `ruby`
   - [ ] `vertical`
 - [x] No `codeblock` or `blockquote` handling in `inline`
