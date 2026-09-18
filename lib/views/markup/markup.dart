@@ -26,6 +26,7 @@ import 'package:nerimobile/views/markup/blockquote.dart';
 import 'package:nerimobile/views/markup/checkbox.dart';
 import 'package:nerimobile/views/markup/code_block.dart';
 import 'package:nerimobile/views/markup/gradient.dart';
+import 'package:nerimobile/views/markup/link_taps.dart';
 import 'package:nerimobile/views/markup/mention_chip.dart';
 import 'package:nerimobile/views/markup/spoiler.dart';
 
@@ -54,6 +55,7 @@ class MarkupRenderContext {
     required this.text,
     required this.channels,
     required this.spoilers,
+    required this.links,
     required this.spoilerBackground,
     required this.spoilerPressedBackground,
     required this.baseStyle,
@@ -71,6 +73,7 @@ class MarkupRenderContext {
   final String text;
   final Map<String, Channel> channels;
   final SpoilerController spoilers;
+  final LinkTapController links;
   final Color spoilerBackground;
   final Color spoilerPressedBackground;
   final TextStyle baseStyle;
@@ -348,12 +351,13 @@ TextSpan buildTextSpan(Entity entity, MarkupRenderContext ctx) {
       );
     case "link":
     case "named_link":
+      final named = entity.type == "named_link";
+      final url = named ? entity.params["url"] as String : content;
+
       return TextSpan(
-        text: ctx.countText(
-          entity.type == "named_link" ? entity.params["name"] : content,
-        ),
+        text: ctx.countText(named ? entity.params["name"] : content),
         style: TextStyle(color: ctx.hide(ctx.neri[NeriToken.primary])),
-        recognizer: ctx.spoilerTap,
+        recognizer: ctx.spoilerTap ?? ctx.links.recognizer(url),
       );
     case "color":
       final textBefore = ctx.textCount;
@@ -526,16 +530,21 @@ class MarkupView extends ConsumerStatefulWidget {
 
 class _MarkupViewState extends ConsumerState<MarkupView> {
   late final _spoilers = SpoilerController(onChanged: () => setState(() {}));
+  final _links = LinkTapController();
 
   @override
   void didUpdateWidget(MarkupView oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.rawText != widget.rawText) _spoilers.reset();
+    if (oldWidget.rawText == widget.rawText) return;
+
+    _spoilers.reset();
+    _links.reset();
   }
 
   @override
   void dispose() {
     _spoilers.reset();
+    _links.reset();
     super.dispose();
   }
 
@@ -550,6 +559,7 @@ class _MarkupViewState extends ConsumerState<MarkupView> {
       text: widget.rawText ?? '',
       channels: ref.read(channelsProvider),
       spoilers: _spoilers,
+      links: _links,
       spoilerBackground: context.neri[NeriToken.markupSpoilerBackground],
       spoilerPressedBackground:
           context.neri[NeriToken.markupSpoilerBackgroundHover],
