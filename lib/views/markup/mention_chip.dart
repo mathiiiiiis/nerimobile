@@ -3,13 +3,9 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 
 import 'package:nerimobile/theme/core/theme_data.dart';
+import 'package:nerimobile/theme/core/token.dart';
 import 'package:nerimobile/theme/sizing/radius.dart';
-
-const mentionLeadingSize = 16.0;
-const mentionIconSize = 14.0;
-const _gap = 4.0;
-const _padding = 4.0;
-const _background = Color.fromARGB(28, 255, 255, 255);
+import 'package:nerimobile/theme/sizing/spacing.dart';
 
 class MentionChip extends StatelessWidget {
   const MentionChip({super.key, required this.leading, required this.label});
@@ -19,17 +15,19 @@ class MentionChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final sizing = context.neriSize;
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: _padding),
+      padding: EdgeInsets.symmetric(
+        horizontal: sizing.space(NeriSpacingRole.xs),
+      ),
       decoration: BoxDecoration(
-        color: _background,
-        borderRadius: BorderRadius.circular(
-          context.neriSize.radius(NeriRadiusRole.full),
-        ),
+        color: context.neri[NeriToken.markupMentionBackground],
+        borderRadius: BorderRadius.circular(sizing.radius(NeriRadiusRole.full)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
-        spacing: _gap,
+        spacing: sizing.space(NeriSpacingRole.xs),
         children: [leading, Text(label)],
       ),
     );
@@ -39,6 +37,7 @@ class MentionChip extends StatelessWidget {
 Size mentionChipSize({
   required String label,
   required double leadingSize,
+  required double spacing,
   required TextStyle style,
   required TextScaler textScaler,
   required TextDirection textDirection,
@@ -50,7 +49,7 @@ Size mentionChipSize({
   )..layout();
 
   final size = Size(
-    _padding * 2 + leadingSize + _gap + painter.width,
+    spacing * 3 + leadingSize + painter.width,
     max(leadingSize, painter.height),
   );
   painter.dispose();

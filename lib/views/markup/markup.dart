@@ -12,6 +12,9 @@ import 'package:nerimobile/stores/channel/channel_store.dart';
 import 'package:nerimobile/theme/core/theme_data.dart';
 import 'package:nerimobile/theme/core/token.dart';
 import 'package:nerimobile/theme/sizing/dimens.dart';
+import 'package:nerimobile/theme/sizing/sizing.dart';
+import 'package:nerimobile/theme/sizing/spacing.dart';
+import 'package:nerimobile/theme/typography/text_styles.dart';
 import 'package:nerimobile/utils/colors.dart';
 import 'package:nerimobile/utils/emoji_shortcodes.dart';
 import 'package:nerimobile/utils/nevula.dart';
@@ -26,8 +29,15 @@ import 'package:nerimobile/views/markup/gradient.dart';
 import 'package:nerimobile/views/markup/mention_chip.dart';
 import 'package:nerimobile/views/markup/spoiler.dart';
 
-const _headingSpacer = 20.0;
 const _checkboxScale = 1.1;
+const _headingRoles = {
+  1: NeriTextRole.headlineLarge,
+  2: NeriTextRole.headlineMedium,
+  3: NeriTextRole.titleLarge,
+  4: NeriTextRole.headlineSmall,
+  5: NeriTextRole.bodyLarge,
+  6: NeriTextRole.bodyMedium,
+};
 
 class PlaceholderSlot {
   const PlaceholderSlot({this.size, required this.alignment});
@@ -39,6 +49,8 @@ class PlaceholderSlot {
 class MarkupRenderContext {
   MarkupRenderContext({
     required this.neri,
+    required this.sizing,
+    required this.textStyles,
     required this.text,
     required this.channels,
     required this.spoilers,
@@ -54,6 +66,8 @@ class MarkupRenderContext {
   });
 
   final NeriColors neri;
+  final NeriSizing sizing;
+  final NeriTypography textStyles;
   final String text;
   final Map<String, Channel> channels;
   final SpoilerController spoilers;
@@ -147,6 +161,7 @@ class MarkupRenderContext {
   Size chipSize(String label, double leadingSize) => mentionChipSize(
     label: label,
     leadingSize: leadingSize,
+    spacing: sizing.space(NeriSpacingRole.xs),
     style: baseStyle,
     textScaler: textScaler,
     textDirection: textDirection,
@@ -246,11 +261,17 @@ TextSpan userMention(User user, MarkupRenderContext ctx) {
       ctx.widgetSpan(
         ctx.cover(
           MentionChip(
-            leading: Avatar(size: mentionLeadingSize, user: user),
+            leading: Avatar(
+              size: ctx.sizing.dimen(NeriDimen.mentionAvatar),
+              user: user,
+            ),
             label: user.username,
           ),
         ),
-        size: ctx.chipSize(user.username, mentionLeadingSize),
+        size: ctx.chipSize(
+          user.username,
+          ctx.sizing.dimen(NeriDimen.mentionAvatar),
+        ),
       ),
     ],
   );
@@ -262,11 +283,17 @@ TextSpan channelMention(Channel channel, MarkupRenderContext ctx) {
       ctx.widgetSpan(
         ctx.cover(
           MentionChip(
-            leading: Icon(Symbols.tag_rounded, size: mentionIconSize),
+            leading: Icon(
+              Symbols.tag_rounded,
+              size: ctx.sizing.dimen(NeriDimen.mentionIcon),
+            ),
             label: channel.name!,
           ),
         ),
-        size: ctx.chipSize(channel.name!, mentionIconSize),
+        size: ctx.chipSize(
+          channel.name!,
+          ctx.sizing.dimen(NeriDimen.mentionIcon),
+        ),
       ),
     ],
   );
@@ -325,7 +352,7 @@ TextSpan buildTextSpan(Entity entity, MarkupRenderContext ctx) {
         text: ctx.countText(
           entity.type == "named_link" ? entity.params["name"] : content,
         ),
-        style: TextStyle(color: ctx.hide(Colors.blue)),
+        style: TextStyle(color: ctx.hide(ctx.neri[NeriToken.primary])),
         recognizer: ctx.spoilerTap,
       );
     case "color":
@@ -425,12 +452,13 @@ TextSpan buildTextSpan(Entity entity, MarkupRenderContext ctx) {
         ],
       );
     case "heading":
-      const levelSizes = {1: 34.0, 2: 24.0, 3: 18.0, 4: 14.0, 5: 12.0, 6: 10.0};
-
       final int level = entity.params["level"] ?? 1;
-      double fontSize = levelSizes[level] ?? 14.0;
+      final role = _headingRoles[level] ?? NeriTextRole.bodyMedium;
+      final fontSize = ctx.textStyles[role].fontSize ?? ctx.baseStyle.fontSize;
 
       if (ctx.inline) return TextSpan(children: children());
+
+      final spacer = ctx.sizing.space(NeriSpacingRole.lg);
 
       final outerSize = ctx.emojiSizeOverride;
       ctx.emojiSizeOverride = fontSize;
@@ -439,10 +467,7 @@ TextSpan buildTextSpan(Entity entity, MarkupRenderContext ctx) {
 
       return TextSpan(
         children: [
-          ctx.widgetSpan(
-            const SizedBox(height: _headingSpacer),
-            size: const Size(0, _headingSpacer),
-          ),
+          ctx.widgetSpan(SizedBox(height: spacer), size: Size(0, spacer)),
           TextSpan(
             children: headingSpans,
             style: TextStyle(fontSize: fontSize, fontWeight: FontWeight.w600),
@@ -520,6 +545,8 @@ class _MarkupViewState extends ConsumerState<MarkupView> {
   }) {
     return MarkupRenderContext(
       neri: context.neri,
+      sizing: context.neriSize,
+      textStyles: context.neriText,
       text: widget.rawText ?? '',
       channels: ref.read(channelsProvider),
       spoilers: _spoilers,

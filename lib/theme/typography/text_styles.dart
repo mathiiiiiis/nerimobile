@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:nerimobile/theme/typography/fonts.dart';
 
 enum NeriTextRole {
+  headlineLarge,
+  headlineMedium,
   titleLarge,
   headlineSmall,
   bodyLarge,
@@ -28,6 +30,12 @@ class TextRoleSpec {
 }
 
 const _defaults = <NeriTextRole, TextRoleSpec>{
+  NeriTextRole.headlineLarge: TextRoleSpec(size: 30, weight: 600, height: 1.2),
+  NeriTextRole.headlineMedium: TextRoleSpec(
+    size: 24,
+    weight: 600,
+    height: 1.25,
+  ),
   NeriTextRole.titleLarge: TextRoleSpec(size: 22, weight: 500, height: 1.25),
   NeriTextRole.headlineSmall: TextRoleSpec(size: 18, weight: 600, height: 1.3),
   NeriTextRole.bodyLarge: TextRoleSpec(size: 16, weight: 400, height: 1.4),
