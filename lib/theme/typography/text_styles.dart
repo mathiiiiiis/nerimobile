@@ -8,6 +8,8 @@ enum NeriTextRole {
   headlineMedium,
   titleLarge,
   headlineSmall,
+  titleMedium,
+  titleSmall,
   bodyLarge,
   bodyMedium,
   bodySmall,
@@ -38,6 +40,8 @@ const _defaults = <NeriTextRole, TextRoleSpec>{
   ),
   NeriTextRole.titleLarge: TextRoleSpec(size: 22, weight: 500, height: 1.25),
   NeriTextRole.headlineSmall: TextRoleSpec(size: 18, weight: 600, height: 1.3),
+  NeriTextRole.titleMedium: TextRoleSpec(size: 16, weight: 600, height: 135),
+  NeriTextRole.titleSmall: TextRoleSpec(size: 15, weight: 600, height: 135),
   NeriTextRole.bodyLarge: TextRoleSpec(size: 16, weight: 400, height: 1.4),
   NeriTextRole.bodyMedium: TextRoleSpec(size: 15, weight: 400, height: 1.45),
   NeriTextRole.bodySmall: TextRoleSpec(size: 13, weight: 400, height: 1.4),
@@ -50,6 +54,7 @@ class TypographySpec {
     required this.id,
     required this.name,
     this.family = neriFontFamily,
+    this.monoFamily = neriMonoFamily,
     this.scale = 1,
     this.roundness = 0,
     this.grade = 0,
@@ -59,6 +64,7 @@ class TypographySpec {
   final String id;
   final String name;
   final String family;
+  final String monoFamily;
   final double scale;
   final double roundness;
   final double grade;
@@ -70,6 +76,7 @@ const defaultTypography = TypographySpec(id: 'nerimobile', name: 'Nerimobile');
 class TypographyOverrides {
   const TypographyOverrides({
     this.family,
+    this.monoFamily,
     this.scale,
     this.roundness,
     this.grade,
@@ -77,6 +84,7 @@ class TypographyOverrides {
   });
 
   final String? family;
+  final String? monoFamily;
   final double? scale;
   final double? roundness;
   final double? grade;
@@ -91,6 +99,11 @@ class TypographyResolver {
 
   final TypographySpec spec;
   final TypographyOverrides overrides;
+
+  TextStyle resolveMono() => TextStyle(
+    fontFamily: overrides.monoFamily ?? spec.monoFamily,
+    fontFamilyFallback: neriMonoFallback,
+  );
 
   Map<NeriTextRole, TextStyle> resolveAll() => Map.unmodifiable({
     for (final role in NeriTextRole.values) role: resolve(role),
@@ -119,15 +132,18 @@ class TypographyResolver {
 }
 
 class NeriTypography extends ThemeExtension<NeriTypography> {
-  const NeriTypography(this.styles);
+  const NeriTypography(this.styles, this.mono);
 
   final Map<NeriTextRole, TextStyle> styles;
+  final TextStyle mono;
 
   TextStyle operator [](NeriTextRole role) => styles[role] ?? const TextStyle();
 
   @override
-  NeriTypography copyWith({Map<NeriTextRole, TextStyle>? styles}) =>
-      NeriTypography(styles ?? this.styles);
+  NeriTypography copyWith({
+    Map<NeriTextRole, TextStyle>? styles,
+    TextStyle? mono,
+  }) => NeriTypography(styles ?? this.styles, mono ?? this.mono);
 
   @override
   NeriTypography lerp(NeriTypography? other, double t) {
@@ -135,7 +151,7 @@ class NeriTypography extends ThemeExtension<NeriTypography> {
     return NeriTypography({
       for (final role in NeriTextRole.values)
         role: TextStyle.lerp(this[role], other[role], t)!,
-    });
+    }, TextStyle.lerp(mono, other.mono, t)!);
   }
 
   @override

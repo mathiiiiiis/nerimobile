@@ -1,6 +1,15 @@
 import 'package:flutter/painting.dart';
 
 const neriFontFamily = 'GoogleSansFlex';
+const neriMonoFamily = 'monospace';
+
+/// Mono fallbacks for code, platforms name their default differently
+const neriMonoFallback = <String>[
+  'Roboto Mono',
+  'Menlo',
+  'Consolas',
+  'Courier New',
+];
 
 /// Covers missing glyphs, static fallbacks follow fontWeight
 const neriFontFallback = <String>[

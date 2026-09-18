@@ -6,8 +6,6 @@ import 'package:nerimobile/theme/sizing/radius.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/theme/typography/text_styles.dart';
 
-const codeFontFamily = 'monospace';
-
 class CodeBlockView extends StatelessWidget {
   const CodeBlockView({super.key, required this.code, this.lang});
 
@@ -37,7 +35,7 @@ class CodeBlockView extends StatelessWidget {
                 color: colors[NeriToken.textTertiary],
               ),
             ),
-          Text.rich(code, style: const TextStyle(fontFamily: codeFontFamily)),
+          Text.rich(code, style: context.neriText.mono),
         ],
       ),
     );

@@ -38,8 +38,8 @@ const _headingRoles = {
   2: NeriTextRole.headlineMedium,
   3: NeriTextRole.titleLarge,
   4: NeriTextRole.headlineSmall,
-  5: NeriTextRole.bodyLarge,
-  6: NeriTextRole.bodyMedium,
+  5: NeriTextRole.titleMedium,
+  6: NeriTextRole.titleSmall,
 };
 
 class PlaceholderSlot {
@@ -111,6 +111,10 @@ class MarkupRenderContext {
     final serverId = channels[message?.channelId]?.serverId;
     return serverId == null ? null : serverRoles[serverId]?[roleId];
   }
+
+  TextStyle get codeStyle => textStyles.mono.copyWith(
+    backgroundColor: neri[NeriToken.markupCodeBackground],
+  );
 
   Color? hide(Color? color) => hidden ? Colors.transparent : color;
 
@@ -436,10 +440,7 @@ TextSpan buildTextSpan(Entity entity, MarkupRenderContext ctx) {
       return TextSpan(
         text: spans.isEmpty ? ctx.countText(content) : null,
         children: spans.isEmpty ? null : spans,
-        style: TextStyle(
-          fontFamily: codeFontFamily,
-          backgroundColor: ctx.neri[NeriToken.markupCodeBackground],
-        ),
+        style: ctx.codeStyle,
         recognizer: ctx.spoilerTap,
       );
     case "codeblock":
@@ -451,10 +452,7 @@ TextSpan buildTextSpan(Entity entity, MarkupRenderContext ctx) {
       if (ctx.inline) {
         return TextSpan(
           children: [code],
-          style: TextStyle(
-            fontFamily: codeFontFamily,
-            backgroundColor: ctx.neri[NeriToken.markupCodeBackground],
-          ),
+          style: ctx.codeStyle,
           recognizer: ctx.spoilerTap,
         );
       }
@@ -493,8 +491,9 @@ TextSpan buildTextSpan(Entity entity, MarkupRenderContext ctx) {
       );
     case "heading":
       final int level = entity.params["level"] ?? 1;
-      final role = _headingRoles[level] ?? NeriTextRole.bodyMedium;
-      final fontSize = ctx.textStyles[role].fontSize ?? ctx.baseStyle.fontSize;
+      final role = _headingRoles[level] ?? NeriTextRole.titleSmall;
+      final headingStyle = ctx.textStyles[role];
+      final fontSize = headingStyle.fontSize ?? ctx.baseStyle.fontSize;
 
       if (ctx.inline) return TextSpan(children: children());
 
@@ -508,10 +507,7 @@ TextSpan buildTextSpan(Entity entity, MarkupRenderContext ctx) {
       return TextSpan(
         children: [
           ctx.widgetSpan(SizedBox(height: spacer), size: Size(0, spacer)),
-          TextSpan(
-            children: headingSpans,
-            style: TextStyle(fontSize: fontSize, fontWeight: FontWeight.w600),
-          ),
+          TextSpan(children: headingSpans, style: headingStyle),
         ],
       );
     case "custom":

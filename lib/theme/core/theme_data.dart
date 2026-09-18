@@ -55,11 +55,13 @@ ThemeData buildNeriTheme({
   final colors = NeriColors(
     ThemeResolver(spec: spec, overrides: overrides).resolveAll(),
   );
+  final typographyResolver = TypographyResolver(
+    spec: typography,
+    overrides: typographyOverrides,
+  );
   final text = NeriTypography(
-    TypographyResolver(
-      spec: typography,
-      overrides: typographyOverrides,
-    ).resolveAll(),
+    typographyResolver.resolveAll(),
+    typographyResolver.resolveMono(),
   );
   final size = SizingResolver(
     spec: sizing,

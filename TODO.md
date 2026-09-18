@@ -48,7 +48,7 @@
 ## Markup
 
 - [ ] Custom entity types (some still render literal):
-  - [ ] `r` role mentions
+  - [x] `r` role mentions
   - [ ] `q` quoted messages
   - [ ] `link` (with `->` syntax)
   - [ ] any kind of timestamp
@@ -56,7 +56,7 @@
   - [ ] `vertical`
 - [x] No `codeblock` or `blockquote` handling in `inline`
 - [x] Make links clickable
-- [ ] Migrate everything to use App Tokens
+- [x] Migrate everything to use App Tokens
 
 ## Improvements
 
