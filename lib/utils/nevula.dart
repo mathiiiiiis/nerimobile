@@ -222,6 +222,16 @@ String getTokenType(RegExpMatch match) {
   return "text";
 }
 
+List<Entity> _escapesBetween(List<RegExpMatch> tokens, int from, int to) => [
+  for (final token in tokens.sublist(from, to))
+    if (getTokenType(token) == "escape")
+      TextEntity(
+        Span(start: token.start + 1, end: token.end),
+        Span(start: token.start, end: token.end),
+        [],
+      ),
+];
+
 Entity parseMarkup(String text) {
   List<Marker> markers = [];
   List<Entity> entities = [];
@@ -418,7 +428,7 @@ Entity parseMarkup(String text) {
             CodeEntity(
               Span(start: indice.end, end: endIndice.start),
               Span(start: indice.start, end: endIndice.end),
-              [],
+              _escapesBetween(tokens, pos, markerIndex),
             ),
           );
           pos = markerIndex;
@@ -449,7 +459,7 @@ Entity parseMarkup(String text) {
                 end: endIndice.start,
               ),
               Span(start: indice.start, end: endIndice.end),
-              [],
+              _escapesBetween(tokens, pos, markerIndex),
               lang,
             ),
           );

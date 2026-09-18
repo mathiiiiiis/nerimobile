@@ -19,11 +19,15 @@ import 'package:nerimobile/views/avatar.dart';
 import 'package:nerimobile/views/chat/message/emoji/custom_emoji.dart';
 import 'package:nerimobile/views/chat/message/emoji/emoji_size.dart';
 import 'package:nerimobile/views/chat/message/emoji/twemoji.dart';
+import 'package:nerimobile/views/markup/blockquote.dart';
+import 'package:nerimobile/views/markup/checkbox.dart';
+import 'package:nerimobile/views/markup/code_block.dart';
 import 'package:nerimobile/views/markup/gradient.dart';
 import 'package:nerimobile/views/markup/mention_chip.dart';
 import 'package:nerimobile/views/markup/spoiler.dart';
 
 const _headingSpacer = 20.0;
+const _checkboxScale = 1.1;
 
 class PlaceholderSlot {
   const PlaceholderSlot({this.size, required this.alignment});
@@ -34,6 +38,7 @@ class PlaceholderSlot {
 
 class MarkupRenderContext {
   MarkupRenderContext({
+    required this.neri,
     required this.text,
     required this.channels,
     required this.spoilers,
@@ -48,6 +53,7 @@ class MarkupRenderContext {
     this.shaders,
   });
 
+  final NeriColors neri;
   final String text;
   final Map<String, Channel> channels;
   final SpoilerController spoilers;
@@ -359,19 +365,72 @@ TextSpan buildTextSpan(Entity entity, MarkupRenderContext ctx) {
         style: TextStyle(color: ctx.hide(color)),
       );
     case "code":
+      final spans = children();
       return TextSpan(
-        text: ctx.countText(content),
-        style: const TextStyle(
-          fontFamily: 'monospace',
-          backgroundColor: Colors.grey,
+        text: spans.isEmpty ? ctx.countText(content) : null,
+        children: spans.isEmpty ? null : spans,
+        style: TextStyle(
+          fontFamily: codeFontFamily,
+          backgroundColor: ctx.neri[NeriToken.markupCodeBackground],
         ),
         recognizer: ctx.spoilerTap,
+      );
+    case "codeblock":
+      final spans = children();
+      final code = TextSpan(
+        text: spans.isEmpty ? ctx.countText(content) : null,
+        children: spans.isEmpty ? null : spans,
+      );
+      if (ctx.inline) {
+        return TextSpan(
+          children: [code],
+          style: TextStyle(
+            fontFamily: codeFontFamily,
+            backgroundColor: ctx.neri[NeriToken.markupCodeBackground],
+          ),
+          recognizer: ctx.spoilerTap,
+        );
+      }
+
+      return TextSpan(
+        children: [
+          ctx.widgetSpan(
+            ctx.cover(CodeBlockView(code: code, lang: entity.params["lang"])),
+          ),
+        ],
+      );
+    case "blockquote":
+      final quoted = TextSpan(children: children());
+      if (ctx.inline) return quoted;
+
+      return TextSpan(
+        children: [ctx.widgetSpan(ctx.cover(BlockquoteView(content: quoted)))],
+      );
+    case "checkbox":
+      ctx.countText(content);
+      final boxSize = (ctx.baseStyle.fontSize ?? 14) * _checkboxScale;
+
+      return TextSpan(
+        children: [
+          ctx.widgetSpan(
+            ctx.cover(
+              MarkupCheckbox(
+                checked: entity.params["checked"] == true,
+                size: boxSize,
+              ),
+            ),
+            size: Size.square(boxSize),
+            alignment: PlaceholderAlignment.middle,
+          ),
+        ],
       );
     case "heading":
       const levelSizes = {1: 34.0, 2: 24.0, 3: 18.0, 4: 14.0, 5: 12.0, 6: 10.0};
 
       final int level = entity.params["level"] ?? 1;
       double fontSize = levelSizes[level] ?? 14.0;
+
+      if (ctx.inline) return TextSpan(children: children());
 
       final outerSize = ctx.emojiSizeOverride;
       ctx.emojiSizeOverride = fontSize;
@@ -460,6 +519,7 @@ class _MarkupViewState extends ConsumerState<MarkupView> {
     List<ui.Shader>? shaders,
   }) {
     return MarkupRenderContext(
+      neri: context.neri,
       text: widget.rawText ?? '',
       channels: ref.read(channelsProvider),
       spoilers: _spoilers,
