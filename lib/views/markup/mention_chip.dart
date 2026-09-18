@@ -8,10 +8,11 @@ import 'package:nerimobile/theme/sizing/radius.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
 
 class MentionChip extends StatelessWidget {
-  const MentionChip({super.key, required this.leading, required this.label});
+  const MentionChip({super.key, required this.label, this.leading, this.color});
 
-  final Widget leading;
   final String label;
+  final Widget? leading;
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +29,10 @@ class MentionChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         spacing: sizing.space(NeriSpacingRole.xs),
-        children: [leading, Text(label)],
+        children: [
+          ?leading,
+          Text(label, style: TextStyle(color: color)),
+        ],
       ),
     );
   }
@@ -48,8 +52,9 @@ Size mentionChipSize({
     textScaler: textScaler,
   )..layout();
 
+  final leading = leadingSize > 0 ? leadingSize + spacing : 0;
   final size = Size(
-    spacing * 3 + leadingSize + painter.width,
+    spacing * 2 + leading + painter.width,
     max(leadingSize, painter.height),
   );
   painter.dispose();

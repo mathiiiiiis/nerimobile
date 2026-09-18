@@ -12,6 +12,7 @@
 - [ ] Server channel mention counts undercount, `isMentioned` misses `[@:e]`,
       role mentions and reply mentions
 - [ ] Scroll to message does not paginate to a target that is not loaded yet
+- [ ] `isValidUrl` rejects urls without a path, so it never matches real links
 - [x] Inline code spans never form
 - [ ] Heading in a custom status keeps its block spacer and font size
 
@@ -53,8 +54,8 @@
   - [ ] any kind of timestamp
   - [ ] `ruby`
   - [ ] `vertical`
-- [ ] No `codeblock` or `blockquote` handling in `inline`
-- [ ] Make links clickable
+- [x] No `codeblock` or `blockquote` handling in `inline`
+- [x] Make links clickable
 - [ ] Migrate everything to use App Tokens
 
 ## Improvements

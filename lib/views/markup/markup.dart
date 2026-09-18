@@ -7,8 +7,10 @@ import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 import 'package:nerimobile/models/channel.dart';
 import 'package:nerimobile/models/message.dart';
+import 'package:nerimobile/models/server_role.dart';
 import 'package:nerimobile/models/user.dart';
 import 'package:nerimobile/stores/channel/channel_store.dart';
+import 'package:nerimobile/stores/server/server_roles_store.dart';
 import 'package:nerimobile/theme/core/theme_data.dart';
 import 'package:nerimobile/theme/core/token.dart';
 import 'package:nerimobile/theme/sizing/dimens.dart';
@@ -54,6 +56,7 @@ class MarkupRenderContext {
     required this.textStyles,
     required this.text,
     required this.channels,
+    required this.serverRoles,
     required this.spoilers,
     required this.links,
     required this.spoilerBackground,
@@ -72,6 +75,7 @@ class MarkupRenderContext {
   final NeriTypography textStyles;
   final String text;
   final Map<String, Channel> channels;
+  final Map<String, Map<String, ServerRole>> serverRoles;
   final SpoilerController spoilers;
   final LinkTapController links;
   final Color spoilerBackground;
@@ -102,6 +106,11 @@ class MarkupRenderContext {
       !styledEmoji;
 
   bool get hidden => hiddenSpoiler != null;
+
+  ServerRole? role(String roleId) {
+    final serverId = channels[message?.channelId]?.serverId;
+    return serverId == null ? null : serverRoles[serverId]?[roleId];
+  }
 
   Color? hide(Color? color) => hidden ? Colors.transparent : color;
 
@@ -194,6 +203,14 @@ TextSpan transformCustomTextSpan(Entity entity, MarkupRenderContext ctx) {
         return channelMention(channel, ctx);
       }
 
+    case "r":
+      final role = ctx.role(content);
+
+      if (role != null) {
+        ctx.countText(content);
+        return roleMention(role, ctx);
+      }
+
     case "@":
       final user = [
         ...?ctx.message?.mentions,
@@ -275,6 +292,25 @@ TextSpan userMention(User user, MarkupRenderContext ctx) {
           user.username,
           ctx.sizing.dimen(NeriDimen.mentionAvatar),
         ),
+      ),
+    ],
+  );
+}
+
+TextSpan roleMention(ServerRole role, MarkupRenderContext ctx) {
+  final label = '@${role.name}';
+  final color = role.hexColor;
+
+  return TextSpan(
+    children: [
+      ctx.widgetSpan(
+        ctx.cover(
+          MentionChip(
+            label: label,
+            color: color == null ? null : ctx.hide(hexToColor(color)),
+          ),
+        ),
+        size: ctx.chipSize(label, 0),
       ),
     ],
   );
@@ -558,6 +594,7 @@ class _MarkupViewState extends ConsumerState<MarkupView> {
       textStyles: context.neriText,
       text: widget.rawText ?? '',
       channels: ref.read(channelsProvider),
+      serverRoles: ref.read(serverRolesProvider),
       spoilers: _spoilers,
       links: _links,
       spoilerBackground: context.neri[NeriToken.markupSpoilerBackground],
