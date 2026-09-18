@@ -1,3 +1,36 @@
+const _relativeSteps = [
+  (60.0, 'second'),
+  (60.0, 'minute'),
+  (24.0, 'hour'),
+  (7.0, 'day'),
+  (4.35, 'week'),
+  (12.0, 'month'),
+];
+
+String formatRelative(int milliseconds) {
+  final target = DateTime.fromMillisecondsSinceEpoch(milliseconds);
+  final difference = target.difference(DateTime.now());
+  final ahead = !difference.isNegative;
+
+  //TODO: add l10n
+  var value = difference.inMilliseconds.abs() / 1000;
+  if (value.round() < 1) return 'now';
+
+  var unit = 'year';
+  for (final (limit, name) in _relativeSteps) {
+    if (value.round() < limit) {
+      unit = name;
+      break;
+    }
+    value /= limit;
+  }
+
+  final amount = value.round();
+  final plural = amount == 1 ? unit : '${unit}s';
+
+  return ahead ? 'in $amount $plural' : '$amount $plural ago';
+}
+
 String formatTimestamp(int milliseconds) {
   final date = DateTime.fromMillisecondsSinceEpoch(milliseconds);
   final now = DateTime.now();
@@ -12,7 +45,7 @@ String formatTimestamp(int milliseconds) {
   if (dateOnly == today) {
     return time;
   } else if (dateOnly == yesterday) {
-    return 'Yesterday at $time';
+    return 'Yesterday at $time'; //TODO: add l10n
   } else {
     final day = date.day.toString().padLeft(2, '0');
     final month = date.month.toString().padLeft(2, '0');

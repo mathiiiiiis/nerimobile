@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui' as ui;
 
 import 'package:flutter/gestures.dart';
@@ -18,6 +19,7 @@ import 'package:nerimobile/theme/sizing/sizing.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/theme/typography/text_styles.dart';
 import 'package:nerimobile/utils/colors.dart';
+import 'package:nerimobile/utils/date.dart';
 import 'package:nerimobile/utils/emoji_shortcodes.dart';
 import 'package:nerimobile/utils/nevula.dart';
 import 'package:nerimobile/utils/url.dart';
@@ -35,6 +37,9 @@ import 'package:nerimobile/views/markup/spoiler.dart';
 import 'package:nerimobile/views/modal/confirm_dialog.dart';
 
 const _checkboxScale = 1.1;
+const _relativeTick = Duration(seconds: 30);
+const _countdownTick = Duration(seconds: 1);
+const _countdownRange = Duration(minutes: 1);
 const _headingRoles = {
   1: NeriTextRole.headlineLarge,
   2: NeriTextRole.headlineMedium,
@@ -95,6 +100,8 @@ class MarkupRenderContext {
   int emojiCount = 0;
   int spoilerCount = 0;
   int spoilerDepth = 0;
+  int relativeCount = 0;
+  bool countingSeconds = false;
   int? hiddenSpoiler;
   bool spoiledEmoji = false;
   bool styledEmoji = false;
@@ -219,6 +226,14 @@ TextSpan transformCustomTextSpan(Entity entity, MarkupRenderContext ctx) {
 
       return linkSpan(target, label, ctx);
 
+    case "tr":
+      final seconds = double.tryParse(content.trim());
+      if (seconds == null) break;
+
+      ctx.countText(content);
+      ctx.relativeCount++;
+      return timestampMention((seconds * 1000).round(), ctx);
+
     case "r":
       final role = ctx.role(content);
 
@@ -319,6 +334,32 @@ TextSpan linkSpan(String url, String label, MarkupRenderContext ctx) {
     style: TextStyle(color: ctx.hide(ctx.neri[NeriToken.primary])),
     recognizer:
         ctx.spoilerTap ?? ctx.links.recognizer(url, masked: label != url),
+  );
+}
+
+//TODO: tapping a future timestamp should offer a reminder (nerimity web behaviour)
+TextSpan timestampMention(int milliseconds, MarkupRenderContext ctx) {
+  final label = formatRelative(milliseconds);
+  final target = DateTime.fromMillisecondsSinceEpoch(milliseconds);
+  if (target.difference(DateTime.now()).abs() < _countdownRange) {
+    ctx.countingSeconds = true;
+  }
+
+  return TextSpan(
+    children: [
+      ctx.widgetSpan(
+        ctx.cover(
+          MentionChip(
+            leading: Icon(
+              Symbols.schedule_rounded,
+              size: ctx.sizing.dimen(NeriDimen.mentionIcon),
+            ),
+            label: label,
+          ),
+        ),
+        size: ctx.chipSize(label, ctx.sizing.dimen(NeriDimen.mentionIcon)),
+      ),
+    ],
   );
 }
 
@@ -580,6 +621,19 @@ class MarkupView extends ConsumerStatefulWidget {
 class _MarkupViewState extends ConsumerState<MarkupView> {
   late final _spoilers = SpoilerController(onChanged: () => setState(() {}));
   late final _links = LinkTapController(_openLink);
+  Timer? _relativeTicker;
+  Duration? _relativeInterval;
+
+  //relative timestamps need periodic redraws
+  void _syncRelativeTicker(Duration? interval) {
+    if (interval == _relativeInterval) return;
+
+    _relativeTicker?.cancel();
+    _relativeInterval = interval;
+    _relativeTicker = interval == null
+        ? null
+        : Timer.periodic(interval, (_) => setState(() {}));
+  }
 
   //masked links require confirmation
   Future<void> _openLink(String url, {required bool masked}) async {
@@ -609,6 +663,7 @@ class _MarkupViewState extends ConsumerState<MarkupView> {
   void dispose() {
     _spoilers.reset();
     _links.reset();
+    _relativeTicker?.cancel();
     super.dispose();
   }
 
@@ -654,6 +709,13 @@ class _MarkupViewState extends ConsumerState<MarkupView> {
     final tree = addTextSpans(parseMarkup(widget.rawText ?? ''));
     final ctx = _context(context);
     final span = buildTextSpan(tree, ctx);
+    _syncRelativeTicker(
+      ctx.relativeCount == 0
+          ? null
+          : ctx.countingSeconds
+          ? _countdownTick
+          : _relativeTick,
+    );
     final emojiSize = ctx.largeEmoji
         ? context.neriSize.dimen(NeriDimen.emojiLg)
         : emojiSizeFor(context);
