@@ -20,6 +20,7 @@ import 'package:nerimobile/theme/typography/text_styles.dart';
 import 'package:nerimobile/utils/colors.dart';
 import 'package:nerimobile/utils/emoji_shortcodes.dart';
 import 'package:nerimobile/utils/nevula.dart';
+import 'package:nerimobile/utils/url.dart';
 import 'package:nerimobile/views/avatar.dart';
 import 'package:nerimobile/views/chat/message/emoji/custom_emoji.dart';
 import 'package:nerimobile/views/chat/message/emoji/emoji_size.dart';
@@ -31,6 +32,7 @@ import 'package:nerimobile/views/markup/gradient.dart';
 import 'package:nerimobile/views/markup/link_taps.dart';
 import 'package:nerimobile/views/markup/mention_chip.dart';
 import 'package:nerimobile/views/markup/spoiler.dart';
+import 'package:nerimobile/views/modal/confirm_dialog.dart';
 
 const _checkboxScale = 1.1;
 const _headingRoles = {
@@ -207,6 +209,16 @@ TextSpan transformCustomTextSpan(Entity entity, MarkupRenderContext ctx) {
         return channelMention(channel, ctx);
       }
 
+    case "link":
+      final parts = content.split('->');
+      if (parts.length < 2) break;
+
+      final target = withScheme(parts[0].trim());
+      final label = parts[1].trim();
+      if (target.isEmpty || label.isEmpty) break;
+
+      return linkSpan(target, label, ctx);
+
     case "r":
       final role = ctx.role(content);
 
@@ -301,6 +313,15 @@ TextSpan userMention(User user, MarkupRenderContext ctx) {
   );
 }
 
+TextSpan linkSpan(String url, String label, MarkupRenderContext ctx) {
+  return TextSpan(
+    text: ctx.countText(label),
+    style: TextStyle(color: ctx.hide(ctx.neri[NeriToken.primary])),
+    recognizer:
+        ctx.spoilerTap ?? ctx.links.recognizer(url, masked: label != url),
+  );
+}
+
 TextSpan roleMention(ServerRole role, MarkupRenderContext ctx) {
   final label = '@${role.name}';
   final color = role.hexColor;
@@ -392,13 +413,9 @@ TextSpan buildTextSpan(Entity entity, MarkupRenderContext ctx) {
     case "link":
     case "named_link":
       final named = entity.type == "named_link";
-      final url = named ? entity.params["url"] as String : content;
+      final url = withScheme(named ? entity.params["url"] : content);
 
-      return TextSpan(
-        text: ctx.countText(named ? entity.params["name"] : content),
-        style: TextStyle(color: ctx.hide(ctx.neri[NeriToken.primary])),
-        recognizer: ctx.spoilerTap ?? ctx.links.recognizer(url),
-      );
+      return linkSpan(url, named ? entity.params["name"] : content, ctx);
     case "color":
       final textBefore = ctx.textCount;
       final spans = children();
@@ -562,7 +579,22 @@ class MarkupView extends ConsumerStatefulWidget {
 
 class _MarkupViewState extends ConsumerState<MarkupView> {
   late final _spoilers = SpoilerController(onChanged: () => setState(() {}));
-  final _links = LinkTapController();
+  late final _links = LinkTapController(_openLink);
+
+  //masked links require confirmation
+  Future<void> _openLink(String url, {required bool masked}) async {
+    if (masked) {
+      final confirmed = await showConfirmDialog(
+        context,
+        title: 'Open link?', //TODO: add l10n
+        message: url,
+        confirmLabel: 'Open', //TODO: add l10n
+      );
+      if (!confirmed) return;
+    }
+
+    openExternal(url);
+  }
 
   @override
   void didUpdateWidget(MarkupView oldWidget) {

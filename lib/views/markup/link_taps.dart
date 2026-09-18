@@ -1,16 +1,20 @@
 import 'package:flutter/gestures.dart';
-import 'package:nerimobile/utils/url.dart';
+
+typedef OpenLink = void Function(String url, {required bool masked});
 
 class LinkTapController {
+  LinkTapController(this.open);
+
+  final OpenLink open;
   final _recognizers = <String, TapGestureRecognizer>{};
 
-  GestureRecognizer? recognizer(String url) {
+  GestureRecognizer? recognizer(String url, {bool masked = false}) {
     final uri = Uri.tryParse(url);
     if (uri == null || !uri.hasAuthority) return null;
     if (uri.scheme != 'http' && uri.scheme != 'https') return null;
 
-    return _recognizers[url] ??= TapGestureRecognizer()
-      ..onTap = () => openExternal(url);
+    return _recognizers['$masked $url'] ??= TapGestureRecognizer()
+      ..onTap = () => open(url, masked: masked);
   }
 
   void reset() {

@@ -3,6 +3,11 @@ import 'package:url_launcher/url_launcher.dart';
 Future<void> openExternal(String url) =>
     launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
 
+String withScheme(String url) =>
+    url.startsWith('http://') || url.startsWith('https://')
+    ? url
+    : 'https://$url';
+
 bool isValidUrl(String url) {
   try {
     final uri = Uri.parse(url);
