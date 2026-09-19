@@ -7,6 +7,7 @@ import 'package:photo_manager/photo_manager.dart';
 
 import 'package:nerimobile/stores/composer/composer_store.dart';
 import 'package:nerimobile/stores/media/recent_media_store.dart';
+import 'package:nerimobile/theme/colors/derive.dart';
 import 'package:nerimobile/theme/core/theme_data.dart';
 import 'package:nerimobile/theme/core/token.dart';
 import 'package:nerimobile/theme/sizing/border.dart';
@@ -21,28 +22,60 @@ const _columns = 3;
 const _visibleRows = 2;
 const _filesPressScale = 0.97;
 const _markerOpacity = 0.55;
+const _selectedOpacity = 0.3;
+
+enum AttachmentPicker { closed, collapsed, expanded }
+
+class AttachmentPickerState {
+  const AttachmentPickerState({required this.mode, this.selected});
+
+  final AttachmentPicker mode;
+  final AssetEntity? selected;
+
+  bool get expanded => mode == AttachmentPicker.expanded;
+  bool get open => mode != AttachmentPicker.closed;
+}
 
 final attachmentPickerProvider =
-    NotifierProvider.family<AttachmentPickerNotifier, bool, String>(
-      AttachmentPickerNotifier.new,
-    );
+    NotifierProvider.family<
+      AttachmentPickerNotifier,
+      AttachmentPickerState,
+      String
+    >(AttachmentPickerNotifier.new);
 
-class AttachmentPickerNotifier extends Notifier<bool> {
+class AttachmentPickerNotifier extends Notifier<AttachmentPickerState> {
   AttachmentPickerNotifier(this.channelId);
 
   final String channelId;
 
   @override
-  bool build() => false;
+  AttachmentPickerState build() =>
+      const AttachmentPickerState(mode: AttachmentPicker.closed);
 
-  void toggle() => state = !state;
-  void close() => state = false;
+  void toggle() => state.open ? close() : collapse();
+
+  void expand() => _mode(AttachmentPicker.expanded);
+  void collapse() => _mode(AttachmentPicker.collapsed);
+
+  void close() =>
+      state = const AttachmentPickerState(mode: AttachmentPicker.closed);
+
+  void select(AssetEntity? asset) => state = AttachmentPickerState(
+    mode: state.mode,
+    selected: state.selected?.id == asset?.id ? null : asset,
+  );
+
+  void _mode(AttachmentPicker mode) =>
+      state = AttachmentPickerState(mode: mode, selected: state.selected);
 }
 
 class AttachmentPanel extends ConsumerWidget {
   const AttachmentPanel({super.key, required this.channelId});
 
   final String channelId;
+
+  AttachmentPickerNotifier _picker(WidgetRef ref) =>
+      ref.read(attachmentPickerProvider(channelId).notifier);
 
   Future<void> _pickFile(WidgetRef ref) async {
     await PhotoManager.requestPermissionExtend(
@@ -70,7 +103,23 @@ class AttachmentPanel extends ConsumerWidget {
     if (path == null) return;
 
     ref.read(composerProvider(channelId).notifier).attach(path);
-    ref.read(attachmentPickerProvider(channelId).notifier).close();
+    _picker(ref).close();
+  }
+
+  void _tapAsset(WidgetRef ref, AssetEntity asset, {required bool expanded}) {
+    if (expanded) return _picker(ref).select(asset);
+
+    _useAsset(ref, asset);
+  }
+
+  void _onDragEnd(WidgetRef ref, DragEndDetails details) {
+    final velocity = details.primaryVelocity ?? 0;
+    if (velocity < 0) return _picker(ref).expand();
+    if (velocity <= 0) return;
+
+    ref.read(attachmentPickerProvider(channelId)).expanded
+        ? _picker(ref).collapse()
+        : _picker(ref).close();
   }
 
   @override
@@ -78,92 +127,145 @@ class AttachmentPanel extends ConsumerWidget {
     final sizing = context.neriSize;
     final gap = sizing.space(NeriSpacingRole.sm);
     final recents = ref.watch(recentMediaProvider);
+    final picker = ref.watch(attachmentPickerProvider(channelId));
+    final expanded = picker.expanded;
+    final selected = picker.selected;
+    final radius = Radius.circular(sizing.radius(NeriRadiusRole.xl));
 
     return Container(
-      color: context.neri[NeriToken.pane],
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: context.neri[NeriToken.pane],
+        borderRadius: expanded
+            ? BorderRadius.only(topLeft: radius, topRight: radius)
+            : null,
+      ),
       child: SafeArea(
         top: false,
-        child: Padding(
-          padding: EdgeInsets.fromLTRB(gap, 0, gap, gap),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            spacing: gap,
-            children: [
-              const _DragHandle(),
-              _FilesButton(onTap: () => _pickFile(ref)),
-              if (recents.hasError)
-                _AccessNotice(onTap: PhotoManager.openSetting)
-              else
-                LayoutBuilder(
-                  builder: (context, constraints) {
-                    final size =
-                        (constraints.maxWidth - gap * (_columns - 1)) /
-                        _columns;
-
-                    return SizedBox(
-                      height: size * _visibleRows + gap * (_visibleRows - 1),
-                      child: GridView.builder(
-                        padding: EdgeInsets.zero,
-                        physics: const NeverScrollableScrollPhysics(),
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: _columns,
-                          mainAxisSpacing: gap,
-                          crossAxisSpacing: gap,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onVerticalDragEnd: (details) => _onDragEnd(ref, details),
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(gap, expanded ? gap : 0, gap, gap),
+            child: Column(
+              mainAxisSize: expanded ? MainAxisSize.max : MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              spacing: gap,
+              children: [
+                const _DragHandle(),
+                if (expanded)
+                  _ExpandedHeader(
+                    onBack: _picker(ref).collapse,
+                    onAlbums: () => _pickFile(ref),
+                  )
+                else
+                  _FilesButton(onTap: () => _pickFile),
+                if (recents.hasError)
+                  _AccessNotice(onTap: PhotoManager.openSetting)
+                else if (expanded)
+                  Expanded(
+                    child: Stack(
+                      children: [
+                        Positioned.fill(
+                          child: _grid(context, ref, recents, expanded: true),
                         ),
-                        itemCount: (recents.value?.length ?? 0) + 1,
-                        itemBuilder: (context, index) {
-                          if (index == 0) {
-                            return _Card(
-                              onTap: () => _takePhoto(ref),
-                              child: Center(
-                                child: Icon(
-                                  Symbols.photo_camera_rounded,
-                                  size: sizing.dimen(NeriDimen.iconMd),
-                                  color: context.neri[NeriToken.textSecondary],
-                                ),
-                              ),
-                            );
-                          }
-
-                          final recent = recents.value?.elementAtOrNull(
-                            index - 1,
-                          );
-                          final thumbnail = recent?.thumbnail;
-                          if (thumbnail == null) return const _Card();
-
-                          final asset = recent!.asset;
-
-                          return _Card(
-                            onTap: () => _useAsset(ref, asset),
-                            child: Stack(
-                              fit: StackFit.expand,
-                              children: [
-                                Image.memory(
-                                  thumbnail,
-                                  fit: BoxFit.cover,
-                                  gaplessPlayback: true,
-                                  cacheWidth:
-                                      (size *
-                                              MediaQuery.devicePixelRatioOf(
-                                                context,
-                                              ))
-                                          .round(),
-                                ),
-                                if (asset.type == AssetType.video)
-                                  _VideoMarker(duration: asset.videoDuration),
-                              ],
+                        if (selected case final selected?)
+                          Positioned(
+                            right: gap,
+                            bottom: gap,
+                            child: _SendButton(
+                              onTap: () => _useAsset(ref, selected),
                             ),
-                          );
-                        },
-                      ),
-                    );
-                  },
-                ),
-            ],
+                          ),
+                      ],
+                    ),
+                  )
+                else
+                  _grid(context, ref, recents, expanded: false),
+              ],
+            ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _grid(
+    BuildContext context,
+    WidgetRef ref,
+    AsyncValue<List<RecentMedia>> recents, {
+    required bool expanded,
+  }) {
+    final sizing = context.neriSize;
+    final gap = sizing.space(NeriSpacingRole.sm);
+    final selected = ref.watch(
+      attachmentPickerProvider(channelId).select((p) => p.selected),
+    );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final size = (constraints.maxWidth - gap * (_columns - 1)) / _columns;
+
+        final grid = GridView.builder(
+          padding: EdgeInsets.zero,
+          physics: expanded
+              ? const AlwaysScrollableScrollPhysics()
+              : const NeverScrollableScrollPhysics(),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: _columns,
+            mainAxisSpacing: gap,
+            crossAxisSpacing: gap,
+          ),
+          itemCount: (recents.value?.length ?? 0) + 1,
+          itemBuilder: (context, index) {
+            if (index == 0) {
+              return _Card(
+                onTap: () => _takePhoto(ref),
+                child: Center(
+                  child: Icon(
+                    Symbols.photo_camera_rounded,
+                    fill: 1,
+                    size: sizing.dimen(NeriDimen.iconMd),
+                    color: context.neri[NeriToken.textSecondary],
+                  ),
+                ),
+              );
+            }
+
+            final recent = recents.value?.elementAtOrNull(index - 1);
+            final thumbnail = recent?.thumbnail;
+            if (thumbnail == null) return const _Card();
+
+            final asset = recent!.asset;
+
+            return _Card(
+              onTap: () => _tapAsset(ref, asset, expanded: expanded),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Image.memory(
+                    thumbnail,
+                    fit: BoxFit.cover,
+                    gaplessPlayback: true,
+                    cacheWidth: (size * MediaQuery.devicePixelRatioOf(context))
+                        .round(),
+                  ),
+                  if (asset.type == AssetType.video)
+                    _VideoMarker(duration: asset.videoDuration),
+                  if (selected?.id == asset.id) const _Selected(),
+                ],
+              ),
+            );
+          },
+        );
+
+        if (expanded) return grid;
+
+        return SizedBox(
+          height: size * _visibleRows + gap * (_visibleRows - 1),
+          child: grid,
+        );
+      },
     );
   }
 }
@@ -300,6 +402,101 @@ class _FilesButton extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _Selected extends StatelessWidget {
+  const _Selected();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.neri;
+    final sizing = context.neriSize;
+
+    return Container(
+      color: colors[NeriToken.primary].withValues(alpha: _selectedOpacity),
+      alignment: Alignment.center,
+      child: Icon(
+        Symbols.check_circle_rounded,
+        fill: 1,
+        size: sizing.dimen(NeriDimen.iconMd),
+        color: colors[NeriToken.primary],
+      ),
+    );
+  }
+}
+
+class _ExpandedHeader extends StatelessWidget {
+  const _ExpandedHeader({required this.onBack, required this.onAlbums});
+
+  final VoidCallback onBack;
+  final VoidCallback onAlbums;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.neri;
+    final sizing = context.neriSize;
+    return Row(
+      children: [
+        GestureDetector(
+          onTap: onBack,
+          child: PressScale(
+            child: Icon(
+              Symbols.arrow_back_rounded,
+              size: sizing.dimen(NeriDimen.iconSm),
+              color: colors[NeriToken.text],
+            ),
+          ),
+        ),
+        const Spacer(),
+        GestureDetector(
+          onTap: onAlbums,
+          child: PressScale(
+            scale: _filesPressScale,
+            child: Text(
+              'All albums', //TODO: add l10n
+              style: context.neriText[NeriTextRole.bodyLarge].copyWith(
+                color: colors[NeriToken.primary],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _SendButton extends StatelessWidget {
+  const _SendButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.neri;
+    final sizing = context.neriSize;
+    final size = sizing.dimen(NeriDimen.avatarMd);
+
+    return GestureDetector(
+      onTap: onTap,
+      child: PressScale(
+        child: Container(
+          width: size,
+          height: size,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: colors[NeriToken.primary],
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            Symbols.send_rounded,
+            fill: 1,
+            size: sizing.dimen(NeriDimen.iconMd),
+            color: onColor(colors[NeriToken.primary]),
           ),
         ),
       ),

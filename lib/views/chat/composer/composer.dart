@@ -177,7 +177,9 @@ class _ComposerState extends ConsumerState<Composer>
     final editing = ref.watch(
       composerProvider(widget.channelId).select((c) => c.editing != null),
     );
-    final picking = ref.watch(attachmentPickerProvider(widget.channelId));
+    final picking = ref.watch(
+      attachmentPickerProvider(widget.channelId).select((p) => p.open),
+    );
 
     return PopScope(
       canPop: !editing,

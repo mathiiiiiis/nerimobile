@@ -17,6 +17,7 @@ import 'package:nerimobile/views/shell/destinations.dart';
 import 'package:nerimobile/views/size_reporter.dart';
 
 const _panelResize = Duration(milliseconds: 200);
+const _expandedHeight = 0.85;
 
 class ChannelPane extends StatelessWidget {
   const ChannelPane({super.key, required this.channelId});
@@ -74,15 +75,19 @@ class _Chat extends ConsumerStatefulWidget {
 
 class _ChatState extends ConsumerState<_Chat> {
   double _composerHeight = 0;
+  double _collapsedPanelHeight = 0;
 
   @override
   Widget build(BuildContext context) {
+    final picker = ref.watch(attachmentPickerProvider(widget.channelId));
+    final lift = picker.open ? _collapsedPanelHeight : 0.0;
+
     return Stack(
       children: [
         Positioned.fill(
           child: MessageList(
             channelId: widget.channelId,
-            bottomInset: _composerHeight,
+            bottomInset: _composerHeight + lift,
           ),
         ),
         Positioned(
@@ -94,28 +99,43 @@ class _ChatState extends ConsumerState<_Chat> {
             showBack: widget.showBack,
           ),
         ),
-        Positioned(
+        //collapsed panel lifts the composer, expanded one covers it
+        AnimatedPositioned(
+          duration: _panelResize,
+          curve: Curves.easeOut,
           left: 0,
           right: 0,
-          bottom: 0,
+          bottom: lift,
           child: SizeReporter(
             onSize: (size) {
               if (mounted) setState(() => _composerHeight = size.height);
             },
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Composer(channelId: widget.channelId),
-                AnimatedSize(
-                  duration: _panelResize,
-                  curve: Curves.easeOut,
-                  alignment: Alignment.topCenter,
-                  child: ref.watch(attachmentPickerProvider(widget.channelId))
-                      ? AttachmentPanel(channelId: widget.channelId)
-                      : const SizedBox(width: double.infinity),
-                ),
-              ],
-            ),
+            child: Composer(channelId: widget.channelId),
+          ),
+        ),
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 0,
+          child: AnimatedSize(
+            duration: _panelResize,
+            curve: Curves.easeOut,
+            alignment: Alignment.topCenter,
+            child: switch (picker.mode) {
+              AttachmentPicker.closed => const SizedBox(width: double.infinity),
+              AttachmentPicker.collapsed => SizeReporter(
+                onSize: (size) {
+                  if (mounted) {
+                    setState(() => _collapsedPanelHeight = size.height);
+                  }
+                },
+                child: AttachmentPanel(channelId: widget.channelId),
+              ),
+              AttachmentPicker.expanded => SizedBox(
+                height: MediaQuery.sizeOf(context).height * _expandedHeight,
+                child: AttachmentPanel(channelId: widget.channelId),
+              ),
+            },
           ),
         ),
       ],
