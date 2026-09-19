@@ -20,6 +20,9 @@
 
 - [x] DM list caching and skeleton loading, plus pattern for every new list
 - [ ] Persist messages so they don't start empty on cold-start
+- [ ] Add Fullscreen Image viewing
+- [ ] Make every nerimity.com/app/ link open inside the app and have custom
+      styling instead of an embed
 - [x] Context menu(s)
   - [ ] Reactions, pin and mark unread
   - [ ] Delete other people's messages with manage messages permission
