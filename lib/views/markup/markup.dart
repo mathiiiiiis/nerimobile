@@ -33,10 +33,12 @@ import 'package:nerimobile/views/markup/code_block.dart';
 import 'package:nerimobile/views/markup/gradient.dart';
 import 'package:nerimobile/views/markup/link_taps.dart';
 import 'package:nerimobile/views/markup/mention_chip.dart';
+import 'package:nerimobile/views/markup/quote_message.dart';
 import 'package:nerimobile/views/markup/spoiler.dart';
 import 'package:nerimobile/views/modal/confirm_dialog.dart';
 
 const _checkboxScale = 1.1;
+const _maxQuotes = 10;
 const _relativeTick = Duration(seconds: 30);
 const _countdownTick = Duration(seconds: 1);
 const _countdownRange = Duration(minutes: 1);
@@ -74,6 +76,7 @@ class MarkupRenderContext {
     this.message,
     this.mentions = const [],
     this.inline = false,
+    this.isQuote = false,
     this.shaders,
   });
 
@@ -93,6 +96,7 @@ class MarkupRenderContext {
   final Message? message;
   final List<User> mentions;
   final bool inline;
+  final bool isQuote;
   final List<ui.Shader>? shaders;
   final placeholders = <PlaceholderSlot>[];
   int gradientCount = 0;
@@ -101,6 +105,7 @@ class MarkupRenderContext {
   int spoilerCount = 0;
   int spoilerDepth = 0;
   int relativeCount = 0;
+  int quoteCount = 0;
   bool countingSeconds = false;
   int? hiddenSpoiler;
   bool spoiledEmoji = false;
@@ -225,6 +230,22 @@ TextSpan transformCustomTextSpan(Entity entity, MarkupRenderContext ctx) {
       if (target.isEmpty || label.isEmpty) break;
 
       return linkSpan(target, label, ctx);
+
+    //TODO: add l10n
+    case "q":
+      if (ctx.isQuote || ctx.inline) return quoteChip('Quote', ctx);
+
+      final quote = ctx.message?.quotedMessages
+          .where((m) => m.id == content)
+          .firstOrNull;
+      if (quote == null) return quoteChip('Unknown message', ctx);
+      if (ctx.quoteCount >= _maxQuotes) break;
+
+      ctx.quoteCount++;
+      ctx.countText(content);
+      return TextSpan(
+        children: [ctx.widgetSpan(ctx.cover(QuoteMessageView(quote: quote)))],
+      );
 
     case "to":
       final clock = formatZoneTime(content.trim());
@@ -354,6 +375,25 @@ TextSpan timestampMention(int milliseconds, MarkupRenderContext ctx) {
   }
 
   return timestampChip(formatRelative(milliseconds), ctx);
+}
+
+TextSpan quoteChip(String label, MarkupRenderContext ctx) {
+  return TextSpan(
+    children: [
+      ctx.widgetSpan(
+        ctx.cover(
+          MentionChip(
+            leading: Icon(
+              Symbols.format_quote_rounded,
+              size: ctx.sizing.dimen(NeriDimen.mentionIcon),
+            ),
+            label: label,
+          ),
+        ),
+        size: ctx.chipSize(label, ctx.sizing.dimen(NeriDimen.mentionIcon)),
+      ),
+    ],
+  );
 }
 
 TextSpan timestampChip(String label, MarkupRenderContext ctx) {
@@ -613,6 +653,7 @@ class MarkupView extends ConsumerStatefulWidget {
 
   //keeps custom status markup on one text run
   final bool inline;
+  final bool isQuote;
   final int? maxLines;
   final TextOverflow? overflow;
 
@@ -622,6 +663,7 @@ class MarkupView extends ConsumerStatefulWidget {
     this.message,
     this.mentions = const [],
     this.inline = false,
+    this.isQuote = false,
     this.maxLines,
     this.overflow,
   });
@@ -701,6 +743,7 @@ class _MarkupViewState extends ConsumerState<MarkupView> {
       message: widget.message,
       mentions: widget.mentions,
       inline: widget.inline,
+      isQuote: widget.isQuote,
       shaders: shaders,
     );
   }

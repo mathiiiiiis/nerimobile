@@ -49,7 +49,7 @@
 
 - [ ] Custom entity types (some still render literal):
   - [x] `r` role mentions
-  - [ ] `q` quoted messages
+  - [x] `q` quoted messages
   - [x] `link` (with `->` syntax)
   - [x] any kind of timestamp
   - [ ] `ruby`

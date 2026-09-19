@@ -30,6 +30,7 @@ class Message {
   final int createdAt;
   final Embed? embed;
   final List<ReplyMessage> replyMessages;
+  final List<PartialMessage> quotedMessages;
 
   Message({
     required this.id,
@@ -42,6 +43,7 @@ class Message {
     this.embed,
     this.mentions = const [],
     this.replyMessages = const [],
+    this.quotedMessages = const [],
   });
 
   factory Message.fromJson(Map<String, dynamic> json) => Message(
@@ -59,6 +61,9 @@ class Message {
     replyMessages: (json['replyMessages'] as List? ?? [])
         .map((r) => ReplyMessage.fromJson(r))
         .toList(),
+    quotedMessages: (json['quotedMessages'] as List? ?? [])
+        .map((q) => PartialMessage.fromJson(q))
+        .toList(),
   );
 
   Message copyWith(Map<String, dynamic> partial) {
@@ -75,6 +80,7 @@ class Message {
           ? (partial["embed"] != null ? Embed.fromJson(partial["embed"]) : null)
           : embed,
       replyMessages: replyMessages,
+      quotedMessages: quotedMessages,
     );
   }
 }
@@ -218,6 +224,7 @@ class PartialMessage {
   final int createdAt;
   final User createdBy;
   final List<Attachment> attachments;
+  final List<User> mentions;
 
   PartialMessage({
     required this.id,
@@ -225,6 +232,7 @@ class PartialMessage {
     required this.createdAt,
     required this.createdBy,
     required this.attachments,
+    this.mentions = const [],
   });
 
   factory PartialMessage.of(Message message) => PartialMessage(
@@ -233,6 +241,7 @@ class PartialMessage {
     createdAt: message.createdAt,
     createdBy: message.createdBy,
     attachments: message.attachments,
+    mentions: message.mentions,
   );
 
   factory PartialMessage.fromJson(Map<String, dynamic> json) => PartialMessage(
@@ -242,6 +251,9 @@ class PartialMessage {
     createdBy: User.fromJson(json['createdBy']),
     attachments: (json['attachments'] as List? ?? [])
         .map((a) => Attachment.fromJson(a))
+        .toList(),
+    mentions: (json['mentions'] as List? ?? [])
+        .map((m) => User.fromJson(m))
         .toList(),
   );
 }
