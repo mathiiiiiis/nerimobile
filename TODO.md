@@ -21,6 +21,14 @@
 - [x] DM list caching and skeleton loading, plus pattern for every new list
 - [ ] Persist messages so they don't start empty on cold-start
 - [ ] Add Fullscreen Image viewing
+- [ ] Attachments:
+  - [ ] Picker sheet with camera and recent images, all albums opens file picker
+  - [ ] Upload to nerimity cdn with progress
+  - [ ] Send one attachment per message, retry a failed upload
+- [ ] Voice messages, record in compose and play back in the message
+- [ ] Emoji anf GIF bottom modal (idea is the nerimity web vanilla version)
+- [ ] Markup bar above compose for bold, italic, strikethrough, headings, links,
+      todo items, hidden text, timestamps and colors, later hideable in settings
 - [ ] Make every nerimity.com/app/ link open inside the app and have custom
       styling instead of an embed
 - [x] Context menu(s)
