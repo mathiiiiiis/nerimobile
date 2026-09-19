@@ -47,16 +47,23 @@
 
 ## Markup
 
-- [ ] Custom entity types (some still render literal):
+- [x] Custom entity types:
   - [x] `r` role mentions
   - [x] `q` quoted messages
   - [x] `link` (with `->` syntax)
   - [x] any kind of timestamp
   - [x] `ruby`
-  - [ ] `vertical`
+  - [x] `vertical`
 - [x] No `codeblock` or `blockquote` handling in `inline`
 - [x] Make links clickable
 - [x] Migrate everything to use App Tokens
+- [ ] Render attachments inside a quote
+- [ ] Offer a reminder when tapping a future timestamp
+- [ ] Toggle checkboxes in own messages
+- [ ] Syntax highlighting in codeblocks
+- [ ] Translucent markup backgrounds wash out codeblocks in quotes
+- [ ] Gradients in blockquotes measure against a placeholder square
+      `IntrinsicHeight` and baseline rows also break around `MarkupView`
 
 ## Improvements
 
