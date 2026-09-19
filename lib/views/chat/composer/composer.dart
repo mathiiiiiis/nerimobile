@@ -16,6 +16,7 @@ import 'package:nerimobile/theme/sizing/dimens.dart';
 import 'package:nerimobile/theme/sizing/radius.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/theme/typography/text_styles.dart';
+import 'package:nerimobile/views/chat/composer/attachment_panel.dart';
 import 'package:nerimobile/views/chat/composer/composer_bar.dart';
 import 'package:nerimobile/views/chat/composer/typing_indicator.dart';
 
@@ -68,6 +69,11 @@ class _ComposerState extends ConsumerState<Composer>
   }
 
   bool get _canSend => _controller.text.trim().isNotEmpty && !_sending;
+
+  void _togglePicker() {
+    _focus.unfocus();
+    ref.read(attachmentPickerProvider(widget.channelId).notifier).toggle();
+  }
 
   void _onChanged() {
     setState(() {});
@@ -171,6 +177,7 @@ class _ComposerState extends ConsumerState<Composer>
     final editing = ref.watch(
       composerProvider(widget.channelId).select((c) => c.editing != null),
     );
+    final picking = ref.watch(attachmentPickerProvider(widget.channelId));
 
     return PopScope(
       canPop: !editing,
@@ -199,7 +206,7 @@ class _ComposerState extends ConsumerState<Composer>
         ),
         child: SafeArea(
           top: false,
-          bottom: !dual,
+          bottom: !dual && !picking,
           child: Padding(
             padding: EdgeInsets.all(sizing.space(NeriSpacingRole.sm)),
             child: Column(
@@ -214,8 +221,7 @@ class _ComposerState extends ConsumerState<Composer>
                   children: [
                     _ActionButton(
                       icon: Symbols.add_rounded,
-                      //TODO: attachment menu
-                      onTap: () {},
+                      onTap: _togglePicker,
                     ),
                     Expanded(
                       child: TextFieldTapRegion(

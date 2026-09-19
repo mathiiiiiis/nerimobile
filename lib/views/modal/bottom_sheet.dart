@@ -21,15 +21,14 @@ class SheetAction {
   final bool destructive;
 }
 
-Future<void> showActionSheet(
+Future<T?> showSheet<T>(
   BuildContext context, {
-  required List<SheetAction> actions,
-  Widget? header,
+  required WidgetBuilder builder,
 }) async {
   final colors = context.neri;
   final radius = Radius.circular(context.neriSize.radius(NeriRadiusRole.xl));
 
-  final picked = await showModalBottomSheet<SheetAction>(
+  return showModalBottomSheet<T>(
     context: context,
     useSafeArea: true,
     showDragHandle: true,
@@ -39,6 +38,17 @@ Future<void> showActionSheet(
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.only(topLeft: radius, topRight: radius),
     ),
+    builder: builder,
+  );
+}
+
+Future<void> showActionSheet(
+  BuildContext context, {
+  required List<SheetAction> actions,
+  Widget? header,
+}) async {
+  final picked = await showSheet<SheetAction>(
+    context,
     builder: (context) => _ActionSheet(header: header, actions: actions),
   );
   picked?.onTap();

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:nerimobile/theme/core/theme_data.dart';
 import 'package:nerimobile/theme/core/token.dart';
@@ -7,12 +8,15 @@ import 'package:nerimobile/theme/sizing/breakpoints.dart';
 import 'package:nerimobile/theme/sizing/radius.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/views/chat/channel/channel_header.dart';
+import 'package:nerimobile/views/chat/composer/attachment_panel.dart';
 import 'package:nerimobile/views/chat/composer/composer.dart';
 import 'package:nerimobile/views/chat/message/message_list.dart';
 import 'package:nerimobile/views/dashboard/dm_list.dart';
 import 'package:nerimobile/views/shell/app_scaffold.dart';
 import 'package:nerimobile/views/shell/destinations.dart';
 import 'package:nerimobile/views/size_reporter.dart';
+
+const _panelResize = Duration(milliseconds: 200);
 
 class ChannelPane extends StatelessWidget {
   const ChannelPane({super.key, required this.channelId});
@@ -58,17 +62,17 @@ class ChannelPane extends StatelessWidget {
   }
 }
 
-class _Chat extends StatefulWidget {
+class _Chat extends ConsumerStatefulWidget {
   const _Chat({required this.channelId, required this.showBack});
 
   final String channelId;
   final bool showBack;
 
   @override
-  State<_Chat> createState() => _ChatState();
+  ConsumerState<_Chat> createState() => _ChatState();
 }
 
-class _ChatState extends State<_Chat> {
+class _ChatState extends ConsumerState<_Chat> {
   double _composerHeight = 0;
 
   @override
@@ -98,7 +102,20 @@ class _ChatState extends State<_Chat> {
             onSize: (size) {
               if (mounted) setState(() => _composerHeight = size.height);
             },
-            child: Composer(channelId: widget.channelId),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Composer(channelId: widget.channelId),
+                AnimatedSize(
+                  duration: _panelResize,
+                  curve: Curves.easeOut,
+                  alignment: Alignment.topCenter,
+                  child: ref.watch(attachmentPickerProvider(widget.channelId))
+                      ? AttachmentPanel(channelId: widget.channelId)
+                      : const SizedBox(width: double.infinity),
+                ),
+              ],
+            ),
           ),
         ),
       ],

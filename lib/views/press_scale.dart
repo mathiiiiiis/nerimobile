@@ -4,9 +4,14 @@ const _pressedScale = 0.9;
 const _pressDuration = Duration(milliseconds: 150);
 
 class PressScale extends StatefulWidget {
-  const PressScale({super.key, required this.child});
+  const PressScale({
+    super.key,
+    required this.child,
+    this.scale = _pressedScale,
+  });
 
   final Widget child;
+  final double scale;
 
   @override
   State<PressScale> createState() => _PressScaleState();
@@ -27,7 +32,7 @@ class _PressScaleState extends State<PressScale> {
       onPointerUp: (_) => _setPressed(false),
       onPointerCancel: (_) => _setPressed(false),
       child: AnimatedScale(
-        scale: _pressed ? _pressedScale : 1,
+        scale: _pressed ? widget.scale : 1,
         duration: _pressDuration,
         curve: Curves.easeOut,
         child: widget.child,

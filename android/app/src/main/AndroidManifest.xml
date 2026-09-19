@@ -1,7 +1,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- required to interact with nerimity api -->
-    <!-- without it the app wouldn't function -->
-    <uses-permission android:name="android.permission.INTERNET"/>
+  <!-- required to interact with nerimity api -->
+  <!-- without it the app wouldn't function -->
+  <uses-permission android:name="android.permission.INTERNET"/>
+
+  <!-- required to attach photos, videos and audio files to messages -->
+  <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
+  <uses-permission android:name="android.permission.READ_MEDIA_VIDEO"/>
+  <uses-permission android:name="android.permission.READ_MEDIA_AUDIO"/>
 
     <application
         android:label="Nerimobile"
