@@ -9,6 +9,7 @@ import 'package:nerimobile/theme/core/token.dart';
 import 'package:nerimobile/theme/sizing/dimens.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/theme/typography/text_styles.dart';
+import 'package:nerimobile/utils/format.dart';
 import 'package:nerimobile/views/markup/markup.dart';
 
 ActivityKind activityKindOf(ActivityStatus activity) {
@@ -62,7 +63,7 @@ class PresenceLine extends ConsumerWidget {
       return DefaultTextStyle(
         style: placeholder,
         child: MarkupView(
-          rawText: _inline(custom),
+          rawText: singleLine(custom),
           inline: true,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
@@ -81,8 +82,6 @@ class PresenceLine extends ConsumerWidget {
 
 PresenceStatus _statusOf(UserPresence? presence) =>
     PresenceStatus.fromValue(presence?.status ?? 0) ?? PresenceStatus.offline;
-
-String _inline(String text) => text.replaceAll(RegExp(r'\s+'), ' ').trim();
 
 class _ActivityLine extends StatelessWidget {
   const _ActivityLine({

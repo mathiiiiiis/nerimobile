@@ -9,7 +9,9 @@ import 'package:nerimobile/theme/sizing/dimens.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/theme/typography/text_styles.dart';
 import 'package:nerimobile/utils/colors.dart';
+import 'package:nerimobile/utils/format.dart';
 import 'package:nerimobile/views/chat/message/message_list.dart';
+import 'package:nerimobile/views/markup/markup.dart';
 
 const _lineWidth = 2.0;
 const _cornerRadius = 8.0;
@@ -127,18 +129,26 @@ class ReplyPreview extends ConsumerWidget {
           ),
         ),
         Expanded(
-          child: Text(
-            attachmentOnly
-                ? 'Sent an attachment'
-                : reply.content, //TODO: add l10n
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+          child: DefaultTextStyle(
             style: style.copyWith(
               color: hexColor == null
                   ? colors[NeriToken.textPlaceholder]
                   : hexToColor(hexColor),
               fontStyle: attachmentOnly ? FontStyle.italic : null,
             ),
+            child: attachmentOnly
+                ? Text(
+                    'Sent an attachment', //TODO: add l10n
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  )
+                : MarkupView(
+                    rawText: singleLine(reply.content),
+                    mentions: reply.mentions,
+                    inline: true,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
           ),
         ),
       ],

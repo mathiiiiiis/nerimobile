@@ -1,3 +1,6 @@
+//normalize whitespace for single line markup
+String singleLine(String text) => text.replaceAll(RegExp(r'\s+'), ' ').trim();
+
 String formatFileSize(int bytes) {
   const units = ['B', 'KB', 'MB', 'GB'];
   var size = bytes.toDouble();

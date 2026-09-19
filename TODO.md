@@ -14,7 +14,7 @@
 - [ ] Scroll to message does not paginate to a target that is not loaded yet
 - [ ] `isValidUrl` rejects urls without a path, so it never matches real links
 - [x] Inline code spans never form
-- [ ] Heading in a custom status keeps its block spacer and font size
+- [x] Heading in a custom status keeps its block spacer and font size
 
 ## Features
 

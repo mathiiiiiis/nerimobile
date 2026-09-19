@@ -16,10 +16,12 @@ import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/theme/typography/text_styles.dart';
 import 'package:nerimobile/utils/caches.dart';
 import 'package:nerimobile/utils/emojis.dart';
+import 'package:nerimobile/utils/format.dart';
 import 'package:nerimobile/utils/image.dart';
 import 'package:nerimobile/views/avatar.dart';
 import 'package:nerimobile/views/chat/message/emoji/twemoji.dart';
 import 'package:nerimobile/views/empty_state.dart';
+import 'package:nerimobile/views/markup/markup.dart';
 import 'package:nerimobile/views/presence/presence_line.dart';
 import 'package:nerimobile/views/skeleton/skeleton.dart';
 
@@ -266,12 +268,15 @@ class _Details extends StatelessWidget {
               ],
             ),
             if (status.title case final title?)
-              Text(
-                title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+              DefaultTextStyle(
                 style: text[NeriTextRole.bodyMedium].copyWith(
                   color: colors[NeriToken.textPlaceholder],
+                ),
+                child: MarkupView(
+                  rawText: singleLine(title),
+                  inline: true,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
           ],
