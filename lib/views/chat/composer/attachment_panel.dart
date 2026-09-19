@@ -20,6 +20,7 @@ import 'package:nerimobile/utils/format.dart';
 import 'package:nerimobile/views/press_scale.dart';
 
 const _columns = 3;
+const _loadMoreRows = 3;
 const _visibleRows = 2;
 const _filesPressScale = 0.97;
 const _markerOpacity = 0.55;
@@ -251,7 +252,20 @@ class AttachmentPanel extends ConsumerWidget {
           },
         );
 
-        if (expanded) return grid;
+        if (expanded) {
+          return NotificationListener<ScrollUpdateNotification>(
+            onNotification: (notification) {
+              final metrics = notification.metrics;
+              final trigger = (size + gap) * _loadMoreRows;
+              if (metrics.extentAfter < trigger) {
+                ref.read(recentMediaProvider.notifier).loadMore();
+              }
+
+              return false;
+            },
+            child: grid,
+          );
+        }
 
         return SizedBox(
           height: size * _visibleRows + gap * (_visibleRows - 1),

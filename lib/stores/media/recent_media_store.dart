@@ -13,6 +13,10 @@ final recentMediaProvider =
 class RecentMediaNotifier extends AsyncNotifier<List<AssetEntity>> {
   final _thumbnails = <String, Uint8List?>{};
 
+  AssetPathEntity? _album;
+  var _hasMore = true;
+  var _loadingMore = false;
+
   @override
   Future<List<AssetEntity>> build() {
     ref.keepAlive();
@@ -37,10 +41,30 @@ class RecentMediaNotifier extends AsyncNotifier<List<AssetEntity>> {
     );
   }
 
+  Future<void> loadMore() async {
+    final album = _album;
+    final loaded = state.value;
+    if (album == null || loaded == null) return;
+    if (!_hasMore || _loadingMore) return;
+
+    _loadingMore = true;
+    try {
+      final next = await album.getAssetListRange(
+        start: loaded.length,
+        end: loaded.length + _pageSize,
+      );
+      _hasMore = next.length == _pageSize;
+      state = AsyncValue.data([...loaded, ...next]);
+    } finally {
+      _loadingMore = false;
+    }
+  }
+
   void _onLibraryChanged(MethodCall _) => refresh();
 
   Future<void> refresh() async {
     _thumbnails.clear();
+    _hasMore = true;
     state = AsyncValue.data(await _load());
   }
 
@@ -59,7 +83,11 @@ class RecentMediaNotifier extends AsyncNotifier<List<AssetEntity>> {
     );
     if (albums.isEmpty) return const [];
 
-    return albums.first.getAssetListRange(start: 0, end: _pageSize);
+    final album = _album = albums.first;
+    final assets = await album.getAssetListRange(start: 0, end: _pageSize);
+    _hasMore = assets.length == _pageSize;
+
+    return assets;
   }
 }
 
