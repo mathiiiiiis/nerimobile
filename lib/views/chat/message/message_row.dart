@@ -81,9 +81,12 @@ class MessageRow extends ConsumerWidget {
   bool _mentionsMe(String? userId) {
     if (userId == null) return false;
     if (message.mentions.any((u) => u.id == userId)) return true;
-    return message.replyMessages.any(
+    if (message.replyMessages.any(
       (r) => r.replyToMessage?.createdBy.id == userId,
-    );
+    )) {
+      return true;
+    }
+    return message.quotedMessages.any((q) => q.createdBy.id == userId);
   }
 
   @override
