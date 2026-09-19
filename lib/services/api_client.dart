@@ -28,3 +28,8 @@ final dioProvider = Provider<Dio>((ref) {
 
   return dio;
 });
+
+//cdn uses a separate upload token
+final cdnDioProvider = Provider<Dio>(
+  (ref) => Dio(BaseOptions(baseUrl: cdnUrl)),
+);
