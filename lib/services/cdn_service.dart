@@ -8,7 +8,7 @@ Future<String> fetchCdnToken(Dio dio, String channelId) async {
   return (response.data as Map<String, dynamic>)['token'] as String;
 }
 
-Future<String> uploadAttachment(
+Future<String> uploadFile(
   Dio cdnDio, {
   required String channelId,
   required String token,
