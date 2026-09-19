@@ -36,6 +36,7 @@ import 'package:nerimobile/views/markup/mention_chip.dart';
 import 'package:nerimobile/views/markup/quote_message.dart';
 import 'package:nerimobile/views/markup/ruby_text.dart';
 import 'package:nerimobile/views/markup/spoiler.dart';
+import 'package:nerimobile/views/markup/vertical_text.dart';
 import 'package:nerimobile/views/modal/confirm_dialog.dart';
 
 const _checkboxScale = 1.1;
@@ -232,6 +233,22 @@ TextSpan transformCustomTextSpan(Entity entity, MarkupRenderContext ctx) {
       if (target.isEmpty || label.isEmpty) break;
 
       return linkSpan(target, label, ctx);
+
+    case "vertical":
+      if (ctx.inline) break;
+
+      final lines = content.trim().split('  ');
+      if (lines.join().isEmpty) break;
+
+      ctx.countText(lines.join());
+      return TextSpan(
+        children: [
+          ctx.widgetSpan(
+            ctx.cover(VerticalText(lines: lines, style: ctx.baseStyle)),
+            alignment: PlaceholderAlignment.top,
+          ),
+        ],
+      );
 
     case "ruby":
       final pairs = [
