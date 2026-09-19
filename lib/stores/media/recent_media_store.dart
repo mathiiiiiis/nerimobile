@@ -5,21 +5,16 @@ import 'package:photo_manager/photo_manager.dart';
 const _pageSize = 60;
 const _thumbnail = ThumbnailSize.square(320);
 
-class RecentMedia {
-  const RecentMedia(this.asset, this.thumbnail);
-
-  final AssetEntity asset;
-  final Uint8List? thumbnail;
-}
-
 final recentMediaProvider =
-    AsyncNotifierProvider<RecentMediaNotifier, List<RecentMedia>>(
+    AsyncNotifierProvider<RecentMediaNotifier, List<AssetEntity>>(
       RecentMediaNotifier.new,
     );
 
-class RecentMediaNotifier extends AsyncNotifier<List<RecentMedia>> {
+class RecentMediaNotifier extends AsyncNotifier<List<AssetEntity>> {
+  final _thumbnails = <String, Uint8List?>{};
+
   @override
-  Future<List<RecentMedia>> build() {
+  Future<List<AssetEntity>> build() {
     ref.keepAlive();
     PhotoManager.addChangeCallback(_onLibraryChanged);
     PhotoManager.startChangeNotify();
@@ -31,13 +26,25 @@ class RecentMediaNotifier extends AsyncNotifier<List<RecentMedia>> {
     return _load();
   }
 
+  Uint8List? cachedThumbnail(AssetEntity asset) => _thumbnails[asset.id];
+
+  //load thumnails on demand to avoid stalling the first open
+  Future<Uint8List?> thumbnail(AssetEntity asset) async {
+    if (_thumbnails.containsKey(asset.id)) return _thumbnails[asset.id];
+
+    return _thumbnails[asset.id] = await asset.thumbnailDataWithSize(
+      _thumbnail,
+    );
+  }
+
   void _onLibraryChanged(MethodCall _) => refresh();
 
   Future<void> refresh() async {
+    _thumbnails.clear();
     state = AsyncValue.data(await _load());
   }
 
-  Future<List<RecentMedia>> _load() async {
+  Future<List<AssetEntity>> _load() async {
     final permission = await PhotoManager.requestPermissionExtend();
     if (!permission.hasAccess) throw const _NoAccess();
 
@@ -52,14 +59,7 @@ class RecentMediaNotifier extends AsyncNotifier<List<RecentMedia>> {
     );
     if (albums.isEmpty) return const [];
 
-    final assets = await albums.first.getAssetListRange(
-      start: 0,
-      end: _pageSize,
-    );
-    return [
-      for (final asset in assets)
-        RecentMedia(asset, await asset.thumbnailDataWithSize(_thumbnail)),
-    ];
+    return albums.first.getAssetListRange(start: 0, end: _pageSize);
   }
 }
 

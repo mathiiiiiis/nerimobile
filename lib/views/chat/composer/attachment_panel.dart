@@ -1,5 +1,6 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
@@ -193,7 +194,7 @@ class AttachmentPanel extends ConsumerWidget {
   Widget _grid(
     BuildContext context,
     WidgetRef ref,
-    AsyncValue<List<RecentMedia>> recents, {
+    AsyncValue<List<AssetEntity>> recents, {
     required bool expanded,
   }) {
     final sizing = context.neriSize;
@@ -232,24 +233,15 @@ class AttachmentPanel extends ConsumerWidget {
               );
             }
 
-            final recent = recents.value?.elementAtOrNull(index - 1);
-            final thumbnail = recent?.thumbnail;
-            if (thumbnail == null) return const _Card();
-
-            final asset = recent!.asset;
+            final asset = recents.value?.elementAtOrNull(index - 1);
+            if (asset == null) return const _Card();
 
             return _Card(
               onTap: () => _tapAsset(ref, asset, expanded: expanded),
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  Image.memory(
-                    thumbnail,
-                    fit: BoxFit.cover,
-                    gaplessPlayback: true,
-                    cacheWidth: (size * MediaQuery.devicePixelRatioOf(context))
-                        .round(),
-                  ),
+                  _Thumbnail(asset: asset, size: size),
                   if (asset.type == AssetType.video)
                     _VideoMarker(duration: asset.videoDuration),
                   if (selected?.id == asset.id) const _Selected(),
@@ -287,6 +279,43 @@ class _DragHandle extends StatelessWidget {
           borderRadius: BorderRadius.circular(height),
         ),
       ),
+    );
+  }
+}
+
+class _Thumbnail extends ConsumerStatefulWidget {
+  const _Thumbnail({required this.asset, required this.size});
+
+  final AssetEntity asset;
+  final double size;
+
+  @override
+  ConsumerState<_Thumbnail> createState() => _ThumbnailState();
+}
+
+class _ThumbnailState extends ConsumerState<_Thumbnail> {
+  late final RecentMediaNotifier _media = ref.read(
+    recentMediaProvider.notifier,
+  );
+  late final Future<Uint8List?> _data = _media.thumbnail(widget.asset);
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder(
+      future: _data,
+      initialData: _media.cachedThumbnail(widget.asset),
+      builder: (context, snapshot) {
+        final thumbnail = snapshot.data;
+        if (thumbnail == null) return const SizedBox.shrink();
+
+        return Image.memory(
+          thumbnail,
+          fit: BoxFit.cover,
+          gaplessPlayback: true,
+          cacheWidth: (widget.size * MediaQuery.devicePixelRatioOf(context))
+              .round(),
+        );
+      },
     );
   }
 }
