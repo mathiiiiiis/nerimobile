@@ -52,7 +52,7 @@
   - [x] `q` quoted messages
   - [x] `link` (with `->` syntax)
   - [x] any kind of timestamp
-  - [ ] `ruby`
+  - [x] `ruby`
   - [ ] `vertical`
 - [x] No `codeblock` or `blockquote` handling in `inline`
 - [x] Make links clickable

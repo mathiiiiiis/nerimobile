@@ -34,11 +34,13 @@ import 'package:nerimobile/views/markup/gradient.dart';
 import 'package:nerimobile/views/markup/link_taps.dart';
 import 'package:nerimobile/views/markup/mention_chip.dart';
 import 'package:nerimobile/views/markup/quote_message.dart';
+import 'package:nerimobile/views/markup/ruby_text.dart';
 import 'package:nerimobile/views/markup/spoiler.dart';
 import 'package:nerimobile/views/modal/confirm_dialog.dart';
 
 const _checkboxScale = 1.1;
 const _maxQuotes = 10;
+final _rubyPattern = RegExp(r'(.+?)\((.*?)\)', dotAll: true);
 const _relativeTick = Duration(seconds: 30);
 const _countdownTick = Duration(seconds: 1);
 const _countdownRange = Duration(minutes: 1);
@@ -230,6 +232,33 @@ TextSpan transformCustomTextSpan(Entity entity, MarkupRenderContext ctx) {
       if (target.isEmpty || label.isEmpty) break;
 
       return linkSpan(target, label, ctx);
+
+    case "ruby":
+      final pairs = [
+        for (final match in _rubyPattern.allMatches(content))
+          (match.group(1)!.trim(), match.group(2)!.trim()),
+      ];
+      if (pairs.isEmpty) break;
+
+      if (ctx.inline) {
+        return TextSpan(
+          text: ctx.countText(
+            pairs.map((pair) => '${pair.$1}(${pair.$2})').join(' '),
+          ),
+          style: TextStyle(color: ctx.hide(ctx.baseStyle.color)),
+          recognizer: ctx.spoilerTap,
+        );
+      }
+
+      ctx.countText(pairs.map((pair) => pair.$1).join());
+      return TextSpan(
+        children: [
+          ctx.widgetSpan(
+            ctx.cover(RubyText(pairs: pairs, style: ctx.baseStyle)),
+            alignment: PlaceholderAlignment.bottom,
+          ),
+        ],
+      );
 
     //TODO: add l10n
     case "q":
