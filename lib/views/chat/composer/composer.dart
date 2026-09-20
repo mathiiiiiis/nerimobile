@@ -177,16 +177,21 @@ class _ComposerState extends ConsumerState<Composer>
     final editing = ref.watch(
       composerProvider(widget.channelId).select((c) => c.editing != null),
     );
-    final picking = ref.watch(
-      attachmentPickerProvider(widget.channelId).select((p) => p.open),
-    );
+    final picker = ref.watch(attachmentPickerProvider(widget.channelId));
+    final picking = picker.open;
 
     return PopScope(
-      canPop: !editing,
+      canPop: !editing && !picking,
       onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) {
-          ref.read(composerProvider(widget.channelId).notifier).cancelEdit();
-        }
+        if (didPop) return;
+
+        final notifier = ref.read(
+          attachmentPickerProvider(widget.channelId).notifier,
+        );
+        if (picker.expanded) return notifier.collapse();
+        if (picking) return notifier.close();
+
+        ref.read(composerProvider(widget.channelId).notifier).cancelEdit();
       },
       child: Container(
         margin: dual

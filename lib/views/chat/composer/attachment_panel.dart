@@ -19,6 +19,20 @@ import 'package:nerimobile/theme/typography/text_styles.dart';
 import 'package:nerimobile/utils/format.dart';
 import 'package:nerimobile/views/press_scale.dart';
 
+//must match panel layout below for prebuild sizing
+double collapsedPanelHeight(BuildContext context) {
+  final sizing = context.neriSize;
+  final gap = sizing.space(NeriSpacingRole.sm);
+  final cards = MediaQuery.sizeOf(context).width - gap * 2;
+  final card = (cards - gap * (_columns - 1)) / _columns;
+
+  return MediaQuery.paddingOf(context).bottom +
+      sizing.border(NeriBorderRole.thick) +
+      sizing.dimen(NeriDimen.controlSize) +
+      card * _visibleRows +
+      gap * (_visibleRows + 2);
+}
+
 const _columns = 3;
 const _loadMoreRows = 3;
 const _visibleRows = 2;
@@ -114,16 +128,6 @@ class AttachmentPanel extends ConsumerWidget {
     _useAsset(ref, asset);
   }
 
-  void _onDragEnd(WidgetRef ref, DragEndDetails details) {
-    final velocity = details.primaryVelocity ?? 0;
-    if (velocity < 0) return _picker(ref).expand();
-    if (velocity <= 0) return;
-
-    ref.read(attachmentPickerProvider(channelId)).expanded
-        ? _picker(ref).collapse()
-        : _picker(ref).close();
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final sizing = context.neriSize;
@@ -144,48 +148,44 @@ class AttachmentPanel extends ConsumerWidget {
       ),
       child: SafeArea(
         top: false,
-        child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onVerticalDragEnd: (details) => _onDragEnd(ref, details),
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(gap, expanded ? gap : 0, gap, gap),
-            child: Column(
-              mainAxisSize: expanded ? MainAxisSize.max : MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              spacing: gap,
-              children: [
-                const _DragHandle(),
-                if (expanded)
-                  _ExpandedHeader(
-                    onBack: _picker(ref).collapse,
-                    onAlbums: () => _pickFile(ref),
-                  )
-                else
-                  _FilesButton(onTap: () => _pickFile),
-                if (recents.hasError)
-                  _AccessNotice(onTap: PhotoManager.openSetting)
-                else if (expanded)
-                  Expanded(
-                    child: Stack(
-                      children: [
-                        Positioned.fill(
-                          child: _grid(context, ref, recents, expanded: true),
-                        ),
-                        if (selected case final selected?)
-                          Positioned(
-                            right: gap,
-                            bottom: gap,
-                            child: _SendButton(
-                              onTap: () => _useAsset(ref, selected),
-                            ),
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(gap, expanded ? gap : 0, gap, gap),
+          child: Column(
+            mainAxisSize: expanded ? MainAxisSize.max : MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            spacing: gap,
+            children: [
+              const _DragHandle(),
+              if (expanded)
+                _ExpandedHeader(
+                  onBack: _picker(ref).collapse,
+                  onAlbums: () => _pickFile(ref),
+                )
+              else
+                _FilesButton(onTap: () => _pickFile(ref)),
+              if (recents.hasError)
+                _AccessNotice(onTap: PhotoManager.openSetting)
+              else if (expanded)
+                Expanded(
+                  child: Stack(
+                    children: [
+                      Positioned.fill(
+                        child: _grid(context, ref, recents, expanded: true),
+                      ),
+                      if (selected case final selected?)
+                        Positioned(
+                          right: gap,
+                          bottom: gap,
+                          child: _SendButton(
+                            onTap: () => _useAsset(ref, selected),
                           ),
-                      ],
-                    ),
-                  )
-                else
-                  _grid(context, ref, recents, expanded: false),
-              ],
-            ),
+                        ),
+                    ],
+                  ),
+                )
+              else
+                _grid(context, ref, recents, expanded: false),
+            ],
           ),
         ),
       ),
@@ -422,9 +422,9 @@ class _FilesButton extends StatelessWidget {
       child: PressScale(
         scale: _filesPressScale,
         child: Container(
+          height: sizing.dimen(NeriDimen.controlSize),
           padding: EdgeInsets.symmetric(
             horizontal: sizing.space(NeriSpacingRole.md),
-            vertical: sizing.space(NeriSpacingRole.md),
           ),
           decoration: BoxDecoration(
             color: colors[NeriToken.card],

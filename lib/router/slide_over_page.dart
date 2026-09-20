@@ -88,11 +88,20 @@ class SlideOverRoute<T> extends PageRoute<T> {
 
   void dragUpdate(double fraction) => controller!.value -= fraction;
 
-  void dragEnd({required bool pop}) {
+  Future<void> dragEnd({required bool pop}) async {
     final controller = this.controller!;
 
+    if (pop && !await navigator!.maybePop()) {
+      controller.animateTo(
+        1,
+        duration: _transition * (1 - controller.value),
+        curve: Curves.easeOut,
+      );
+      _watchGesture(controller);
+      return;
+    }
+
     if (pop) {
-      navigator!.pop();
       if (controller.isAnimating) {
         controller.animateBack(
           0,
@@ -108,6 +117,10 @@ class SlideOverRoute<T> extends PageRoute<T> {
       );
     }
 
+    _watchGesture(controller);
+  }
+
+  void _watchGesture(AnimationController controller) {
     if (!controller.isAnimating) {
       _endGesture();
       return;
