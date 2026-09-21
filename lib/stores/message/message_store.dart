@@ -193,7 +193,7 @@ class MessagesNotifier extends Notifier<ChannelMessages> {
       _replaceLocal(localId, Message.fromJson(sent['message'] ?? sent));
     } catch (e) {
       final reason = e is DioException ? e.response?.data : null;
-      debugPrint('postMessage($channelId) failed: {$reason ?? e}');
+      debugPrint('postMessage($channelId) failed: ${reason ?? e}');
       state = state.copyWith(
         pending: {...state.pending}..remove(localId),
         failed: {...state.failed, localId},

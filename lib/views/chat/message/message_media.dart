@@ -82,7 +82,7 @@ class _Attachment extends StatelessWidget {
     if (attachment.onDevice) {
       return attachment.isImage
           ? _Media.file(File(path), uploadId: attachment.id)
-          : _FileCard(attachment: attachment);
+          : _FileCard(attachment: attachment, uploadId: attachment.id);
     }
     if (attachment.isExpired) return _FileCard(attachment: attachment);
     if (attachment.isAudio) return AudioPlayer(attachment: attachment);
@@ -359,9 +359,10 @@ class _RingPainter extends CustomPainter {
 }
 
 class _FileCard extends StatelessWidget {
-  const _FileCard({this.attachment});
+  const _FileCard({this.attachment, this.uploadId});
 
   final Attachment? attachment;
+  final String? uploadId;
 
   @override
   Widget build(BuildContext context) {
@@ -416,11 +417,60 @@ class _FileCard extends StatelessWidget {
                       AttachmentExpiry(expireAt: attachment!.expireAt!),
                   ],
                 ),
+                if (uploadId case final uploadId?)
+                  _UploadBar(uploadId: uploadId),
               ],
             ),
           ),
         ],
       ),
+    );
+  }
+}
+
+class _UploadBar extends ConsumerWidget {
+  const _UploadBar({required this.uploadId});
+
+  final String uploadId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final progress = ref.watch(uploadProgressProvider(uploadId));
+    if (progress == null) return const SizedBox.shrink();
+
+    final colors = context.neri;
+    final sizing = context.neriSize;
+
+    return TweenAnimationBuilder<double>(
+      tween: Tween(end: progress),
+      duration: _progressEase,
+      builder: (context, value, _) {
+        final processing = value >= 1;
+
+        return Row(
+          spacing: sizing.space(NeriSpacingRole.sm),
+          children: [
+            Expanded(
+              child: LinearProgressIndicator(
+                value: processing ? null : value,
+                minHeight: sizing.border(NeriBorderRole.thick),
+                borderRadius: sizing.rounded(NeriRadiusRole.full),
+                color: colors[NeriToken.primary],
+                backgroundColor: colors[NeriToken.border],
+              ),
+            ),
+            Text(
+              processing
+                  ? 'Still processing...' //TODO: add l10n
+                  : '${(value * 100).round()}%',
+              style: context.neriText[NeriTextRole.labelSmall].copyWith(
+                color: colors[NeriToken.textPlaceholder],
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
