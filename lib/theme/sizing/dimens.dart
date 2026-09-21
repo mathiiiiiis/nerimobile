@@ -17,6 +17,7 @@ enum NeriDimen {
   channelHeaderHeight,
   dialogWidth,
   attachmentCard,
+  uploadRing,
 }
 
 const neriDimentDefaults = <NeriDimen, double>{
@@ -38,4 +39,5 @@ const neriDimentDefaults = <NeriDimen, double>{
   NeriDimen.channelHeaderHeight: 57,
   NeriDimen.dialogWidth: 360,
   NeriDimen.attachmentCard: 100,
+  NeriDimen.uploadRing: 52,
 };

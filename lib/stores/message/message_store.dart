@@ -6,6 +6,7 @@ import 'package:nerimobile/models/message.dart';
 import 'package:nerimobile/services/api_client.dart';
 import 'package:nerimobile/services/cdn_service.dart';
 import 'package:nerimobile/services/channel_service.dart';
+import 'package:nerimobile/stores/message/upload_progress_store.dart';
 import 'package:nerimobile/stores/user/user_store.dart';
 
 const messagePageSize = 50;
@@ -179,7 +180,7 @@ class MessagesNotifier extends Notifier<ChannelMessages> {
     );
 
     try {
-      final fileId = file == null ? null : await _upload(file);
+      final fileId = file == null ? null : await _upload(file, localId);
       final sent = await postMessage(
         ref.read(dioProvider),
         channelId,
@@ -214,14 +215,24 @@ class MessagesNotifier extends Notifier<ChannelMessages> {
     );
   }
 
-  Future<String> _upload(String file) async {
-    final token = await fetchCdnToken(ref.read(dioProvider), channelId);
-    return uploadFile(
-      ref.read(cdnDioProvider),
-      channelId: channelId,
-      token: token,
-      path: file,
-    );
+  Future<String> _upload(String file, String localId) async {
+    final provider = uploadProgressProvider(localId);
+    final hold = ref.listen(provider, (_, _) {});
+    final progress = ref.read(provider.notifier)..report(0);
+
+    try {
+      final token = await fetchCdnToken(ref.read(dioProvider), channelId);
+      return await uploadFile(
+        ref.read(cdnDioProvider),
+        channelId: channelId,
+        token: token,
+        path: file,
+        onProgress: progress.report,
+      );
+    } finally {
+      progress.report(null);
+      hold.close();
+    }
   }
 
   Future<bool> edit(String messageId, String content) async {

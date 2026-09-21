@@ -1,6 +1,9 @@
 import 'dart:io';
+import 'dart:math';
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:nerimobile/stores/message/upload_progress_store.dart';
 import 'package:nerimobile/theme/sizing/border.dart';
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -24,6 +27,10 @@ import 'package:nerimobile/views/chat/video/video_player.dart';
 const _maxWidth = 600.0;
 const _maxHeight = 350.0;
 const _fallbackRatio = 4 / 3;
+const _scrimOpacity = 0.45;
+const _trackOpacity = 0.3;
+const _progressEase = Duration(milliseconds: 200);
+const _overlayFade = Duration(milliseconds: 200);
 
 class MediaPreview extends StatelessWidget {
   const MediaPreview({
@@ -74,7 +81,7 @@ class _Attachment extends StatelessWidget {
 
     if (attachment.onDevice) {
       return attachment.isImage
-          ? _Media.file(File(path))
+          ? _Media.file(File(path), uploadId: attachment.id)
           : _FileCard(attachment: attachment);
     }
     if (attachment.isExpired) return _FileCard(attachment: attachment);
@@ -178,12 +185,17 @@ class _LinkCard extends StatelessWidget {
 
 class _Media extends StatelessWidget {
   const _Media({required String this.url, this.width, this.height})
-    : file = null;
+    : file = null,
+      uploadId = null;
 
-  const _Media.file(File this.file) : url = null, width = null, height = null;
+  const _Media.file(File this.file, {this.uploadId})
+    : url = null,
+      width = null,
+      height = null;
 
   final String? url;
   final File? file;
+  final String? uploadId;
   final double? width;
   final double? height;
 
@@ -205,14 +217,24 @@ class _Media extends StatelessWidget {
         return ClipRRect(
           borderRadius: sizing.rounded(NeriRadiusRole.image),
           child: switch (file) {
-            final file? => Image.file(
-              file,
-              width: size.width,
-              height: size.height,
-              fit: BoxFit.cover,
-              cacheWidth: (size.width * MediaQuery.devicePixelRatioOf(context))
-                  .round(),
-              errorBuilder: (_, _, _) => _FileCard(),
+            final file? => Stack(
+              children: [
+                TickerMode(
+                  enabled: false,
+                  child: Image.file(
+                    file,
+                    width: size.width,
+                    height: size.height,
+                    fit: BoxFit.cover,
+                    cacheWidth:
+                        (size.width * MediaQuery.devicePixelRatioOf(context))
+                            .round(),
+                    errorBuilder: (_, _, _) => _FileCard(),
+                  ),
+                ),
+                if (uploadId case final uploadId?)
+                  Positioned.fill(child: _UploadOverlay(uploadId: uploadId)),
+              ],
             ),
             null => CachedNetworkImage(
               imageUrl: url!,
@@ -230,6 +252,110 @@ class _Media extends StatelessWidget {
       },
     );
   }
+}
+
+class _UploadOverlay extends ConsumerWidget {
+  const _UploadOverlay({required this.uploadId});
+
+  final String uploadId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final progress = ref.watch(uploadProgressProvider(uploadId));
+    final sizing = context.neriSize;
+    final ring = sizing.dimen(NeriDimen.uploadRing);
+    final stroke = sizing.border(NeriBorderRole.thick);
+
+    return AnimatedSwitcher(
+      duration: _overlayFade,
+      child: progress == null
+          ? const SizedBox.expand()
+          : ColoredBox(
+              color: Colors.black.withValues(alpha: _scrimOpacity),
+              child: Center(
+                child: TweenAnimationBuilder<double>(
+                  tween: Tween(end: progress),
+                  duration: _progressEase,
+                  builder: (context, value, _) => value >= 1
+                      //all bytes out, cdn is still processing
+                      ? Stack(
+                          clipBehavior: Clip.none,
+                          alignment: Alignment.topCenter,
+                          children: [
+                            SizedBox.square(
+                              dimension: ring,
+                              child: CircularProgressIndicator(
+                                strokeWidth: stroke,
+                                strokeCap: StrokeCap.round,
+                                color: Colors.white,
+                                backgroundColor: Colors.white.withValues(
+                                  alpha: _trackOpacity,
+                                ),
+                              ),
+                            ),
+                            Positioned(
+                              top: ring + sizing.space(NeriSpacingRole.sm),
+                              child: Text(
+                                'Still processing...', //TODO: add l10n
+                                style: context.neriText[NeriTextRole.labelSmall]
+                                    .copyWith(color: Colors.white),
+                              ),
+                            ),
+                          ],
+                        )
+                      : CustomPaint(
+                          painter: _RingPainter(
+                            progress: value,
+                            stroke: stroke,
+                          ),
+                          child: SizedBox.square(
+                            dimension: ring,
+                            child: Center(
+                              child: Text(
+                                '${(value * 100).round()}%',
+                                style: context.neriText[NeriTextRole.labelSmall]
+                                    .copyWith(
+                                      color: Colors.white,
+                                      fontFeatures: const [
+                                        FontFeature.tabularFigures(),
+                                      ],
+                                    ),
+                              ),
+                            ),
+                          ),
+                        ),
+                ),
+              ),
+            ),
+    );
+  }
+}
+
+class _RingPainter extends CustomPainter {
+  const _RingPainter({required this.progress, required this.stroke});
+
+  final double progress;
+  final double stroke;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = (Offset.zero & size).deflate(stroke / 2);
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = stroke
+      ..strokeCap = StrokeCap.round;
+
+    paint.color = Colors.white.withValues(alpha: _trackOpacity);
+    canvas.drawArc(rect, 0, 2 * pi, false, paint);
+
+    if (progress <= 0) return;
+    paint.color = Colors.white;
+    canvas.drawArc(rect, -pi / 2, 2 * pi * progress, false, paint);
+  }
+
+  @override
+  bool shouldRepaint(_RingPainter old) =>
+      old.progress != progress || old.stroke != stroke;
 }
 
 class _FileCard extends StatelessWidget {
