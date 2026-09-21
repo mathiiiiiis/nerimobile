@@ -131,9 +131,9 @@ class AttachmentPanel extends ConsumerWidget {
   void _tapAsset(WidgetRef ref, AssetEntity asset) {
     if (ref.read(attachmentPickerProvider(channelId)).expanded) {
       _picker(ref).select(asset);
+    } else {
+      _useAsset(ref, asset);
     }
-
-    _useAsset(ref, asset);
   }
 
   @override
