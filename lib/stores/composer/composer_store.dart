@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mime/mime.dart';
 import 'package:path/path.dart' as p;
@@ -27,6 +28,7 @@ class ComposerState {
     this.editing,
     this.pendingInsert,
     this.attachment,
+    this.sendRequests = 0,
   });
 
   final List<Message> replyTo;
@@ -35,18 +37,23 @@ class ComposerState {
   final String? pendingInsert;
   final ComposerAttachment? attachment;
 
+  //bump to send from outside the composer
+  final int sendRequests;
+
   ComposerState copyWith({
     List<Message>? replyTo,
     bool? mentionReplies,
     ValueGetter<Message?>? editing,
     ValueGetter<String?>? pendingInsert,
     ValueGetter<ComposerAttachment?>? attachment,
+    int? sendRequests,
   }) => ComposerState(
     replyTo: replyTo ?? this.replyTo,
     mentionReplies: mentionReplies ?? this.mentionReplies,
     editing: editing != null ? editing() : this.editing,
     pendingInsert: pendingInsert != null ? pendingInsert() : this.pendingInsert,
     attachment: attachment != null ? attachment() : this.attachment,
+    sendRequests: sendRequests ?? this.sendRequests,
   );
 }
 
@@ -89,6 +96,9 @@ class ComposerNotifier extends Notifier<ComposerState> {
   }
 
   void removeAttachment() => state = state.copyWith(attachment: () => null);
+
+  void requestSend() =>
+      state = state.copyWith(sendRequests: state.sendRequests + 1);
 
   void reply(Message message) {
     final replyTo = state.replyTo;

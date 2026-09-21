@@ -183,6 +183,10 @@ class _ComposerState extends ConsumerState<Composer>
       _startEdit(next, fromDraft: previous == null);
     });
     ref.listen(
+      composerProvider(widget.channelId).select((c) => c.sendRequests),
+      (_, _) => _send(),
+    );
+    ref.listen(
       composerProvider(widget.channelId).select((c) => c.pendingInsert),
       (_, next) {
         if (next == null) return;

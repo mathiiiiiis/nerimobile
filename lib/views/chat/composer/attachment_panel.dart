@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:ui';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -142,6 +143,11 @@ class AttachmentPanel extends ConsumerWidget {
     if (file != null) composer.attach(file.path, assetId: asset.id);
   }
 
+  void _send(WidgetRef ref) {
+    ref.read(composerProvider(channelId).notifier).requestSend();
+    _picker(ref).close();
+  }
+
   void _use(WidgetRef ref, String? path) {
     if (path == null) return;
 
@@ -218,7 +224,7 @@ class AttachmentPanel extends ConsumerWidget {
                         Positioned(
                           right: gap,
                           bottom: gap,
-                          child: _SendButton(onTap: _picker(ref).close),
+                          child: _SendButton(onTap: () => _send(ref)),
                         ),
                     ],
                   ),
