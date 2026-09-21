@@ -35,5 +35,5 @@ Future<String> uploadFile(
         onProgress?.call(total <= 0 ? 0 : sent / total),
   );
 
-  return (response.data as Map<String, dynamic>)['fieldId'] as String;
+  return (response.data as Map<String, dynamic>)['fileId'] as String;
 }
