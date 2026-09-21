@@ -77,9 +77,30 @@ class _Chat extends ConsumerStatefulWidget {
   ConsumerState<_Chat> createState() => _ChatState();
 }
 
-class _ChatState extends ConsumerState<_Chat> {
+class _ChatState extends ConsumerState<_Chat> with WidgetsBindingObserver {
   double _composerHeight = 0;
+  double _keyboard = 0;
   double? _drag;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  //scaffold hides view insets from the body
+  @override
+  void didChangeMetrics() {
+    final view = View.of(context);
+    final keyboard = view.viewInsets.bottom / view.devicePixelRatio;
+    if (keyboard != _keyboard) setState(() => _keyboard = keyboard);
+  }
 
   void _onDragStart(double height) => setState(() => _drag = height);
 
@@ -129,8 +150,10 @@ class _ChatState extends ConsumerState<_Chat> {
       duration: _drag == null ? _panelMotion : Duration.zero,
       curve: _panelCurve,
       builder: (context, shown, _) {
-        final lift = min(shown, collapsed);
-        final frame = max(shown, collapsed);
+        //panel fills space above the keyboard
+        final visible = max(0.0, shown - _keyboard);
+        final lift = min(visible, collapsed);
+        final frame = max(visible, collapsed);
 
         return Stack(
           children: [
@@ -160,7 +183,7 @@ class _ChatState extends ConsumerState<_Chat> {
                 },
                 child: Composer(
                   channelId: widget.channelId,
-                  bottomInset: max(0.0, safeBottom - shown),
+                  bottomInset: max(0.0, safeBottom - visible),
                 ),
               ),
             ),
@@ -170,7 +193,7 @@ class _ChatState extends ConsumerState<_Chat> {
               bottom: 0,
               child: GestureDetector(
                 behavior: HitTestBehavior.deferToChild,
-                onVerticalDragStart: (_) => _onDragStart(shown),
+                onVerticalDragStart: (_) => _onDragStart(visible),
                 onVerticalDragUpdate: (details) =>
                     _onDragUpdate(details, expanded),
                 onVerticalDragEnd: (details) => _onDragEnd(
@@ -179,7 +202,7 @@ class _ChatState extends ConsumerState<_Chat> {
                   expanded: expanded,
                 ),
                 child: SizedBox(
-                  height: shown,
+                  height: visible,
                   child: ClipRect(
                     child: OverflowBox(
                       alignment: Alignment.topCenter,
@@ -188,7 +211,7 @@ class _ChatState extends ConsumerState<_Chat> {
                       child: AttachmentPanel(
                         channelId: widget.channelId,
                         expansion:
-                            ((shown - collapsed) / (expanded - collapsed))
+                            ((visible - collapsed) / (expanded - collapsed))
                                 .clamp(0.0, 1.0),
                       ),
                     ),

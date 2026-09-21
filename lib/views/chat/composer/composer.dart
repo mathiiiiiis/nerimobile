@@ -73,8 +73,17 @@ class _ComposerState extends ConsumerState<Composer>
   bool get _canSend => _controller.text.trim().isNotEmpty && !_sending;
 
   void _togglePicker() {
-    _focus.unfocus();
-    ref.read(attachmentPickerProvider(widget.channelId).notifier).toggle();
+    final picker = ref.read(
+      attachmentPickerProvider(widget.channelId).notifier,
+    );
+
+    //unfocus to reveal the panel above the keyboard
+    if (_focus.hasFocus) {
+      _focus.unfocus();
+      picker.collapse();
+    } else {
+      picker.toggle();
+    }
   }
 
   void _onChanged() {
@@ -234,9 +243,11 @@ class _ComposerState extends ConsumerState<Composer>
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    _ActionButton(
-                      icon: Symbols.add_rounded,
-                      onTap: _togglePicker,
+                    TextFieldTapRegion(
+                      child: _ActionButton(
+                        icon: Symbols.add_rounded,
+                        onTap: _togglePicker,
+                      ),
                     ),
                     Expanded(
                       child: TextFieldTapRegion(
