@@ -37,6 +37,7 @@ const _columns = 3;
 const _loadMoreRows = 3;
 const _visibleRows = 2;
 const _filesPressScale = 0.97;
+const _headerFade = Duration(milliseconds: 150);
 const _markerOpacity = 0.55;
 const _selectedOpacity = 0.3;
 
@@ -127,8 +128,10 @@ class AttachmentPanel extends ConsumerWidget {
     _picker(ref).close();
   }
 
-  void _tapAsset(WidgetRef ref, AssetEntity asset, {required bool expanded}) {
-    if (expanded) return _picker(ref).select(asset);
+  void _tapAsset(WidgetRef ref, AssetEntity asset) {
+    if (ref.read(attachmentPickerProvider(channelId)).expanded) {
+      _picker(ref).select(asset);
+    }
 
     _useAsset(ref, asset);
   }
@@ -138,9 +141,11 @@ class AttachmentPanel extends ConsumerWidget {
     final sizing = context.neriSize;
     final gap = sizing.space(NeriSpacingRole.sm);
     final recents = ref.watch(recentMediaProvider);
-    final picker = ref.watch(attachmentPickerProvider(channelId));
-    final expanded = picker.expanded;
-    final selected = picker.selected;
+    final selected = ref.watch(
+      attachmentPickerProvider(channelId).select((p) => p.selected),
+    );
+    //show sheet as soon as it starts expanding
+    final sheet = expansion > 0;
     final radius = Radius.circular(
       sizing.radius(NeriRadiusRole.xl) * expansion,
     );
@@ -156,26 +161,28 @@ class AttachmentPanel extends ConsumerWidget {
         child: Padding(
           padding: EdgeInsets.fromLTRB(gap, gap * expansion, gap, gap),
           child: Column(
-            mainAxisSize: expanded ? MainAxisSize.max : MainAxisSize.min,
+            mainAxisSize: sheet ? MainAxisSize.max : MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             spacing: gap,
             children: [
               const _DragHandle(),
-              if (expanded)
-                _ExpandedHeader(
-                  onBack: _picker(ref).collapse,
-                  onAlbums: () => _pickFile(ref),
-                )
-              else
-                _FilesButton(onTap: () => _pickFile(ref)),
+              AnimatedSwitcher(
+                duration: _headerFade,
+                child: sheet
+                    ? _ExpandedHeader(
+                        onBack: _picker(ref).collapse,
+                        onAlbums: () => _pickFile(ref),
+                      )
+                    : _FilesButton(onTap: () => _pickFile(ref)),
+              ),
               if (recents.hasError)
                 _AccessNotice(onTap: PhotoManager.openSetting)
-              else if (expanded)
+              else if (sheet)
                 Expanded(
                   child: Stack(
                     children: [
                       Positioned.fill(
-                        child: _grid(context, ref, recents, expanded: true),
+                        child: _grid(context, ref, recents, sheet: true),
                       ),
                       if (selected case final selected?)
                         Positioned(
@@ -189,7 +196,7 @@ class AttachmentPanel extends ConsumerWidget {
                   ),
                 )
               else
-                _grid(context, ref, recents, expanded: false),
+                _grid(context, ref, recents, sheet: false),
             ],
           ),
         ),
@@ -201,7 +208,7 @@ class AttachmentPanel extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
     AsyncValue<List<AssetEntity>> recents, {
-    required bool expanded,
+    required bool sheet,
   }) {
     final sizing = context.neriSize;
     final gap = sizing.space(NeriSpacingRole.sm);
@@ -215,7 +222,7 @@ class AttachmentPanel extends ConsumerWidget {
 
         final grid = GridView.builder(
           padding: EdgeInsets.zero,
-          physics: expanded
+          physics: sheet
               ? const AlwaysScrollableScrollPhysics()
               : const NeverScrollableScrollPhysics(),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -243,7 +250,7 @@ class AttachmentPanel extends ConsumerWidget {
             if (asset == null) return const _Card();
 
             return _Card(
-              onTap: () => _tapAsset(ref, asset, expanded: expanded),
+              onTap: () => _tapAsset(ref, asset),
               child: Stack(
                 fit: StackFit.expand,
                 children: [
@@ -257,7 +264,7 @@ class AttachmentPanel extends ConsumerWidget {
           },
         );
 
-        if (expanded) {
+        if (sheet) {
           return NotificationListener<ScrollUpdateNotification>(
             onNotification: (notification) {
               final metrics = notification.metrics;
@@ -488,32 +495,35 @@ class _ExpandedHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.neri;
     final sizing = context.neriSize;
-    return Row(
-      children: [
-        GestureDetector(
-          onTap: onBack,
-          child: PressScale(
-            child: Icon(
-              Symbols.arrow_back_rounded,
-              size: sizing.dimen(NeriDimen.iconSm),
-              color: colors[NeriToken.text],
-            ),
-          ),
-        ),
-        const Spacer(),
-        GestureDetector(
-          onTap: onAlbums,
-          child: PressScale(
-            scale: _filesPressScale,
-            child: Text(
-              'All albums', //TODO: add l10n
-              style: context.neriText[NeriTextRole.bodyLarge].copyWith(
-                color: colors[NeriToken.primary],
+    return SizedBox(
+      height: sizing.dimen(NeriDimen.controlSize),
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: onBack,
+            child: PressScale(
+              child: Icon(
+                Symbols.arrow_back_rounded,
+                size: sizing.dimen(NeriDimen.iconSm),
+                color: colors[NeriToken.text],
               ),
             ),
           ),
-        ),
-      ],
+          const Spacer(),
+          GestureDetector(
+            onTap: onAlbums,
+            child: PressScale(
+              scale: _filesPressScale,
+              child: Text(
+                'All albums', //TODO: add l10n
+                style: context.neriText[NeriTextRole.bodyLarge].copyWith(
+                  color: colors[NeriToken.primary],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
