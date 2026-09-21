@@ -21,7 +21,7 @@ class _PressScaleState extends State<PressScale> {
   bool _pressed = false;
 
   void _setPressed(bool pressed) {
-    if (_pressed == pressed) return;
+    if (!mounted || _pressed == pressed) return;
     setState(() => _pressed = pressed);
   }
 
