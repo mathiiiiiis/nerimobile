@@ -14,7 +14,7 @@ import 'package:nerimobile/stores/user/user_store.dart';
 const messagePageSize = 50;
 const _brokenPipe = 32;
 
-enum SendFailure { fileTooLarge, other }
+enum SendFailure { fileTooLarge, cancelled, other }
 
 class _FileTooLarge implements Exception {
   const _FileTooLarge();
@@ -76,6 +76,7 @@ class MessagesNotifier extends Notifier<ChannelMessages> {
   final String channelId;
 
   final _mentionReplies = <String>{};
+  final _uploads = <String, CancelToken>{};
 
   @override
   ChannelMessages build() => const ChannelMessages();
@@ -205,6 +206,10 @@ class MessagesNotifier extends Notifier<ChannelMessages> {
       _remove(localId);
       return SendFailure.fileTooLarge;
     } catch (e) {
+      if (e is DioException && CancelToken.isCancel(e)) {
+        return SendFailure.cancelled;
+      }
+
       final reason = e is DioException ? e.response?.data : null;
       debugPrint('postMessage($channelId) failed: ${reason ?? e}');
       _fail(localId);
@@ -231,10 +236,16 @@ class MessagesNotifier extends Notifier<ChannelMessages> {
     );
   }
 
+  void cancelUpload(String localId) {
+    _uploads.remove(localId)?.cancel();
+    _remove(localId);
+  }
+
   Future<String> _upload(String file, String localId) async {
     final provider = uploadProgressProvider(localId);
     final hold = ref.listen(provider, (_, _) {});
     final progress = ref.read(provider.notifier)..report(0);
+    final cancel = _uploads[localId] = CancelToken();
 
     try {
       final token = await fetchCdnToken(ref.read(dioProvider), channelId);
@@ -243,6 +254,7 @@ class MessagesNotifier extends Notifier<ChannelMessages> {
         channelId: channelId,
         token: token,
         path: file,
+        cancelToken: cancel,
         onProgress: progress.report,
       );
     } on DioException catch (e) {
@@ -254,6 +266,7 @@ class MessagesNotifier extends Notifier<ChannelMessages> {
       }
       rethrow;
     } finally {
+      _uploads.remove(localId);
       progress.report(null);
       hold.close();
     }

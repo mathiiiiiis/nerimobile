@@ -75,6 +75,15 @@ Future<void> showMessageContextMenu(
         destructive: true,
         onTap: () => _delete(context, ref, message, confirm: !access.failed),
       ),
+    if (access.canCancelUpload)
+      SheetAction(
+        icon: Symbols.cancel_rounded,
+        label: 'Cancel upload', //TODO: add l10n
+        destructive: true,
+        onTap: () => ref
+            .read(messagesProvider(message.channelId).notifier)
+            .cancelUpload(message.id),
+      ),
   ];
   if (actions.isEmpty) return;
 

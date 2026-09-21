@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:nerimobile/models/message.dart';
 import 'package:nerimobile/stores/message/message_store.dart';
+import 'package:nerimobile/stores/message/upload_progress_store.dart';
 import 'package:nerimobile/stores/user/user_store.dart';
 
 class MessageAccess {
@@ -9,6 +10,7 @@ class MessageAccess {
     required this.own,
     required this.pending,
     required this.failed,
+    required this.uploading,
     required this.isContent,
   });
 
@@ -18,6 +20,7 @@ class MessageAccess {
       own: message.createdBy.id == ref.read(currentUserProvider)?.id,
       pending: channel.pending.contains(message.id),
       failed: channel.failed.contains(message.id),
+      uploading: ref.read(uploadProgressProvider(message.id)) != null,
       isContent: message.type == MessageType.content,
     );
   }
@@ -25,6 +28,7 @@ class MessageAccess {
   final bool own;
   final bool pending;
   final bool failed;
+  final bool uploading;
   final bool isContent;
 
   bool get local => pending || failed;
@@ -32,5 +36,6 @@ class MessageAccess {
   bool get canQuote => !local;
   bool get canEdit => own && !local && isContent;
   bool get canDelete => own && !pending && isContent;
+  bool get canCancelUpload => own && uploading;
   bool get canCopyId => !local;
 }
