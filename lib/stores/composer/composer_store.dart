@@ -15,10 +15,12 @@ const _typingInterval = Duration(seconds: 4);
 class ComposerAttachment {
   const ComposerAttachment({
     required this.path,
+    this.assetId,
     this.progress = 0,
     this.uploading = false,
   });
 
+  final String? assetId;
   final String path;
   final double progress;
   final bool uploading;
@@ -29,6 +31,7 @@ class ComposerAttachment {
   ComposerAttachment copyWith({double? progress, bool? uploading}) =>
       ComposerAttachment(
         path: path,
+        assetId: assetId,
         progress: progress ?? this.progress,
         uploading: uploading ?? this.uploading,
       );
@@ -96,11 +99,11 @@ class ComposerNotifier extends Notifier<ComposerState> {
 
   void resetTyping() => _typingSentAt = null;
 
-  void attach(String path) {
+  void attach(String path, {String? assetId}) {
     _upload?.cancel();
     _upload = null;
     state = state.copyWith(
-      attachment: () => ComposerAttachment(path: path),
+      attachment: () => ComposerAttachment(path: path, assetId: assetId),
       editing: () => null,
     );
   }

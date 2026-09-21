@@ -62,10 +62,9 @@ const _selectedOpacity = 0.3;
 enum AttachmentPicker { closed, collapsed, expanded }
 
 class AttachmentPickerState {
-  const AttachmentPickerState({required this.mode, this.selected});
+  const AttachmentPickerState({required this.mode});
 
   final AttachmentPicker mode;
-  final AssetEntity? selected;
 
   bool get expanded => mode == AttachmentPicker.expanded;
   bool get open => mode != AttachmentPicker.closed;
@@ -95,13 +94,8 @@ class AttachmentPickerNotifier extends Notifier<AttachmentPickerState> {
   void close() =>
       state = const AttachmentPickerState(mode: AttachmentPicker.closed);
 
-  void select(AssetEntity? asset) => state = AttachmentPickerState(
-    mode: state.mode,
-    selected: state.selected?.id == asset?.id ? null : asset,
-  );
-
   void _mode(AttachmentPicker mode) =>
-      state = AttachmentPickerState(mode: mode, selected: state.selected);
+      state = AttachmentPickerState(mode: mode);
 }
 
 class AttachmentPanel extends ConsumerWidget {
@@ -136,22 +130,22 @@ class AttachmentPanel extends ConsumerWidget {
     _use(ref, photo?.path);
   }
 
-  Future<void> _useAsset(WidgetRef ref, AssetEntity asset) async =>
-      _use(ref, (await asset.file)?.path);
+  Future<void> _toggleAsset(WidgetRef ref, AssetEntity asset) async {
+    final composer = ref.read(composerProvider(channelId).notifier);
+    final attached = ref.read(composerProvider(channelId)).attachment;
+    if (attached?.assetId == asset.id) {
+      composer.removeAttachment();
+      return;
+    }
+
+    final file = await asset.file;
+    if (file != null) composer.attach(file.path, assetId: asset.id);
+  }
 
   void _use(WidgetRef ref, String? path) {
     if (path == null) return;
 
     ref.read(composerProvider(channelId).notifier).attach(path);
-    _picker(ref).close();
-  }
-
-  void _tapAsset(WidgetRef ref, AssetEntity asset) {
-    if (ref.read(attachmentPickerProvider(channelId)).expanded) {
-      _picker(ref).select(asset);
-    } else {
-      _useAsset(ref, asset);
-    }
   }
 
   @override
@@ -159,8 +153,8 @@ class AttachmentPanel extends ConsumerWidget {
     final sizing = context.neriSize;
     final gap = sizing.space(NeriSpacingRole.sm);
     final recents = ref.watch(recentMediaProvider);
-    final selected = ref.watch(
-      attachmentPickerProvider(channelId).select((p) => p.selected),
+    final attached = ref.watch(
+      composerProvider(channelId).select((c) => c.attachment != null),
     );
     //show sheet as soon as it starts expanding
     final sheet = expansion > 0;
@@ -220,13 +214,11 @@ class AttachmentPanel extends ConsumerWidget {
                       Positioned.fill(
                         child: _grid(context, ref, recents, sheet: true),
                       ),
-                      if (selected case final selected?)
+                      if (attached)
                         Positioned(
                           right: gap,
                           bottom: gap,
-                          child: _SendButton(
-                            onTap: () => _useAsset(ref, selected),
-                          ),
+                          child: _SendButton(onTap: _picker(ref).close),
                         ),
                     ],
                   ),
@@ -248,8 +240,8 @@ class AttachmentPanel extends ConsumerWidget {
   }) {
     final sizing = context.neriSize;
     final gap = sizing.space(NeriSpacingRole.sm);
-    final selected = ref.watch(
-      attachmentPickerProvider(channelId).select((p) => p.selected),
+    final attachedId = ref.watch(
+      composerProvider(channelId).select((c) => c.attachment?.assetId),
     );
 
     return LayoutBuilder(
@@ -286,14 +278,14 @@ class AttachmentPanel extends ConsumerWidget {
             if (asset == null) return const _Card();
 
             return _Card(
-              onTap: () => _tapAsset(ref, asset),
+              onTap: () => _toggleAsset(ref, asset),
               child: Stack(
                 fit: StackFit.expand,
                 children: [
                   _Thumbnail(asset: asset, size: size),
                   if (asset.type == AssetType.video)
                     _VideoMarker(duration: asset.videoDuration),
-                  if (selected?.id == asset.id) const _Selected(),
+                  if (attachedId == asset.id) const _Selected(),
                 ],
               ),
             );
