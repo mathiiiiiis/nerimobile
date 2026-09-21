@@ -1,8 +1,10 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:nerimobile/models/message.dart';
 import 'package:nerimobile/services/api_client.dart';
+import 'package:nerimobile/services/cdn_service.dart';
 import 'package:nerimobile/services/channel_service.dart';
 import 'package:nerimobile/stores/user/user_store.dart';
 
@@ -150,6 +152,7 @@ class MessagesNotifier extends Notifier<ChannelMessages> {
     String content, {
     List<PartialMessage> replyTo = const [],
     bool mentionReplies = false,
+    String? file,
   }) async {
     final author = ref.read(currentUserProvider);
     if (author == null) return;
@@ -160,7 +163,9 @@ class MessagesNotifier extends Notifier<ChannelMessages> {
       content: content,
       channelId: channelId,
       createdBy: author,
-      attachments: const [],
+      attachments: [
+        if (file != null) Attachment(id: localId, path: file, onDevice: true),
+      ],
       createdAt: DateTime.now().millisecondsSinceEpoch,
       replyMessages: [
         for (final reply in replyTo) ReplyMessage(replyToMessage: reply),
@@ -174,17 +179,20 @@ class MessagesNotifier extends Notifier<ChannelMessages> {
     );
 
     try {
+      final fileId = file == null ? null : await _upload(file);
       final sent = await postMessage(
         ref.read(dioProvider),
         channelId,
         content,
         replyToMessageIds: [for (final reply in replyTo) reply.id],
         mentionReplies: mentionReplies,
+        fileId: fileId,
       );
       _mentionReplies.remove(localId);
       _replaceLocal(localId, Message.fromJson(sent['message'] ?? sent));
     } catch (e) {
-      debugPrint('postMessage($channelId) failed: $e');
+      final reason = e is DioException ? e.response?.data : null;
+      debugPrint('postMessage($channelId) failed: {$reason ?? e}');
       state = state.copyWith(
         pending: {...state.pending}..remove(localId),
         failed: {...state.failed, localId},
@@ -202,6 +210,17 @@ class MessagesNotifier extends Notifier<ChannelMessages> {
       local.content,
       replyTo: [for (final reply in local.replyMessages) ?reply.replyToMessage],
       mentionReplies: mentionReplies,
+      file: local.attachments.firstOrNull?.path,
+    );
+  }
+
+  Future<String> _upload(String file) async {
+    final token = await fetchCdnToken(ref.read(dioProvider), channelId);
+    return uploadFile(
+      ref.read(cdnDioProvider),
+      channelId: channelId,
+      token: token,
+      path: file,
     );
   }
 

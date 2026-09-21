@@ -98,8 +98,11 @@ class Attachment {
   final int? duration;
   final int? expireAt;
 
+  final bool onDevice;
+
   Attachment({
     required this.id,
+    this.onDevice = false,
     this.provider = 'local',
     this.fileId,
     this.path,

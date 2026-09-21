@@ -1,8 +1,6 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mime/mime.dart';
-import 'package:nerimobile/services/cdn_service.dart';
 import 'package:path/path.dart' as p;
 
 import 'package:nerimobile/models/message.dart';
@@ -13,28 +11,13 @@ const maxReplies = 5;
 const _typingInterval = Duration(seconds: 4);
 
 class ComposerAttachment {
-  const ComposerAttachment({
-    required this.path,
-    this.assetId,
-    this.progress = 0,
-    this.uploading = false,
-  });
+  const ComposerAttachment({required this.path, this.assetId});
 
   final String? assetId;
   final String path;
-  final double progress;
-  final bool uploading;
 
   String get name => p.basename(path);
   bool get isImage => (lookupMimeType(path) ?? '').startsWith('image/');
-
-  ComposerAttachment copyWith({double? progress, bool? uploading}) =>
-      ComposerAttachment(
-        path: path,
-        assetId: assetId,
-        progress: progress ?? this.progress,
-        uploading: uploading ?? this.uploading,
-      );
 }
 
 class ComposerState {
@@ -78,7 +61,6 @@ class ComposerNotifier extends Notifier<ComposerState> {
   final String channelId;
 
   DateTime? _typingSentAt;
-  CancelToken? _upload;
 
   @override
   ComposerState build() => ComposerState();
@@ -100,50 +82,13 @@ class ComposerNotifier extends Notifier<ComposerState> {
   void resetTyping() => _typingSentAt = null;
 
   void attach(String path, {String? assetId}) {
-    _upload?.cancel();
-    _upload = null;
     state = state.copyWith(
       attachment: () => ComposerAttachment(path: path, assetId: assetId),
       editing: () => null,
     );
   }
 
-  void removeAttachment() {
-    _upload?.cancel();
-    _upload = null;
-    state = state.copyWith(attachment: () => null);
-  }
-
-  //uploads on send
-  Future<String?> uploadAttachment() async {
-    final attachment = state.attachment;
-    if (attachment == null) return null;
-
-    final cancelToken = _upload = CancelToken();
-    _setAttachment(attachment.copyWith(uploading: true, progress: 0));
-
-    try {
-      final token = await fetchCdnToken(ref.read(dioProvider), channelId);
-      return await uploadFile(
-        ref.read(cdnDioProvider),
-        channelId: channelId,
-        token: token,
-        path: attachment.path,
-        cancelToken: cancelToken,
-        onProgress: (progess) =>
-            _setAttachment(state.attachment?.copyWith(progress: progess)),
-      );
-    } catch (e) {
-      debugPrint('uploadAttachment($channelId) failed: $e');
-      return null;
-    } finally {
-      if (identical(_upload, cancelToken)) _upload = null;
-      _setAttachment(state.attachment?.copyWith(uploading: false));
-    }
-  }
-
-  void _setAttachment(ComposerAttachment? attachment) =>
-      state = state.copyWith(attachment: () => attachment);
+  void removeAttachment() => state = state.copyWith(attachment: () => null);
 
   void reply(Message message) {
     final replyTo = state.replyTo;

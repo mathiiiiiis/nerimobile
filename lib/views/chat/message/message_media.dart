@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:nerimobile/theme/sizing/border.dart';
 import 'package:flutter/material.dart';
@@ -70,6 +72,11 @@ class _Attachment extends StatelessWidget {
     final path = attachment.path;
     if (path == null) return const SizedBox.shrink();
 
+    if (attachment.onDevice) {
+      return attachment.isImage
+          ? _Media.file(File(path))
+          : _FileCard(attachment: attachment);
+    }
     if (attachment.isExpired) return _FileCard(attachment: attachment);
     if (attachment.isAudio) return AudioPlayer(attachment: attachment);
     if (attachment.isVideo) {
@@ -170,9 +177,13 @@ class _LinkCard extends StatelessWidget {
 }
 
 class _Media extends StatelessWidget {
-  const _Media({required this.url, this.width, this.height});
+  const _Media({required String this.url, this.width, this.height})
+    : file = null;
 
-  final String url;
+  const _Media.file(File this.file) : url = null, width = null, height = null;
+
+  final String? url;
+  final File? file;
   final double? width;
   final double? height;
 
@@ -193,17 +204,28 @@ class _Media extends StatelessWidget {
 
         return ClipRRect(
           borderRadius: sizing.rounded(NeriRadiusRole.image),
-          child: CachedNetworkImage(
-            imageUrl: url,
-            cacheManager: mediaCache,
-            width: size.width,
-            height: size.height,
-            fit: BoxFit.cover,
-            fadeInDuration: Duration.zero,
-            fadeOutDuration: Duration.zero,
-            placeholder: (_, _) => ColoredBox(color: colors[NeriToken.card]),
-            errorWidget: (_, _, _) => const _FileCard(),
-          ),
+          child: switch (file) {
+            final file? => Image.file(
+              file,
+              width: size.width,
+              height: size.height,
+              fit: BoxFit.cover,
+              cacheWidth: (size.width * MediaQuery.devicePixelRatioOf(context))
+                  .round(),
+              errorBuilder: (_, _, _) => _FileCard(),
+            ),
+            null => CachedNetworkImage(
+              imageUrl: url!,
+              cacheManager: mediaCache,
+              width: size.width,
+              height: size.height,
+              fit: BoxFit.cover,
+              fadeInDuration: Duration.zero,
+              fadeOutDuration: Duration.zero,
+              placeholder: (_, _) => ColoredBox(color: colors[NeriToken.card]),
+              errorWidget: (_, _, _) => const _FileCard(),
+            ),
+          },
         );
       },
     );

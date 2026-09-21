@@ -23,11 +23,14 @@ Future<Map<String, dynamic>> postMessage(
   String content, {
   List<String> replyToMessageIds = const [],
   bool mentionReplies = false,
+  String? fileId,
 }) async {
   final response = await dio.post(
     '/channels/$channelId/messages',
     data: {
-      'content': content,
+      //server rejects empty content
+      if (content.isNotEmpty) 'content': content,
+      'nerimityCdnFileId': ?fileId,
       if (replyToMessageIds.isNotEmpty) ...{
         'replyToMessageIds': replyToMessageIds,
         'mentionReplies': mentionReplies,

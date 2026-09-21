@@ -70,7 +70,13 @@ class _ComposerState extends ConsumerState<Composer>
     super.dispose();
   }
 
-  bool get _canSend => _controller.text.trim().isNotEmpty && !_sending;
+  bool get _canSend {
+    if (_sending) return false;
+    if (_controller.text.trim().isNotEmpty) return true;
+
+    final composer = ref.read(composerProvider(widget.channelId));
+    return composer.editing == null && composer.attachment != null;
+  }
 
   void _togglePicker() {
     final picker = ref.read(
@@ -103,7 +109,8 @@ class _ComposerState extends ConsumerState<Composer>
     _controller.clear();
     ref.read(composerProvider(widget.channelId).notifier)
       ..resetTyping()
-      ..clearReplies();
+      ..clearReplies()
+      ..removeAttachment();
     setState(() => _sending = true);
 
     await ref
@@ -112,6 +119,7 @@ class _ComposerState extends ConsumerState<Composer>
           content,
           replyTo: [for (final m in composer.replyTo) PartialMessage.of(m)],
           mentionReplies: composer.mentionReplies,
+          file: composer.attachment?.path,
         );
     if (mounted) setState(() => _sending = false);
   }
@@ -187,6 +195,9 @@ class _ComposerState extends ConsumerState<Composer>
 
     final editing = ref.watch(
       composerProvider(widget.channelId).select((c) => c.editing != null),
+    );
+    ref.watch(
+      composerProvider(widget.channelId).select((c) => c.attachment != null),
     );
     final picker = ref.watch(attachmentPickerProvider(widget.channelId));
     final picking = picker.open;
