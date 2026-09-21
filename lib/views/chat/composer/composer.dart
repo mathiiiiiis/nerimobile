@@ -29,9 +29,11 @@ const _sendGap = 4.0;
 const _fieldRadius = _fieldHeight / 2;
 
 class Composer extends ConsumerStatefulWidget {
-  const Composer({super.key, required this.channelId});
+  const Composer({super.key, required this.channelId, this.bottomInset = 0});
 
   final String channelId;
+  //system inset not covered by attachment panel
+  final double bottomInset;
 
   @override
   ConsumerState<Composer> createState() => _ComposerState();
@@ -213,9 +215,15 @@ class _ComposerState extends ConsumerState<Composer>
         ),
         child: SafeArea(
           top: false,
-          bottom: !dual && !picking,
+          bottom: false,
           child: Padding(
-            padding: EdgeInsets.all(sizing.space(NeriSpacingRole.sm)),
+            padding: EdgeInsets.fromLTRB(
+              sizing.space(NeriSpacingRole.sm),
+              sizing.space(NeriSpacingRole.sm),
+              sizing.space(NeriSpacingRole.sm),
+              sizing.space(NeriSpacingRole.sm) +
+                  (dual ? 0 : widget.bottomInset),
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [

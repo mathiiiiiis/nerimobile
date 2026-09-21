@@ -86,9 +86,14 @@ class AttachmentPickerNotifier extends Notifier<AttachmentPickerState> {
 }
 
 class AttachmentPanel extends ConsumerWidget {
-  const AttachmentPanel({super.key, required this.channelId});
+  const AttachmentPanel({
+    super.key,
+    required this.channelId,
+    this.expansion = 0,
+  });
 
   final String channelId;
+  final double expansion;
 
   AttachmentPickerNotifier _picker(WidgetRef ref) =>
       ref.read(attachmentPickerProvider(channelId).notifier);
@@ -136,20 +141,20 @@ class AttachmentPanel extends ConsumerWidget {
     final picker = ref.watch(attachmentPickerProvider(channelId));
     final expanded = picker.expanded;
     final selected = picker.selected;
-    final radius = Radius.circular(sizing.radius(NeriRadiusRole.xl));
+    final radius = Radius.circular(
+      sizing.radius(NeriRadiusRole.xl) * expansion,
+    );
 
     return Container(
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: context.neri[NeriToken.pane],
-        borderRadius: expanded
-            ? BorderRadius.only(topLeft: radius, topRight: radius)
-            : null,
+        borderRadius: BorderRadius.only(topLeft: radius, topRight: radius),
       ),
       child: SafeArea(
         top: false,
         child: Padding(
-          padding: EdgeInsets.fromLTRB(gap, expanded ? gap : 0, gap, gap),
+          padding: EdgeInsets.fromLTRB(gap, gap * expansion, gap, gap),
           child: Column(
             mainAxisSize: expanded ? MainAxisSize.max : MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,

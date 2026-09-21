@@ -18,7 +18,8 @@ import 'package:nerimobile/views/shell/app_scaffold.dart';
 import 'package:nerimobile/views/shell/destinations.dart';
 import 'package:nerimobile/views/size_reporter.dart';
 
-const _panelResize = Duration(milliseconds: 200);
+const _panelMotion = Duration(milliseconds: 300);
+const _panelCurve = Curves.easeOutCubic;
 const _flingVelocity = 400.0;
 const _expandedHeight = 0.85;
 
@@ -113,72 +114,91 @@ class _ChatState extends ConsumerState<_Chat> {
     final picker = ref.watch(attachmentPickerProvider(widget.channelId));
     final collapsed = collapsedPanelHeight(context);
     final expanded = MediaQuery.sizeOf(context).height * _expandedHeight;
-    final height =
+    final safeBottom = MediaQuery.paddingOf(context).bottom;
+    final target =
         _drag ??
         switch (picker.mode) {
           AttachmentPicker.closed => 0.0,
           AttachmentPicker.collapsed => collapsed,
           AttachmentPicker.expanded => expanded,
         };
-    final duration = _drag == null ? _panelResize : Duration.zero;
 
-    return Stack(
-      children: [
-        Positioned.fill(
-          child: MessageList(
-            channelId: widget.channelId,
-            bottomInset: _composerHeight + (picker.open ? collapsed : 0),
-          ),
-        ),
-        Positioned(
-          top: 0,
-          left: 0,
-          right: 0,
-          child: ChannelHeader(
-            channelId: widget.channelId,
-            showBack: widget.showBack,
-          ),
-        ),
-        //collapsed panel lifts the composer, expanded one covers it
-        AnimatedPositioned(
-          duration: duration,
-          curve: Curves.easeOut,
-          left: 0,
-          right: 0,
-          bottom: min(height, collapsed),
-          child: SizeReporter(
-            onSize: (size) {
-              if (mounted) setState(() => _composerHeight = size.height);
-            },
-            child: Composer(channelId: widget.channelId),
-          ),
-        ),
-        Positioned(
-          left: 0,
-          right: 0,
-          bottom: 0,
-          child: GestureDetector(
-            behavior: HitTestBehavior.deferToChild,
-            onVerticalDragStart: (_) => _onDragStart(height),
-            onVerticalDragUpdate: (details) => _onDragUpdate(details, expanded),
-            onVerticalDragEnd: (details) =>
-                _onDragEnd(details, collapsed: collapsed, expanded: expanded),
-            child: AnimatedContainer(
-              duration: duration,
-              curve: Curves.easeOut,
-              height: height,
-              clipBehavior: Clip.hardEdge,
-              decoration: const BoxDecoration(),
-              child: OverflowBox(
-                alignment: Alignment.topCenter,
-                minHeight: 0,
-                maxHeight: max(height, collapsed),
-                child: AttachmentPanel(channelId: widget.channelId),
+    //keeps list, composer and panel in sync
+    return TweenAnimationBuilder<double>(
+      tween: Tween(end: target),
+      duration: _drag == null ? _panelMotion : Duration.zero,
+      curve: _panelCurve,
+      builder: (context, shown, _) {
+        final lift = min(shown, collapsed);
+        final frame = max(shown, collapsed);
+
+        return Stack(
+          children: [
+            Positioned.fill(
+              child: MessageList(
+                channelId: widget.channelId,
+                bottomInset: _composerHeight + lift,
               ),
             ),
-          ),
-        ),
-      ],
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: ChannelHeader(
+                channelId: widget.channelId,
+                showBack: widget.showBack,
+              ),
+            ),
+            //collapsed panel lifts the composer, expanded one covers it
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: lift,
+              child: SizeReporter(
+                onSize: (size) {
+                  if (mounted) setState(() => _composerHeight = size.height);
+                },
+                child: Composer(
+                  channelId: widget.channelId,
+                  bottomInset: max(0.0, safeBottom - shown),
+                ),
+              ),
+            ),
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: GestureDetector(
+                behavior: HitTestBehavior.deferToChild,
+                onVerticalDragStart: (_) => _onDragStart(shown),
+                onVerticalDragUpdate: (details) =>
+                    _onDragUpdate(details, expanded),
+                onVerticalDragEnd: (details) => _onDragEnd(
+                  details,
+                  collapsed: collapsed,
+                  expanded: expanded,
+                ),
+                child: SizedBox(
+                  height: shown,
+                  child: ClipRect(
+                    child: OverflowBox(
+                      alignment: Alignment.topCenter,
+                      minHeight: frame,
+                      maxHeight: frame,
+                      child: AttachmentPanel(
+                        channelId: widget.channelId,
+                        expansion:
+                            ((shown - collapsed) / (expanded - collapsed))
+                                .clamp(0.0, 1.0),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
