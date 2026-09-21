@@ -4,6 +4,7 @@ import 'package:nerimobile/theme/core/theme_data.dart';
 import 'package:nerimobile/theme/sizing/dimens.dart';
 import 'package:nerimobile/theme/sizing/radius.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
+import 'package:nerimobile/views/chat/channel/channel_header.dart';
 import 'package:nerimobile/views/skeleton/skeleton.dart';
 
 const _groups = 5;
@@ -34,9 +35,7 @@ class MessageListSkeleton extends StatelessWidget {
         reverse: true,
         padding: EdgeInsets.only(
           bottom: bottomInset + sizing.space(NeriSpacingRole.xl),
-          top:
-              sizing.dimen(NeriDimen.channelHeaderHeight) +
-              sizing.space(NeriSpacingRole.md) * 2,
+          top: channelHeaderExtent(context),
         ),
         itemCount: _groups,
         itemBuilder: (context, index) => Padding(

@@ -12,8 +12,8 @@ import 'package:nerimobile/stores/message/message_store.dart';
 import 'package:nerimobile/stores/user/user_store.dart';
 import 'package:nerimobile/stores/window/window_focus_store.dart';
 import 'package:nerimobile/theme/core/theme_data.dart';
-import 'package:nerimobile/theme/sizing/dimens.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
+import 'package:nerimobile/views/chat/channel/channel_header.dart';
 import 'package:nerimobile/views/chat/message/message_list_skeleton.dart';
 import 'package:nerimobile/views/chat/message/message_row.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
@@ -206,9 +206,7 @@ class MessageListState extends ConsumerState<MessageList> {
       reverse: true,
       padding: EdgeInsets.only(
         bottom: widget.bottomInset + sizing.space(NeriSpacingRole.xl),
-        top:
-            sizing.dimen(NeriDimen.channelHeaderHeight) +
-            sizing.space(NeriSpacingRole.md) * 2,
+        top: channelHeaderExtent(context),
       ),
       itemCount: messages.length,
       itemBuilder: (context, index) {

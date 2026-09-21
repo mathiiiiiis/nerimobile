@@ -9,12 +9,23 @@ import 'package:material_symbols_icons/symbols.dart';
 import 'package:nerimobile/stores/inbox/inbox_store.dart';
 import 'package:nerimobile/theme/core/theme_data.dart';
 import 'package:nerimobile/theme/core/token.dart';
+import 'package:nerimobile/theme/sizing/breakpoints.dart';
 import 'package:nerimobile/theme/sizing/dimens.dart';
 import 'package:nerimobile/theme/sizing/radius.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/theme/typography/text_styles.dart';
 import 'package:nerimobile/views/avatar.dart';
 import 'package:nerimobile/views/presence/presence_line.dart';
+
+//mached composer inset on dual pane
+double _headerInset(BuildContext context) => context.neriSize.space(
+  NeriWindow.of(context).isDualPane ? NeriSpacingRole.sm : NeriSpacingRole.md,
+);
+
+//space covered by header
+double channelHeaderExtent(BuildContext context) =>
+    context.neriSize.dimen(NeriDimen.channelHeaderHeight) +
+    _headerInset(context) * 2;
 
 class ChannelHeader extends ConsumerWidget {
   const ChannelHeader({
@@ -36,7 +47,7 @@ class ChannelHeader extends ConsumerWidget {
     final radius = sizing.rounded(NeriRadiusRole.image);
 
     return Padding(
-      padding: EdgeInsets.all(sizing.space(NeriSpacingRole.md)),
+      padding: EdgeInsets.all(_headerInset(context)),
       child: ClipRRect(
         borderRadius: radius,
         child: BackdropFilter(
