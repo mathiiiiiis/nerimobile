@@ -132,9 +132,15 @@ class _ChatState extends ConsumerState<_Chat> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) => _pane(context, constraints.biggest),
+    );
+  }
+
+  Widget _pane(BuildContext context, Size pane) {
     final picker = ref.watch(attachmentPickerProvider(widget.channelId));
-    final collapsed = collapsedPanelHeight(context);
-    final expanded = MediaQuery.sizeOf(context).height * _expandedHeight;
+    final collapsed = collapsedPanelHeight(context, pane.width);
+    final expanded = pane.height * _expandedHeight;
     final safeBottom = MediaQuery.paddingOf(context).bottom;
     final target =
         _drag ??

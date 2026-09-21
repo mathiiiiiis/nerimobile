@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -20,11 +22,10 @@ import 'package:nerimobile/utils/format.dart';
 import 'package:nerimobile/views/press_scale.dart';
 
 //must match panel layout below for prebuild sizing
-double collapsedPanelHeight(BuildContext context) {
+double collapsedPanelHeight(BuildContext context, double width) {
   final sizing = context.neriSize;
   final gap = sizing.space(NeriSpacingRole.sm);
-  final cards = MediaQuery.sizeOf(context).width - gap * 2;
-  final card = (cards - gap * (_columns - 1)) / _columns;
+  final card = _cardLayout(context, width - gap * 2).size;
 
   return MediaQuery.paddingOf(context).bottom +
       sizing.border(NeriBorderRole.thick) +
@@ -33,7 +34,17 @@ double collapsedPanelHeight(BuildContext context) {
       gap * (_visibleRows + 2);
 }
 
-const _columns = 3;
+//adjust columns to keep cards near target size
+({int columns, double size}) _cardLayout(BuildContext context, double width) {
+  final sizing = context.neriSize;
+  final gap = sizing.space(NeriSpacingRole.sm);
+  final target = sizing.dimen(NeriDimen.attachmentCard);
+  final columns = max(_minColumns, ((width + gap) / (target + gap)).round());
+
+  return (columns: columns, size: (width - gap * (columns - 1)) / columns);
+}
+
+const _minColumns = 3;
 const _loadMoreRows = 3;
 const _visibleRows = 2;
 const _filesPressScale = 0.97;
@@ -218,7 +229,7 @@ class AttachmentPanel extends ConsumerWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final size = (constraints.maxWidth - gap * (_columns - 1)) / _columns;
+        final (:columns, :size) = _cardLayout(context, constraints.maxWidth);
 
         final grid = GridView.builder(
           padding: EdgeInsets.zero,
@@ -226,7 +237,7 @@ class AttachmentPanel extends ConsumerWidget {
               ? const AlwaysScrollableScrollPhysics()
               : const NeverScrollableScrollPhysics(),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: _columns,
+            crossAxisCount: columns,
             mainAxisSpacing: gap,
             crossAxisSpacing: gap,
           ),
