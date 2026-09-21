@@ -186,15 +186,18 @@ class _AttachmentBar extends ConsumerWidget {
         if (attachment.isImage)
           ClipRRect(
             borderRadius: sizing.rounded(NeriRadiusRole.md),
-            child: Image.file(
-              File(attachment.path),
-              width: size,
-              height: size,
-              fit: BoxFit.cover,
-              cacheWidth: (size * MediaQuery.devicePixelRatioOf(context))
-                  .round(),
-              //hide formats platform cant decode
-              errorBuilder: (_, _, _) => const SizedBox.shrink(),
+            child: TickerMode(
+              enabled: false,
+              child: Image.file(
+                File(attachment.path),
+                width: size,
+                height: size,
+                fit: BoxFit.cover,
+                cacheWidth: (size * MediaQuery.devicePixelRatioOf(context))
+                    .round(),
+                //hide formats platform cant decode
+                errorBuilder: (_, _, _) => const SizedBox.shrink(),
+              ),
             ),
           ),
       ],
