@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,6 +12,13 @@ import 'package:nerimobile/stores/message/upload_progress_store.dart';
 import 'package:nerimobile/stores/user/user_store.dart';
 
 const messagePageSize = 50;
+const _brokenPipe = 32;
+
+enum SendFailure { fileTooLarge, other }
+
+class _FileTooLarge implements Exception {
+  const _FileTooLarge();
+}
 
 //pending messages sort last
 String _localId() => '999${DateTime.now().microsecondsSinceEpoch}';
@@ -149,14 +158,14 @@ class MessagesNotifier extends Notifier<ChannelMessages> {
     ]);
   }
 
-  Future<void> send(
+  Future<SendFailure?> send(
     String content, {
     List<PartialMessage> replyTo = const [],
     bool mentionReplies = false,
     String? file,
   }) async {
     final author = ref.read(currentUserProvider);
-    if (author == null) return;
+    if (author == null) return SendFailure.other;
 
     final localId = _localId();
     final local = Message(
@@ -191,23 +200,30 @@ class MessagesNotifier extends Notifier<ChannelMessages> {
       );
       _mentionReplies.remove(localId);
       _replaceLocal(localId, Message.fromJson(sent['message'] ?? sent));
+      return null;
+    } on _FileTooLarge {
+      _fail(localId);
+      return SendFailure.fileTooLarge;
     } catch (e) {
       final reason = e is DioException ? e.response?.data : null;
       debugPrint('postMessage($channelId) failed: ${reason ?? e}');
-      state = state.copyWith(
-        pending: {...state.pending}..remove(localId),
-        failed: {...state.failed, localId},
-      );
+      _fail(localId);
+      return SendFailure.other;
     }
   }
 
-  void retry(String localId) {
+  void _fail(String localId) => state = state.copyWith(
+    pending: {...state.pending}..remove(localId),
+    failed: {...state.failed, localId},
+  );
+
+  Future<SendFailure?> retry(String localId) async {
     final local = _find(localId);
-    if (local == null) return;
+    if (local == null) return SendFailure.other;
 
     final mentionReplies = _mentionReplies.contains(localId);
     _remove(localId);
-    send(
+    return send(
       local.content,
       replyTo: [for (final reply in local.replyMessages) ?reply.replyToMessage],
       mentionReplies: mentionReplies,
@@ -229,6 +245,14 @@ class MessagesNotifier extends Notifier<ChannelMessages> {
         path: file,
         onProgress: progress.report,
       );
+    } on DioException catch (e) {
+      //this is a guess: oversized files surface as a broken pipe
+      if (e.error case SocketException(
+        osError: OSError(errorCode: _brokenPipe),
+      )) {
+        throw const _FileTooLarge();
+      }
+      rethrow;
     } finally {
       progress.report(null);
       hold.close();

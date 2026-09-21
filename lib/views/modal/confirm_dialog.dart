@@ -31,6 +31,23 @@ Future<bool> showConfirmDialog(
   return confirmed ?? false;
 }
 
+Future<void> showNoticeDialog(
+  BuildContext context, {
+  required String title,
+  String? message,
+  String okLabel = 'OK', //TODO: add l10n
+}) => showDialog<void>(
+  context: context,
+  barrierColor: context.neri[NeriToken.scrim],
+  builder: (context) => _ConfirmDialog(
+    title: title,
+    message: message,
+    confirmLabel: okLabel,
+    cancelLabel: null,
+    destructive: false,
+  ),
+);
+
 class _ConfirmDialog extends StatelessWidget {
   const _ConfirmDialog({
     required this.title,
@@ -43,7 +60,7 @@ class _ConfirmDialog extends StatelessWidget {
   final String title;
   final String? message;
   final String confirmLabel;
-  final String cancelLabel;
+  final String? cancelLabel;
   final bool destructive;
 
   @override
@@ -92,14 +109,15 @@ class _ConfirmDialog extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.end,
                 spacing: sizing.space(NeriSpacingRole.sm),
                 children: [
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(false),
-                    style: TextButton.styleFrom(
-                      foregroundColor: colors[NeriToken.textSecondary],
-                      shape: buttonShape,
+                  if (cancelLabel case final cancelLabel?)
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(false),
+                      style: TextButton.styleFrom(
+                        foregroundColor: colors[NeriToken.textSecondary],
+                        shape: buttonShape,
+                      ),
+                      child: Text(cancelLabel),
                     ),
-                    child: Text(cancelLabel),
-                  ),
                   PressScale(
                     child: FilledButton(
                       onPressed: () => Navigator.of(context).pop(true),

@@ -14,6 +14,7 @@ import 'package:nerimobile/stores/window/window_focus_store.dart';
 import 'package:nerimobile/theme/core/theme_data.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/views/chat/channel/channel_header.dart';
+import 'package:nerimobile/views/chat/file_too_large_dialog.dart';
 import 'package:nerimobile/views/chat/message/message_list_skeleton.dart';
 import 'package:nerimobile/views/chat/message/message_row.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
@@ -178,6 +179,15 @@ class MessageListState extends ConsumerState<MessageList> {
     );
   }
 
+  Future<void> _retry(String localId) async {
+    final failure = await ref
+        .read(messagesProvider(widget.channelId).notifier)
+        .retry(localId);
+    if (failure == SendFailure.fileTooLarge && mounted) {
+      showFileTooLargeDialog(context);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     ref.listen(windowFocusProvider, (_, focused) {
@@ -223,9 +233,7 @@ class MessageListState extends ConsumerState<MessageList> {
               channel.pending.contains(message.id) ||
               channel.editing.contains(message.id),
           failed: channel.failed.contains(message.id),
-          onRetry: () => ref
-              .read(messagesProvider(widget.channelId).notifier)
-              .retry(message.id),
+          onRetry: () => _retry(message.id),
           flashed: message.id == _flashed,
         );
       },

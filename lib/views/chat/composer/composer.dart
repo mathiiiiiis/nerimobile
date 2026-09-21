@@ -19,6 +19,7 @@ import 'package:nerimobile/theme/typography/text_styles.dart';
 import 'package:nerimobile/views/chat/composer/attachment_panel.dart';
 import 'package:nerimobile/views/chat/composer/composer_bar.dart';
 import 'package:nerimobile/views/chat/composer/typing_indicator.dart';
+import 'package:nerimobile/views/chat/file_too_large_dialog.dart';
 
 const _fieldHeight = 48.0;
 const _maxFieldLines = 6;
@@ -113,7 +114,7 @@ class _ComposerState extends ConsumerState<Composer>
       ..removeAttachment();
     setState(() => _sending = true);
 
-    await ref
+    final failure = await ref
         .read(messagesProvider(widget.channelId).notifier)
         .send(
           content,
@@ -121,7 +122,10 @@ class _ComposerState extends ConsumerState<Composer>
           mentionReplies: composer.mentionReplies,
           file: composer.attachment?.path,
         );
-    if (mounted) setState(() => _sending = false);
+    if (!mounted) return;
+
+    setState(() => _sending = false);
+    if (failure == SendFailure.fileTooLarge) showFileTooLargeDialog(context);
   }
 
   Future<void> _save(Message editing, String content) async {
