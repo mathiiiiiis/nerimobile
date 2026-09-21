@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
+import 'package:nerimobile/theme/sizing/breakpoints.dart';
 import 'package:photo_manager/photo_manager.dart';
 
 import 'package:nerimobile/stores/composer/composer_store.dart';
@@ -25,9 +26,15 @@ import 'package:nerimobile/views/press_scale.dart';
 double collapsedPanelHeight(BuildContext context, double width) {
   final sizing = context.neriSize;
   final gap = sizing.space(NeriSpacingRole.sm);
-  final card = _cardLayout(context, width - gap * 2).size;
+  final hariline = sizing.border(NeriBorderRole.hairline);
+  final dual = NeriWindow.of(context).isDualPane;
+  final side = dual ? gap + hariline : 0.0;
+  final frame = dual
+      ? gap * 2 + hariline * 2
+      : MediaQuery.paddingOf(context).bottom;
+  final card = _cardLayout(context, width - (gap + side) * 2).size;
 
-  return MediaQuery.paddingOf(context).bottom +
+  return frame +
       sizing.border(NeriBorderRole.thick) +
       sizing.dimen(NeriDimen.controlSize) +
       card * _visibleRows +
@@ -157,20 +164,38 @@ class AttachmentPanel extends ConsumerWidget {
     );
     //show sheet as soon as it starts expanding
     final sheet = expansion > 0;
+    final dual = NeriWindow.of(context).isDualPane;
     final radius = Radius.circular(
-      sizing.radius(NeriRadiusRole.xl) * expansion,
+      dual
+          ? sizing.radius(NeriRadiusRole.image)
+          : sizing.radius(NeriRadiusRole.xl) * expansion,
     );
 
     return Container(
+      margin: dual ? EdgeInsets.fromLTRB(gap, 0, gap, gap) : EdgeInsets.zero,
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: context.neri[NeriToken.pane],
-        borderRadius: BorderRadius.only(topLeft: radius, topRight: radius),
+        borderRadius: dual
+            ? BorderRadius.all(radius)
+            : BorderRadius.only(topLeft: radius, topRight: radius),
+        border: dual
+            ? Border.all(
+                color: context.neri[NeriToken.border],
+                width: sizing.border(NeriBorderRole.hairline),
+              )
+            : null,
       ),
       child: SafeArea(
         top: false,
+        bottom: !dual,
         child: Padding(
-          padding: EdgeInsets.fromLTRB(gap, gap * expansion, gap, gap),
+          padding: EdgeInsets.fromLTRB(
+            gap,
+            dual ? gap : gap * expansion,
+            gap,
+            gap,
+          ),
           child: Column(
             mainAxisSize: sheet ? MainAxisSize.max : MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
