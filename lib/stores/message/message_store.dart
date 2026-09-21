@@ -202,7 +202,7 @@ class MessagesNotifier extends Notifier<ChannelMessages> {
       _replaceLocal(localId, Message.fromJson(sent['message'] ?? sent));
       return null;
     } on _FileTooLarge {
-      _fail(localId);
+      _remove(localId);
       return SendFailure.fileTooLarge;
     } catch (e) {
       final reason = e is DioException ? e.response?.data : null;
