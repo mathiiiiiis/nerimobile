@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:mime/mime.dart';
@@ -16,20 +18,20 @@ Future<String> uploadFile(
   CancelToken? cancelToken,
   ValueChanged<double>? onProgress,
 }) async {
-  final form = FormData.fromMap({
-    'f': await MultipartFile.fromFile(
-      path,
-      filename: p.basename(path),
-      contentType: DioMediaType.parse(
-        lookupMimeType(path) ?? 'application/octet-stream',
-      ),
-    ),
-  });
+  final file = File(path);
 
   final response = await cdnDio.post(
     'attachments/$channelId',
-    data: form,
-    options: Options(headers: {'Authorization': token}),
+    data: file.openRead(),
+    options: Options(
+      headers: {
+        'Authorization': token,
+        Headers.contentTypeHeader:
+            lookupMimeType(path) ?? 'application/octet-stream',
+        Headers.contentLengthHeader: await file.length(),
+        'File-Name': Uri.encodeComponent(p.basename(path)),
+      },
+    ),
     cancelToken: cancelToken,
     onSendProgress: (sent, total) =>
         onProgress?.call(total <= 0 ? 0 : sent / total),
