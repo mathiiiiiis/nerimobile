@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';
-import 'package:nerimobile/stores/composer/composer_store.dart';
 
+import 'package:nerimobile/stores/composer/composer_store.dart';
+import 'package:nerimobile/stores/emoji/recent_emoji_store.dart';
 import 'package:nerimobile/theme/core/theme_data.dart';
 import 'package:nerimobile/theme/core/token.dart';
 import 'package:nerimobile/theme/sizing/dimens.dart';
@@ -10,6 +11,7 @@ import 'package:nerimobile/theme/sizing/radius.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/theme/typography/text_styles.dart';
 import 'package:nerimobile/utils/emoji_catalog.dart';
+import 'package:nerimobile/utils/emoji_entries.dart';
 import 'package:nerimobile/utils/emoji_shortcodes.dart';
 import 'package:nerimobile/views/app_text_field.dart';
 import 'package:nerimobile/views/chat/composer/composer_panel.dart';
@@ -48,11 +50,6 @@ class EmojiPanelNotifier extends Notifier<EmojiPane> {
   }
 }
 
-final _entries = <String, CatalogEmoji>{
-  for (final emojis in emojiCatalog.values)
-    for (final emoji in emojis) emoji.emoji: emoji,
-};
-
 //aliases are searchable too
 List<CatalogEmoji> _matches(String query) {
   final starts = <CatalogEmoji>[];
@@ -61,7 +58,7 @@ List<CatalogEmoji> _matches(String query) {
 
   for (final MapEntry(key: name, value: emoji) in emojiShortcodes.entries) {
     final at = name.indexOf(query);
-    final entry = _entries[emoji];
+    final entry = emojiEntries[emoji];
     if (at < 0 || entry == null || !seen.add(emoji)) continue;
 
     (at == 0 ? starts : contains).add(entry);
@@ -78,7 +75,7 @@ class _Header extends _Row {
   const _Header(this.category, this.icon);
 
   final String category;
-  final CatalogEmoji icon;
+  final CatalogEmoji? icon;
 }
 
 class _Emojis extends _Row {
@@ -92,7 +89,11 @@ List<_Row> _emojiRows(List<CatalogEmoji> emojis, int columns) => [
     _Emojis(emojis.sublist(i, (i + columns).clamp(0, emojis.length))),
 ];
 
-List<_Row> _rows(int columns) => [
+List<_Row> _rows(List<CatalogEmoji> recents, int columns) => [
+  if (recents.isNotEmpty) ...[
+    _Header('Recent', null), //TODO: add l10n
+    ..._emojiRows(recents, columns),
+  ],
   for (final MapEntry(key: category, value: emojis)
       in emojiCatalog.entries) ...[
     _Header(category, emojis.first),
@@ -117,6 +118,7 @@ class _EmojiPanelState extends ConsumerState<EmojiPanel> {
   var _query = '';
   var _rowList = const <_Row>[];
   var _headers = const <int>[];
+  var _icons = const <CatalogEmoji?>[];
   var _active = 0;
 
   @override
@@ -149,12 +151,18 @@ class _EmojiPanelState extends ConsumerState<EmojiPanel> {
   }
 
   void _relayout() {
+    final recents = ref.read(recentEmojisProvider).value ?? const [];
+
     _rowList = _query.isEmpty
-        ? _rows(_columns)
+        ? _rows(recents, _columns)
         : _emojiRows(_matches(_query), _columns);
     _headers = [
       for (var i = 0; i < _rowList.length; i++)
         if (_rowList[i] is _Header) i,
+    ];
+    _icons = [
+      for (final row in _rowList)
+        if (row case _Header(:final icon)) icon,
     ];
   }
 
@@ -181,14 +189,20 @@ class _EmojiPanelState extends ConsumerState<EmojiPanel> {
     _scroll.jumpTo(_headers[category] * _extent);
   }
 
-  void _pick(CatalogEmoji emoji) => ref
-      .read(composerProvider(widget.channelId).notifier)
-      .insert(':${emoji.name}: ');
+  void _pick(CatalogEmoji emoji) {
+    ref
+        .read(composerProvider(widget.channelId).notifier)
+        .insert(':${emoji.name}: ');
+    ref.read(recentEmojisProvider.notifier).use(emoji);
+  }
 
   @override
   Widget build(BuildContext context) {
-    ref.listen(emojiPaneProvider(widget.channelId), (_, pane) {
-      if (pane != EmojiPane.closed) return;
+    ref.listen(emojiPaneProvider(widget.channelId), (previous, pane) {
+      if (pane != EmojiPane.closed) {
+        if (previous == EmojiPane.closed) setState(_relayout);
+        return;
+      }
 
       _searchFocus.unfocus();
       _search.clear();
@@ -212,9 +226,7 @@ class _EmojiPanelState extends ConsumerState<EmojiPanel> {
                 children: [
                   _Sidebar(
                     active: _query.isEmpty ? _active : -1,
-                    icons: [
-                      for (final emojis in emojiCatalog.values) emojis.first,
-                    ],
+                    icons: _icons,
                     onTap: _jumpTo,
                   ),
                   Expanded(
@@ -277,7 +289,7 @@ class _Sidebar extends StatefulWidget {
   });
 
   final int active;
-  final List<CatalogEmoji> icons;
+  final List<CatalogEmoji?> icons;
   final ValueChanged<int> onTap;
 
   @override
@@ -350,10 +362,17 @@ class _SidebarState extends State<_Sidebar> {
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
-                    Twemoji(
-                      unicode: widget.icons[i].emoji,
-                      size: sizing.dimen(NeriDimen.iconSm),
-                    ),
+                    if (widget.icons[i] case final icon?)
+                      Twemoji(
+                        unicode: icon.emoji,
+                        size: sizing.dimen(NeriDimen.iconSm),
+                      )
+                    else
+                      Icon(
+                        Symbols.schedule_rounded,
+                        size: sizing.dimen(NeriDimen.iconSm),
+                        color: colors[NeriToken.textSecondary],
+                      ),
                     if (i == widget.active)
                       Positioned(
                         left: 0,
@@ -380,7 +399,7 @@ class _GroupHeader extends StatelessWidget {
   const _GroupHeader({required this.name, required this.icon});
 
   final String name;
-  final CatalogEmoji icon;
+  final CatalogEmoji? icon;
 
   @override
   Widget build(BuildContext context) {
@@ -404,7 +423,14 @@ class _GroupHeader extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           spacing: sizing.space(NeriSpacingRole.xs),
           children: [
-            Twemoji(unicode: icon.emoji, size: _headerEmoji),
+            if (icon case final icon?)
+              Twemoji(unicode: icon.emoji, size: _headerEmoji)
+            else
+              Icon(
+                Symbols.schedule_rounded,
+                size: _headerEmoji,
+                color: colors[NeriToken.textSecondary],
+              ),
             Text(
               name,
               style: context.neriText[NeriTextRole.labelSmall].copyWith(

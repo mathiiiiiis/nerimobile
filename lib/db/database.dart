@@ -6,12 +6,20 @@ import 'package:nerimobile/db/migrations.dart';
 import 'package:nerimobile/db/tables/announcements.dart';
 import 'package:nerimobile/db/tables/channels.dart';
 import 'package:nerimobile/db/tables/inboxes.dart';
+import 'package:nerimobile/db/tables/recent_emojis.dart';
 import 'package:nerimobile/db/tables/users.dart';
 
 part 'database.g.dart';
 
 @DriftDatabase(
-  tables: [Announcements, Channels, DismissedAnnouncements, Inboxes, Users],
+  tables: [
+    Announcements,
+    Channels,
+    DismissedAnnouncements,
+    Inboxes,
+    RecentEmojis,
+    Users,
+  ],
 )
 class NeriDatabase extends _$NeriDatabase {
   NeriDatabase() : super(openConnection());

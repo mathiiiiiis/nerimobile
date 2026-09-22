@@ -1316,6 +1316,214 @@ class InboxesCompanion extends UpdateCompanion<InboxRow> {
   }
 }
 
+class $RecentEmojisTable extends RecentEmojis
+    with TableInfo<$RecentEmojisTable, RecentEmojiRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $RecentEmojisTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _emojiMeta = const VerificationMeta('emoji');
+  @override
+  late final GeneratedColumn<String> emoji = GeneratedColumn<String>(
+    'emoji',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _usedAtMeta = const VerificationMeta('usedAt');
+  @override
+  late final GeneratedColumn<int> usedAt = GeneratedColumn<int>(
+    'used_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [emoji, usedAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'recent_emojis';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<RecentEmojiRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('emoji')) {
+      context.handle(
+        _emojiMeta,
+        emoji.isAcceptableOrUnknown(data['emoji']!, _emojiMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_emojiMeta);
+    }
+    if (data.containsKey('used_at')) {
+      context.handle(
+        _usedAtMeta,
+        usedAt.isAcceptableOrUnknown(data['used_at']!, _usedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_usedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {emoji};
+  @override
+  RecentEmojiRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return RecentEmojiRow(
+      emoji: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}emoji'],
+      )!,
+      usedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}used_at'],
+      )!,
+    );
+  }
+
+  @override
+  $RecentEmojisTable createAlias(String alias) {
+    return $RecentEmojisTable(attachedDatabase, alias);
+  }
+}
+
+class RecentEmojiRow extends DataClass implements Insertable<RecentEmojiRow> {
+  final String emoji;
+  final int usedAt;
+  const RecentEmojiRow({required this.emoji, required this.usedAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['emoji'] = Variable<String>(emoji);
+    map['used_at'] = Variable<int>(usedAt);
+    return map;
+  }
+
+  RecentEmojisCompanion toCompanion(bool nullToAbsent) {
+    return RecentEmojisCompanion(emoji: Value(emoji), usedAt: Value(usedAt));
+  }
+
+  factory RecentEmojiRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return RecentEmojiRow(
+      emoji: serializer.fromJson<String>(json['emoji']),
+      usedAt: serializer.fromJson<int>(json['usedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'emoji': serializer.toJson<String>(emoji),
+      'usedAt': serializer.toJson<int>(usedAt),
+    };
+  }
+
+  RecentEmojiRow copyWith({String? emoji, int? usedAt}) =>
+      RecentEmojiRow(emoji: emoji ?? this.emoji, usedAt: usedAt ?? this.usedAt);
+  RecentEmojiRow copyWithCompanion(RecentEmojisCompanion data) {
+    return RecentEmojiRow(
+      emoji: data.emoji.present ? data.emoji.value : this.emoji,
+      usedAt: data.usedAt.present ? data.usedAt.value : this.usedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RecentEmojiRow(')
+          ..write('emoji: $emoji, ')
+          ..write('usedAt: $usedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(emoji, usedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is RecentEmojiRow &&
+          other.emoji == this.emoji &&
+          other.usedAt == this.usedAt);
+}
+
+class RecentEmojisCompanion extends UpdateCompanion<RecentEmojiRow> {
+  final Value<String> emoji;
+  final Value<int> usedAt;
+  final Value<int> rowid;
+  const RecentEmojisCompanion({
+    this.emoji = const Value.absent(),
+    this.usedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  RecentEmojisCompanion.insert({
+    required String emoji,
+    required int usedAt,
+    this.rowid = const Value.absent(),
+  }) : emoji = Value(emoji),
+       usedAt = Value(usedAt);
+  static Insertable<RecentEmojiRow> custom({
+    Expression<String>? emoji,
+    Expression<int>? usedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (emoji != null) 'emoji': emoji,
+      if (usedAt != null) 'used_at': usedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  RecentEmojisCompanion copyWith({
+    Value<String>? emoji,
+    Value<int>? usedAt,
+    Value<int>? rowid,
+  }) {
+    return RecentEmojisCompanion(
+      emoji: emoji ?? this.emoji,
+      usedAt: usedAt ?? this.usedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (emoji.present) {
+      map['emoji'] = Variable<String>(emoji.value);
+    }
+    if (usedAt.present) {
+      map['used_at'] = Variable<int>(usedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RecentEmojisCompanion(')
+          ..write('emoji: $emoji, ')
+          ..write('usedAt: $usedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $UsersTable extends Users with TableInfo<$UsersTable, UserRow> {
   @override
   final GeneratedDatabase attachedDatabase;
@@ -1632,6 +1840,7 @@ abstract class _$NeriDatabase extends GeneratedDatabase {
   late final $DismissedAnnouncementsTable dismissedAnnouncements =
       $DismissedAnnouncementsTable(this);
   late final $InboxesTable inboxes = $InboxesTable(this);
+  late final $RecentEmojisTable recentEmojis = $RecentEmojisTable(this);
   late final $UsersTable users = $UsersTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
@@ -1642,6 +1851,7 @@ abstract class _$NeriDatabase extends GeneratedDatabase {
     channels,
     dismissedAnnouncements,
     inboxes,
+    recentEmojis,
     users,
   ];
 }
@@ -2440,6 +2650,158 @@ typedef $$InboxesTableProcessedTableManager =
       InboxRow,
       PrefetchHooks Function()
     >;
+typedef $$RecentEmojisTableCreateCompanionBuilder =
+    RecentEmojisCompanion Function({
+      required String emoji,
+      required int usedAt,
+      Value<int> rowid,
+    });
+typedef $$RecentEmojisTableUpdateCompanionBuilder =
+    RecentEmojisCompanion Function({
+      Value<String> emoji,
+      Value<int> usedAt,
+      Value<int> rowid,
+    });
+
+class $$RecentEmojisTableFilterComposer
+    extends Composer<_$NeriDatabase, $RecentEmojisTable> {
+  $$RecentEmojisTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get emoji => $composableBuilder(
+    column: $table.emoji,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get usedAt => $composableBuilder(
+    column: $table.usedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$RecentEmojisTableOrderingComposer
+    extends Composer<_$NeriDatabase, $RecentEmojisTable> {
+  $$RecentEmojisTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get emoji => $composableBuilder(
+    column: $table.emoji,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get usedAt => $composableBuilder(
+    column: $table.usedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$RecentEmojisTableAnnotationComposer
+    extends Composer<_$NeriDatabase, $RecentEmojisTable> {
+  $$RecentEmojisTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get emoji =>
+      $composableBuilder(column: $table.emoji, builder: (column) => column);
+
+  GeneratedColumn<int> get usedAt =>
+      $composableBuilder(column: $table.usedAt, builder: (column) => column);
+}
+
+class $$RecentEmojisTableTableManager
+    extends
+        RootTableManager<
+          _$NeriDatabase,
+          $RecentEmojisTable,
+          RecentEmojiRow,
+          $$RecentEmojisTableFilterComposer,
+          $$RecentEmojisTableOrderingComposer,
+          $$RecentEmojisTableAnnotationComposer,
+          $$RecentEmojisTableCreateCompanionBuilder,
+          $$RecentEmojisTableUpdateCompanionBuilder,
+          (
+            RecentEmojiRow,
+            BaseReferences<_$NeriDatabase, $RecentEmojisTable, RecentEmojiRow>,
+          ),
+          RecentEmojiRow,
+          PrefetchHooks Function()
+        > {
+  $$RecentEmojisTableTableManager(_$NeriDatabase db, $RecentEmojisTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$RecentEmojisTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$RecentEmojisTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$RecentEmojisTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> emoji = const Value.absent(),
+                Value<int> usedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => RecentEmojisCompanion(
+                emoji: emoji,
+                usedAt: usedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String emoji,
+                required int usedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => RecentEmojisCompanion.insert(
+                emoji: emoji,
+                usedAt: usedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$RecentEmojisTable, RecentEmojiRow>(table),
+                  BaseReferences<
+                    _$NeriDatabase,
+                    $RecentEmojisTable,
+                    RecentEmojiRow
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$RecentEmojisTableProcessedTableManager =
+    ProcessedTableManager<
+      _$NeriDatabase,
+      $RecentEmojisTable,
+      RecentEmojiRow,
+      $$RecentEmojisTableFilterComposer,
+      $$RecentEmojisTableOrderingComposer,
+      $$RecentEmojisTableAnnotationComposer,
+      $$RecentEmojisTableCreateCompanionBuilder,
+      $$RecentEmojisTableUpdateCompanionBuilder,
+      (
+        RecentEmojiRow,
+        BaseReferences<_$NeriDatabase, $RecentEmojisTable, RecentEmojiRow>,
+      ),
+      RecentEmojiRow,
+      PrefetchHooks Function()
+    >;
 typedef $$UsersTableCreateCompanionBuilder =
     UsersCompanion Function({
       required String id,
@@ -2638,6 +3000,8 @@ class $NeriDatabaseManager {
       );
   $$InboxesTableTableManager get inboxes =>
       $$InboxesTableTableManager(_db, _db.inboxes);
+  $$RecentEmojisTableTableManager get recentEmojis =>
+      $$RecentEmojisTableTableManager(_db, _db.recentEmojis);
   $$UsersTableTableManager get users =>
       $$UsersTableTableManager(_db, _db.users);
 }
