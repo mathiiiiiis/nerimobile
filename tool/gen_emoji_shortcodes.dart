@@ -39,9 +39,9 @@ String _shortcodes(List<Map<String, dynamic>> emojis) {
 }
 
 String _catalog(List<Map<String, dynamic>> emojis) {
-  final catergories = <String, List<Map<String, dynamic>>>{};
+  final categories = <String, List<Map<String, dynamic>>>{};
   for (final emoji in emojis) {
-    (catergories[emoji['category'] as String] ??= []).add(emoji);
+    (categories[emoji['category'] as String] ??= []).add(emoji);
   }
 
   final buffer = StringBuffer()
@@ -50,7 +50,7 @@ String _catalog(List<Map<String, dynamic>> emojis) {
     ..writeln('typedef CatalogEmoji = ({String emoji, String name});')
     ..writeln()
     ..writeln('const emojiCatalog = <String, List<CatalogEmoji>>{');
-  for (final MapEntry(key: category, value: members) in catergories.entries) {
+  for (final MapEntry(key: category, value: members) in categories.entries) {
     buffer.writeln("  '${_escape(category)}': [");
     for (final emoji in members) {
       final name = (emoji['short_names'] as List).first as String;
