@@ -241,6 +241,18 @@ class MessagesNotifier extends Notifier<ChannelMessages> {
     _remove(localId);
   }
 
+  //large files may return 413, an error message or a broken pipe
+  bool _rejectedAsTooLarge(DioException e) => switch (e) {
+    DioException(
+      error: SocketException(osError: OSError(errorCode: _brokenPipe)),
+    ) =>
+      true,
+    DioException(response: Response(statusCode: 412)) => true,
+    DioException(response: Response(data: {'message': final String message})) =>
+      message.toLowerCase().contains('too large'),
+    _ => false,
+  };
+
   Future<String> _upload(String file, String localId) async {
     final provider = uploadProgressProvider(localId);
     final hold = ref.listen(provider, (_, _) {});
@@ -258,12 +270,7 @@ class MessagesNotifier extends Notifier<ChannelMessages> {
         onProgress: progress.report,
       );
     } on DioException catch (e) {
-      //this is a guess: oversized files surface as a broken pipe
-      if (e.error case SocketException(
-        osError: OSError(errorCode: _brokenPipe),
-      )) {
-        throw const _FileTooLarge();
-      }
+      if (_rejectedAsTooLarge(e)) throw const _FileTooLarge();
       rethrow;
     } finally {
       _uploads.remove(localId);
