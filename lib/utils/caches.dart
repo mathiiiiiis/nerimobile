@@ -11,8 +11,8 @@ final avatarCache = CacheManager(
 final emojiCache = CacheManager(
   Config(
     'neri_emojis',
-    stalePeriod: const Duration(days: 60),
-    maxNrOfCacheObjects: 2000,
+    stalePeriod: const Duration(days: 3650),
+    maxNrOfCacheObjects: 6000,
   ),
 );
 
