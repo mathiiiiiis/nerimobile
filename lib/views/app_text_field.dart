@@ -15,6 +15,8 @@ class AppTextField extends StatefulWidget {
   final ValueChanged<String>? onSubmitted;
   final ValueChanged<String>? onChanged;
   final bool obscureText;
+  final bool dense;
+  final NeriToken? background;
 
   const AppTextField({
     super.key,
@@ -26,6 +28,8 @@ class AppTextField extends StatefulWidget {
     this.onSubmitted,
     this.onChanged,
     this.obscureText = false,
+    this.dense = false,
+    this.background,
   });
 
   @override
@@ -87,10 +91,13 @@ class _AppTextFieldState extends State<AppTextField> {
                 style: const TextStyle(fontSize: 14),
                 decoration: InputDecoration(
                   isDense: true,
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 14,
-                  ),
+                  filled: widget.background != null,
+                  fillColor: widget.background == null
+                      ? null
+                      : colors[widget.background!],
+                  contentPadding: widget.dense
+                      ? const EdgeInsets.symmetric(horizontal: 8, vertical: 7)
+                      : const EdgeInsets.symmetric(horizontal: 6, vertical: 14),
 
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(radius),

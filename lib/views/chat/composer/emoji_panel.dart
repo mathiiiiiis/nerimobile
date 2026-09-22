@@ -21,6 +21,7 @@ const _headerEmoji = 16.0;
 const _indicatorWidth = 2.0;
 const _indicatorHeight = 0.4;
 const _disabledOpacity = 0.4;
+const _searchHeight = 34.0;
 const _sidebarFollow = Duration(milliseconds: 200);
 
 enum EmojiPane { closed, open, searching }
@@ -230,16 +231,22 @@ class _EmojiPanelState extends ConsumerState<EmojiPanel> {
                     onTap: _jumpTo,
                   ),
                   Expanded(
-                    child: Column(
-                      spacing: gap,
+                    child: Stack(
                       children: [
-                        AppTextField(
-                          controller: _search,
-                          focusNode: _searchFocus,
-                          onChanged: _onQuery,
-                          hintText: 'Search Emojis...', //TODO: add l10n
+                        Positioned.fill(child: _list()),
+                        Positioned(
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          child: AppTextField(
+                            dense: true,
+                            background: NeriToken.card,
+                            controller: _search,
+                            focusNode: _searchFocus,
+                            onChanged: _onQuery,
+                            hintText: 'Search Emojis...', //TODO: add l10n
+                          ),
                         ),
-                        Expanded(child: _list()),
                       ],
                     ),
                   ),
@@ -259,6 +266,9 @@ class _EmojiPanelState extends ConsumerState<EmojiPanel> {
       return ListView.builder(
         controller: _scroll,
         itemExtent: _extent,
+        padding: EdgeInsets.only(
+          top: _searchHeight + context.neriSize.space(NeriSpacingRole.sm),
+        ),
         itemCount: _rowList.length,
         itemBuilder: (context, index) => switch (_rowList[index]) {
           _Header(:final category, :final icon) => _GroupHeader(
