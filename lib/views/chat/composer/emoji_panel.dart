@@ -162,8 +162,8 @@ class _EmojiPanelState extends ConsumerState<EmojiPanel> {
         if (_rowList[i] is _Header) i,
     ];
     _icons = [
-      for (final row in _rowList)
-        if (row case _Header(:final icon)) icon,
+      if (recents.isNotEmpty) null,
+      for (final emojis in emojiCatalog.values) emojis.first,
     ];
   }
 
