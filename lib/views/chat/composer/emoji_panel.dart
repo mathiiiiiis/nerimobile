@@ -10,6 +10,8 @@ import 'package:nerimobile/theme/sizing/radius.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/theme/typography/text_styles.dart';
 import 'package:nerimobile/utils/emoji_catalog.dart';
+import 'package:nerimobile/utils/emoji_shortcodes.dart';
+import 'package:nerimobile/views/app_text_field.dart';
 import 'package:nerimobile/views/chat/composer/composer_panel.dart';
 import 'package:nerimobile/views/chat/message/emoji/twemoji.dart';
 
@@ -19,22 +21,53 @@ const _indicatorHeight = 0.4;
 const _disabledOpacity = 0.4;
 const _sidebarFollow = Duration(milliseconds: 200);
 
+enum EmojiPane { closed, open, searching }
+
 final emojiPaneProvider =
-    NotifierProvider.family<EmojiPanelNotifier, bool, String>(
+    NotifierProvider.family<EmojiPanelNotifier, EmojiPane, String>(
       EmojiPanelNotifier.new,
     );
 
-class EmojiPanelNotifier extends Notifier<bool> {
+class EmojiPanelNotifier extends Notifier<EmojiPane> {
   EmojiPanelNotifier(this.channelId);
 
   final String channelId;
 
   @override
-  bool build() => false;
+  EmojiPane build() => EmojiPane.closed;
 
-  void open() => state = true;
-  void close() => state = false;
-  void toggle() => state = !state;
+  void open() => state = EmojiPane.open;
+  void close() => state = EmojiPane.closed;
+
+  void toggle() =>
+      state = state == EmojiPane.closed ? EmojiPane.open : EmojiPane.closed;
+
+  void search(bool searching) {
+    if (state == EmojiPane.closed) return;
+    state = searching ? EmojiPane.searching : EmojiPane.open;
+  }
+}
+
+final _entries = <String, CatalogEmoji>{
+  for (final emojis in emojiCatalog.values)
+    for (final emoji in emojis) emoji.emoji: emoji,
+};
+
+//aliases are searchable too
+List<CatalogEmoji> _matches(String query) {
+  final starts = <CatalogEmoji>[];
+  final contains = <CatalogEmoji>[];
+  final seen = <String>{};
+
+  for (final MapEntry(key: name, value: emoji) in emojiShortcodes.entries) {
+    final at = name.indexOf(query);
+    final entry = _entries[emoji];
+    if (at < 0 || entry == null || !seen.add(emoji)) continue;
+
+    (at == 0 ? starts : contains).add(entry);
+  }
+
+  return [...starts, ...contains];
 }
 
 sealed class _Row {
@@ -54,12 +87,16 @@ class _Emojis extends _Row {
   final List<CatalogEmoji> emojis;
 }
 
+List<_Row> _emojiRows(List<CatalogEmoji> emojis, int columns) => [
+  for (var i = 0; i < emojis.length; i += columns)
+    _Emojis(emojis.sublist(i, (i + columns).clamp(0, emojis.length))),
+];
+
 List<_Row> _rows(int columns) => [
   for (final MapEntry(key: category, value: emojis)
       in emojiCatalog.entries) ...[
     _Header(category, emojis.first),
-    for (var i = 0; i < emojis.length; i += columns)
-      _Emojis(emojis.sublist(i, (i + columns).clamp(0, emojis.length))),
+    ..._emojiRows(emojis, columns),
   ],
 ];
 
@@ -74,7 +111,10 @@ class EmojiPanel extends ConsumerStatefulWidget {
 
 class _EmojiPanelState extends ConsumerState<EmojiPanel> {
   final _scroll = ScrollController();
+  final _search = TextEditingController();
+  final _searchFocus = FocusNode();
   var _columns = 0;
+  var _query = '';
   var _rowList = const <_Row>[];
   var _headers = const <int>[];
   var _active = 0;
@@ -83,11 +123,18 @@ class _EmojiPanelState extends ConsumerState<EmojiPanel> {
   void initState() {
     super.initState();
     _scroll.addListener(_onScroll);
+    _searchFocus.addListener(
+      () => ref
+          .read(emojiPaneProvider(widget.channelId).notifier)
+          .search(_searchFocus.hasFocus),
+    );
   }
 
   @override
   void dispose() {
     _scroll.dispose();
+    _search.dispose();
+    _searchFocus.dispose();
     super.dispose();
   }
 
@@ -98,20 +145,41 @@ class _EmojiPanelState extends ConsumerState<EmojiPanel> {
   void _layout(int columns) {
     if (columns == _columns) return;
     _columns = columns;
-    _rowList = _rows(columns);
+    _relayout();
+  }
+
+  void _relayout() {
+    _rowList = _query.isEmpty
+        ? _rows(_columns)
+        : _emojiRows(_matches(_query), _columns);
     _headers = [
       for (var i = 0; i < _rowList.length; i++)
         if (_rowList[i] is _Header) i,
     ];
   }
 
+  void _onQuery(String query) {
+    setState(() => _query = query.trim().toLowerCase().replaceAll(' ', '_'));
+    _relayout();
+    if (_scroll.hasClients) _scroll.jumpTo(0);
+  }
+
   void _onScroll() {
+    if (_query.isNotEmpty) return;
+
     final row = _scroll.offset / _extent;
     final active = _headers.lastIndexWhere((header) => header <= row + 0.5);
     if (active >= 0 && active != _active) setState(() => _active = active);
   }
 
-  void _jumpTo(int category) => _scroll.jumpTo(_headers[category] * _extent);
+  void _jumpTo(int category) {
+    if (_query.isNotEmpty) {
+      _search.clear();
+      _onQuery('');
+    }
+
+    _scroll.jumpTo(_headers[category] * _extent);
+  }
 
   void _pick(CatalogEmoji emoji) => ref
       .read(composerProvider(widget.channelId).notifier)
@@ -119,6 +187,14 @@ class _EmojiPanelState extends ConsumerState<EmojiPanel> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(emojiPaneProvider(widget.channelId), (_, pane) {
+      if (pane != EmojiPane.closed) return;
+
+      _searchFocus.unfocus();
+      _search.clear();
+      if (_query.isNotEmpty) _onQuery('');
+    });
+
     final sizing = context.neriSize;
     final gap = sizing.space(NeriSpacingRole.sm);
 
@@ -135,39 +211,24 @@ class _EmojiPanelState extends ConsumerState<EmojiPanel> {
                 spacing: gap,
                 children: [
                   _Sidebar(
-                    active: _active,
+                    active: _query.isEmpty ? _active : -1,
                     icons: [
                       for (final emojis in emojiCatalog.values) emojis.first,
                     ],
                     onTap: _jumpTo,
                   ),
                   Expanded(
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        _layout(
-                          (constraints.maxWidth / _extent).floor().clamp(1, 99),
-                        );
-                        return ListView.builder(
-                          controller: _scroll,
-                          itemExtent: _extent,
-                          itemCount: _rowList.length,
-                          itemBuilder: (context, index) =>
-                              switch (_rowList[index]) {
-                                _Header(:final category, :final icon) =>
-                                  _GroupHeader(name: category, icon: icon),
-                                _Emojis(:final emojis) => Row(
-                                  children: [
-                                    for (final emoji in emojis)
-                                      _EmojiCell(
-                                        emoji: emoji,
-                                        extent: _extent,
-                                        onTap: () => _pick(emoji),
-                                      ),
-                                  ],
-                                ),
-                              },
-                        );
-                      },
+                    child: Column(
+                      spacing: gap,
+                      children: [
+                        AppTextField(
+                          controller: _search,
+                          focusNode: _searchFocus,
+                          onChanged: _onQuery,
+                          hintText: 'Search Emojis...', //TODO: add l10n
+                        ),
+                        Expanded(child: _list()),
+                      ],
                     ),
                   ),
                 ],
@@ -179,6 +240,33 @@ class _EmojiPanelState extends ConsumerState<EmojiPanel> {
       ),
     );
   }
+
+  Widget _list() => LayoutBuilder(
+    builder: (context, constraints) {
+      _layout((constraints.maxWidth / _extent).floor().clamp(1, 99));
+      return ListView.builder(
+        controller: _scroll,
+        itemExtent: _extent,
+        itemCount: _rowList.length,
+        itemBuilder: (context, index) => switch (_rowList[index]) {
+          _Header(:final category, :final icon) => _GroupHeader(
+            name: category,
+            icon: icon,
+          ),
+          _Emojis(:final emojis) => Row(
+            children: [
+              for (final emoji in emojis)
+                _EmojiCell(
+                  emoji: emoji,
+                  extent: _extent,
+                  onTap: () => _pick(emoji),
+                ),
+            ],
+          ),
+        },
+      );
+    },
+  );
 }
 
 class _Sidebar extends StatefulWidget {
@@ -209,7 +297,8 @@ class _SidebarState extends State<_Sidebar> {
   @override
   void didUpdateWidget(_Sidebar old) {
     super.didUpdateWidget(old);
-    if (widget.active == old.active || !_scroll.hasClients) return;
+    if (widget.active < 0 || widget.active == old.active || !_scroll.hasClients)
+      return;
 
     final item = context.neriSize.dimen(NeriDimen.controlSize);
     final start = widget.active * item;

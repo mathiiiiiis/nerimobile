@@ -139,8 +139,8 @@ class _ChatState extends ConsumerState<_Chat> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    ref.listen(emojiPaneProvider(widget.channelId), (_, open) {
-      if (open) _dock = _Dock.emoji;
+    ref.listen(emojiPaneProvider(widget.channelId), (_, pane) {
+      if (pane != EmojiPane.closed) _dock = _Dock.emoji;
     });
     ref.listen(
       attachmentPickerProvider(widget.channelId).select((p) => p.open),
@@ -156,6 +156,7 @@ class _ChatState extends ConsumerState<_Chat> with WidgetsBindingObserver {
 
   Widget _pane(BuildContext context, Size pane) {
     final emoji = ref.watch(emojiPaneProvider(widget.channelId));
+    final keyboard = emoji == EmojiPane.searching ? 0.0 : _keyboard;
     final attachments = _dock == _Dock.attachments;
     final picker = ref.watch(attachmentPickerProvider(widget.channelId));
     final collapsed = collapsedPanelHeight(context, pane.width);
@@ -170,7 +171,7 @@ class _ChatState extends ConsumerState<_Chat> with WidgetsBindingObserver {
                 AttachmentPicker.collapsed => collapsed,
                 AttachmentPicker.expanded => expanded,
               }
-            : (emoji ? emojiHeight : 0.0));
+            : (emoji == EmojiPane.closed ? 0.0 : emojiHeight));
 
     //keeps list, composer and panel in sync
     return TweenAnimationBuilder<double>(
@@ -179,7 +180,7 @@ class _ChatState extends ConsumerState<_Chat> with WidgetsBindingObserver {
       curve: _panelCurve,
       builder: (context, shown, _) {
         //panel fills space above the keyboard
-        final visible = max(0.0, shown - _keyboard);
+        final visible = max(0.0, shown - keyboard);
         final lift = attachments ? min(visible, collapsed) : visible;
         final frame = max(visible, attachments ? collapsed : emojiHeight);
 
