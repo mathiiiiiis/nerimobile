@@ -12,6 +12,7 @@ import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/views/chat/channel/channel_header.dart';
 import 'package:nerimobile/views/chat/composer/attachment_panel.dart';
 import 'package:nerimobile/views/chat/composer/composer.dart';
+import 'package:nerimobile/views/chat/composer/emoji_panel.dart';
 import 'package:nerimobile/views/chat/message/message_list.dart';
 import 'package:nerimobile/views/dashboard/dm_list.dart';
 import 'package:nerimobile/views/shell/app_scaffold.dart';
@@ -22,6 +23,9 @@ const _panelMotion = Duration(milliseconds: 300);
 const _panelCurve = Curves.easeOutCubic;
 const _flingVelocity = 400.0;
 const _expandedHeight = 0.85;
+const _emojiHeight = 0.4;
+
+enum _Dock { attachments, emoji }
 
 class ChannelPane extends StatelessWidget {
   const ChannelPane({super.key, required this.channelId});
@@ -82,6 +86,9 @@ class _ChatState extends ConsumerState<_Chat> with WidgetsBindingObserver {
   double _keyboard = 0;
   double? _drag;
 
+  //keeps closing panel visible until it slides away
+  _Dock _dock = _Dock.attachments;
+
   @override
   void initState() {
     super.initState();
@@ -132,23 +139,38 @@ class _ChatState extends ConsumerState<_Chat> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(emojiPaneProvider(widget.channelId), (_, open) {
+      if (open) _dock = _Dock.emoji;
+    });
+    ref.listen(
+      attachmentPickerProvider(widget.channelId).select((p) => p.open),
+      (_, open) {
+        if (open) _dock = _Dock.attachments;
+      },
+    );
+
     return LayoutBuilder(
       builder: (context, constraints) => _pane(context, constraints.biggest),
     );
   }
 
   Widget _pane(BuildContext context, Size pane) {
+    final emoji = ref.watch(emojiPaneProvider(widget.channelId));
+    final attachments = _dock == _Dock.attachments;
     final picker = ref.watch(attachmentPickerProvider(widget.channelId));
     final collapsed = collapsedPanelHeight(context, pane.width);
     final expanded = pane.height * _expandedHeight;
+    final emojiHeight = pane.height * _emojiHeight;
     final safeBottom = MediaQuery.paddingOf(context).bottom;
     final target =
         _drag ??
-        switch (picker.mode) {
-          AttachmentPicker.closed => 0.0,
-          AttachmentPicker.collapsed => collapsed,
-          AttachmentPicker.expanded => expanded,
-        };
+        (attachments
+            ? switch (picker.mode) {
+                AttachmentPicker.closed => 0.0,
+                AttachmentPicker.collapsed => collapsed,
+                AttachmentPicker.expanded => expanded,
+              }
+            : (emoji ? emojiHeight : 0.0));
 
     //keeps list, composer and panel in sync
     return TweenAnimationBuilder<double>(
@@ -158,8 +180,8 @@ class _ChatState extends ConsumerState<_Chat> with WidgetsBindingObserver {
       builder: (context, shown, _) {
         //panel fills space above the keyboard
         final visible = max(0.0, shown - _keyboard);
-        final lift = min(visible, collapsed);
-        final frame = max(visible, collapsed);
+        final lift = attachments ? min(visible, collapsed) : visible;
+        final frame = max(visible, attachments ? collapsed : emojiHeight);
 
         return Stack(
           children: [
@@ -199,14 +221,19 @@ class _ChatState extends ConsumerState<_Chat> with WidgetsBindingObserver {
               bottom: 0,
               child: GestureDetector(
                 behavior: HitTestBehavior.deferToChild,
-                onVerticalDragStart: (_) => _onDragStart(visible),
-                onVerticalDragUpdate: (details) =>
-                    _onDragUpdate(details, expanded),
-                onVerticalDragEnd: (details) => _onDragEnd(
-                  details,
-                  collapsed: collapsed,
-                  expanded: expanded,
-                ),
+                onVerticalDragStart: attachments
+                    ? (_) => _onDragStart(visible)
+                    : null,
+                onVerticalDragUpdate: attachments
+                    ? (details) => _onDragUpdate(details, expanded)
+                    : null,
+                onVerticalDragEnd: attachments
+                    ? (details) => _onDragEnd(
+                        details,
+                        collapsed: collapsed,
+                        expanded: expanded,
+                      )
+                    : null,
                 child: SizedBox(
                   height: visible,
                   child: ClipRect(
@@ -214,12 +241,15 @@ class _ChatState extends ConsumerState<_Chat> with WidgetsBindingObserver {
                       alignment: Alignment.topCenter,
                       minHeight: frame,
                       maxHeight: frame,
-                      child: AttachmentPanel(
-                        channelId: widget.channelId,
-                        expansion:
-                            ((visible - collapsed) / (expanded - collapsed))
-                                .clamp(0.0, 1.0),
-                      ),
+                      child: attachments
+                          ? AttachmentPanel(
+                              channelId: widget.channelId,
+                              expansion:
+                                  ((visible - collapsed) /
+                                          (expanded - collapsed))
+                                      .clamp(0.0, 1.0),
+                            )
+                          : EmojiPanel(channelId: widget.channelId),
                     ),
                   ),
                 ),

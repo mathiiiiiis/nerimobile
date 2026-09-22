@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:nerimobile/theme/sizing/breakpoints.dart';
+import 'package:nerimobile/views/chat/composer/composer_panel.dart';
 import 'package:photo_manager/photo_manager.dart';
 
 import 'package:nerimobile/stores/composer/composer_store.dart';
@@ -163,76 +164,45 @@ class AttachmentPanel extends ConsumerWidget {
     );
     //show sheet as soon as it starts expanding
     final sheet = expansion > 0;
-    final dual = NeriWindow.of(context).isDualPane;
-    final radius = Radius.circular(
-      dual
-          ? sizing.radius(NeriRadiusRole.image)
-          : sizing.radius(NeriRadiusRole.xl) * expansion,
-    );
 
-    return Container(
-      margin: dual ? EdgeInsets.fromLTRB(gap, 0, gap, gap) : EdgeInsets.zero,
-      clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        color: context.neri[NeriToken.pane],
-        borderRadius: dual
-            ? BorderRadius.all(radius)
-            : BorderRadius.only(topLeft: radius, topRight: radius),
-        border: dual
-            ? Border.all(
-                color: context.neri[NeriToken.border],
-                width: sizing.border(NeriBorderRole.hairline),
-              )
-            : null,
-      ),
-      child: SafeArea(
-        top: false,
-        bottom: !dual,
-        child: Padding(
-          padding: EdgeInsets.fromLTRB(
-            gap,
-            dual ? gap : gap * expansion,
-            gap,
-            gap,
+    return ComposerPanelFrame(
+      expansion: expansion,
+      child: Column(
+        mainAxisSize: sheet ? MainAxisSize.max : MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: gap,
+        children: [
+          const _DragHandle(),
+          AnimatedSwitcher(
+            duration: _headerFade,
+            child: sheet
+                ? _ExpandedHeader(
+                    onBack: _picker(ref).collapse,
+                    onAlbums: () => _pickFile(ref),
+                  )
+                : _FilesButton(onTap: () => _pickFile(ref)),
           ),
-          child: Column(
-            mainAxisSize: sheet ? MainAxisSize.max : MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            spacing: gap,
-            children: [
-              const _DragHandle(),
-              AnimatedSwitcher(
-                duration: _headerFade,
-                child: sheet
-                    ? _ExpandedHeader(
-                        onBack: _picker(ref).collapse,
-                        onAlbums: () => _pickFile(ref),
-                      )
-                    : _FilesButton(onTap: () => _pickFile(ref)),
-              ),
-              if (recents.hasError)
-                _AccessNotice(onTap: PhotoManager.openSetting)
-              else if (sheet)
-                Expanded(
-                  child: Stack(
-                    children: [
-                      Positioned.fill(
-                        child: _grid(context, ref, recents, sheet: true),
-                      ),
-                      if (attached)
-                        Positioned(
-                          right: gap,
-                          bottom: gap,
-                          child: _SendButton(onTap: () => _send(ref)),
-                        ),
-                    ],
+          if (recents.hasError)
+            _AccessNotice(onTap: PhotoManager.openSetting)
+          else if (sheet)
+            Expanded(
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: _grid(context, ref, recents, sheet: true),
                   ),
-                )
-              else
-                _grid(context, ref, recents, sheet: false),
-            ],
-          ),
-        ),
+                  if (attached)
+                    Positioned(
+                      right: gap,
+                      bottom: gap,
+                      child: _SendButton(onTap: () => _send(ref)),
+                    ),
+                ],
+              ),
+            )
+          else
+            _grid(context, ref, recents, sheet: false),
+        ],
       ),
     );
   }

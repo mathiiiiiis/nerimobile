@@ -18,6 +18,7 @@ import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/theme/typography/text_styles.dart';
 import 'package:nerimobile/views/chat/composer/attachment_panel.dart';
 import 'package:nerimobile/views/chat/composer/composer_bar.dart';
+import 'package:nerimobile/views/chat/composer/emoji_panel.dart';
 import 'package:nerimobile/views/chat/composer/typing_indicator.dart';
 import 'package:nerimobile/views/chat/file_too_large_dialog.dart';
 
@@ -83,6 +84,7 @@ class _ComposerState extends ConsumerState<Composer>
     final picker = ref.read(
       attachmentPickerProvider(widget.channelId).notifier,
     );
+    ref.read(emojiPaneProvider(widget.channelId).notifier).close();
 
     //unfocus to reveal the panel above the keyboard
     if (_focus.hasFocus) {
@@ -90,6 +92,18 @@ class _ComposerState extends ConsumerState<Composer>
       picker.collapse();
     } else {
       picker.toggle();
+    }
+  }
+
+  void _toggleEmojis() {
+    final emojis = ref.read(emojiPaneProvider(widget.channelId).notifier);
+    ref.read(attachmentPickerProvider(widget.channelId).notifier).close();
+
+    if (_focus.hasFocus) {
+      _focus.unfocus();
+      emojis.open();
+    } else {
+      emojis.toggle();
     }
   }
 
@@ -162,7 +176,7 @@ class _ComposerState extends ConsumerState<Composer>
         : TextSelection.collapsed(offset: value.text.length);
 
     _controller.value = value.replaced(selection, text);
-    _focus.requestFocus();
+    if (!ref.read(emojiPaneProvider(widget.channelId))) _focus.requestFocus();
   }
 
   @override
@@ -208,16 +222,20 @@ class _ComposerState extends ConsumerState<Composer>
       composerProvider(widget.channelId).select((c) => c.attachment != null),
     );
     final picker = ref.watch(attachmentPickerProvider(widget.channelId));
+    final emojis = ref.watch(emojiPaneProvider(widget.channelId));
     final picking = picker.open;
 
     return PopScope(
-      canPop: !editing && !picking,
+      canPop: !editing && !picking && !emojis,
       onPopInvokedWithResult: (didPop, _) {
         if (didPop) return;
 
         final notifier = ref.read(
           attachmentPickerProvider(widget.channelId).notifier,
         );
+        if (emojis) {
+          return ref.read(emojiPaneProvider(widget.channelId).notifier).close();
+        }
         if (picker.expanded) return notifier.collapse();
         if (picking) return notifier.close();
 
@@ -274,6 +292,7 @@ class _ComposerState extends ConsumerState<Composer>
                           controller: _controller,
                           focusNode: _focus,
                           hint: _hint(ref, widget.channelId),
+                          onEmojis: _toggleEmojis,
                         ),
                       ),
                     ),
@@ -302,11 +321,13 @@ class _Field extends StatelessWidget {
     required this.controller,
     required this.focusNode,
     required this.hint,
+    required this.onEmojis,
   });
 
   final TextEditingController controller;
   final FocusNode focusNode;
   final String hint;
+  final VoidCallback onEmojis;
 
   @override
   Widget build(BuildContext context) {
@@ -323,26 +344,47 @@ class _Field extends StatelessWidget {
         color: colors[NeriToken.chatInputBackground],
         borderRadius: BorderRadius.circular(_fieldRadius),
       ),
-      child: TextField(
-        controller: controller,
-        focusNode: focusNode,
-        onTapOutside: (_) => focusNode.unfocus(),
-        maxLines: _maxFieldLines,
-        minLines: 1,
-        textInputAction: TextInputAction.newline,
-        keyboardType: TextInputType.multiline,
-        cursorColor: colors[NeriToken.primary],
-        style: context.neriText[NeriTextRole.bodyLarge].copyWith(
-          color: colors[NeriToken.text],
-        ),
-        decoration: InputDecoration(
-          isDense: true,
-          isCollapsed: true,
-          border: InputBorder.none,
-          hintText: hint, //TODO: add l10n
-          hintStyle: context.neriText[NeriTextRole.bodyLarge].copyWith(
-            color: colors[NeriToken.textPlaceholder],
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        spacing: sizing.space(NeriSpacingRole.sm),
+        children: [
+          Expanded(child: _input(context)),
+          GestureDetector(
+            onTap: onEmojis,
+            behavior: HitTestBehavior.opaque,
+            child: Icon(
+              Symbols.mood_rounded,
+              size: sizing.dimen(NeriDimen.iconSm),
+              color: colors[NeriToken.textSecondary],
+            ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _input(BuildContext context) {
+    final colors = context.neri;
+
+    return TextField(
+      controller: controller,
+      focusNode: focusNode,
+      onTapOutside: (_) => focusNode.unfocus(),
+      maxLines: _maxFieldLines,
+      minLines: 1,
+      textInputAction: TextInputAction.newline,
+      keyboardType: TextInputType.multiline,
+      cursorColor: colors[NeriToken.primary],
+      style: context.neriText[NeriTextRole.bodyLarge].copyWith(
+        color: colors[NeriToken.text],
+      ),
+      decoration: InputDecoration(
+        isDense: true,
+        isCollapsed: true,
+        border: InputBorder.none,
+        hintText: hint, //TODO: add l10n
+        hintStyle: context.neriText[NeriTextRole.bodyLarge].copyWith(
+          color: colors[NeriToken.textPlaceholder],
         ),
       ),
     );

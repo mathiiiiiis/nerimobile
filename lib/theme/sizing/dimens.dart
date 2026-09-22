@@ -18,6 +18,7 @@ enum NeriDimen {
   dialogWidth,
   attachmentCard,
   uploadRing,
+  pickerEmoji,
 }
 
 const neriDimentDefaults = <NeriDimen, double>{
@@ -40,4 +41,5 @@ const neriDimentDefaults = <NeriDimen, double>{
   NeriDimen.dialogWidth: 360,
   NeriDimen.attachmentCard: 100,
   NeriDimen.uploadRing: 52,
+  NeriDimen.pickerEmoji: 32,
 };
