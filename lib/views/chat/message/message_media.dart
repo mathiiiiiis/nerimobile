@@ -21,7 +21,7 @@ import 'package:nerimobile/utils/image.dart';
 import 'package:nerimobile/utils/url.dart';
 import 'package:nerimobile/views/chat/attachment_expiry.dart';
 import 'package:nerimobile/views/chat/audio/audio_player.dart';
-import 'package:nerimobile/views/chat/video/video_fullscreen.dart';
+import 'package:nerimobile/views/chat/fullscreen/fullscreen_shell.dart';
 import 'package:nerimobile/views/chat/video/video_player.dart';
 
 const _maxWidth = 600.0;

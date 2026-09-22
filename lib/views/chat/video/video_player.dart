@@ -13,6 +13,7 @@ import 'package:nerimobile/theme/sizing/radius.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/utils/caches.dart';
 import 'package:nerimobile/utils/image.dart';
+import 'package:nerimobile/views/chat/fullscreen/fullscreen_shell.dart';
 import 'package:nerimobile/views/chat/video/video_fullscreen.dart';
 
 const _maxWidth = 600.0;
