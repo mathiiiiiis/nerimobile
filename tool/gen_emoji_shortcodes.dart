@@ -56,7 +56,7 @@ String _catalog(List<Map<String, dynamic>> emojis) {
       final name = (emoji['short_names'] as List).first as String;
       buffer.writeln(
         "    (emoji: '${_escape(emoji['emoji'] as String)}', "
-        "name: '${_escape(name)},'),",
+        "name: '${_escape(name)}'),",
       );
     }
     buffer.writeln('  ],');
