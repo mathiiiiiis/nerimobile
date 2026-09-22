@@ -22,6 +22,7 @@ import 'package:nerimobile/utils/url.dart';
 import 'package:nerimobile/views/chat/attachment_expiry.dart';
 import 'package:nerimobile/views/chat/audio/audio_player.dart';
 import 'package:nerimobile/views/chat/fullscreen/fullscreen_shell.dart';
+import 'package:nerimobile/views/chat/fullscreen/image_fullscreen.dart';
 import 'package:nerimobile/views/chat/video/video_player.dart';
 
 const _maxWidth = 600.0;
@@ -53,7 +54,8 @@ class MediaPreview extends StatelessWidget {
     final media = <Widget>[
       if (attachment != null)
         _Attachment(attachment: attachment, onOptions: onOptions),
-      if (attachment == null && embed != null) _EmbedView(embed: embed),
+      if (attachment == null && embed != null)
+        _EmbedView(embed: embed, onOptions: onOptions),
     ];
     if (media.isEmpty) return const SizedBox.shrink();
 
@@ -95,14 +97,16 @@ class _Attachment extends StatelessWidget {
       url: buildImageUrl(path, animate: true),
       width: attachment.width?.toDouble(),
       height: attachment.height?.toDouble(),
+      onOptions: onOptions,
     );
   }
 }
 
 class _EmbedView extends StatelessWidget {
-  const _EmbedView({required this.embed});
+  const _EmbedView({required this.embed, this.onOptions});
 
   final Embed embed;
+  final OptionsCallback? onOptions;
 
   @override
   Widget build(BuildContext context) {
@@ -112,6 +116,7 @@ class _EmbedView extends StatelessWidget {
             url: embed.imageUrl!,
             width: embed.imageWidth?.toDouble(),
             height: embed.imageHeight?.toDouble(),
+            onOptions: onOptions,
           );
     if (!embed.hasDetails) return image ?? const SizedBox.shrink();
     return _LinkCard(embed: embed, image: image);
@@ -184,20 +189,31 @@ class _LinkCard extends StatelessWidget {
 }
 
 class _Media extends StatelessWidget {
-  const _Media({required String this.url, this.width, this.height})
-    : file = null,
-      uploadId = null;
+  const _Media({
+    required String this.url,
+    this.width,
+    this.height,
+    this.onOptions,
+  }) : file = null,
+       uploadId = null;
 
   const _Media.file(File this.file, {this.uploadId})
     : url = null,
       width = null,
-      height = null;
+      height = null,
+      onOptions = null;
 
   final String? url;
   final File? file;
   final String? uploadId;
   final double? width;
   final double? height;
+  final OptionsCallback? onOptions;
+
+  ImageProvider get _image => switch (file) {
+    final file? => FileImage(file),
+    null => CachedNetworkImageProvider(url!, cacheManager: mediaCache),
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -214,40 +230,53 @@ class _Media extends StatelessWidget {
           maxHeight: _maxHeight,
         );
 
-        return ClipRRect(
-          borderRadius: sizing.rounded(NeriRadiusRole.image),
-          child: switch (file) {
-            final file? => Stack(
-              children: [
-                TickerMode(
-                  enabled: false,
-                  child: Image.file(
-                    file,
-                    width: size.width,
-                    height: size.height,
-                    fit: BoxFit.cover,
-                    cacheWidth:
-                        (size.width * MediaQuery.devicePixelRatioOf(context))
-                            .round(),
-                    errorBuilder: (_, _, _) => _FileCard(),
-                  ),
-                ),
-                if (uploadId case final uploadId?)
-                  Positioned.fill(child: _UploadOverlay(uploadId: uploadId)),
-              ],
-            ),
-            null => CachedNetworkImage(
-              imageUrl: url!,
-              cacheManager: mediaCache,
-              width: size.width,
-              height: size.height,
-              fit: BoxFit.cover,
-              fadeInDuration: Duration.zero,
-              fadeOutDuration: Duration.zero,
-              placeholder: (_, _) => ColoredBox(color: colors[NeriToken.card]),
-              errorWidget: (_, _, _) => const _FileCard(),
-            ),
+        return GestureDetector(
+          onTap: () {
+            final box = context.findRenderObject()! as RenderBox;
+            openImageFullscreen(
+              context,
+              _image,
+              from: box.localToGlobal(Offset.zero) & box.size,
+              url: url,
+              onOptions: onOptions,
+            );
           },
+          child: ClipRRect(
+            borderRadius: sizing.rounded(NeriRadiusRole.image),
+            child: switch (file) {
+              final file? => Stack(
+                children: [
+                  TickerMode(
+                    enabled: false,
+                    child: Image.file(
+                      file,
+                      width: size.width,
+                      height: size.height,
+                      fit: BoxFit.cover,
+                      cacheWidth:
+                          (size.width * MediaQuery.devicePixelRatioOf(context))
+                              .round(),
+                      errorBuilder: (_, _, _) => _FileCard(),
+                    ),
+                  ),
+                  if (uploadId case final uploadId?)
+                    Positioned.fill(child: _UploadOverlay(uploadId: uploadId)),
+                ],
+              ),
+              null => CachedNetworkImage(
+                imageUrl: url!,
+                cacheManager: mediaCache,
+                width: size.width,
+                height: size.height,
+                fit: BoxFit.cover,
+                fadeInDuration: Duration.zero,
+                fadeOutDuration: Duration.zero,
+                placeholder: (_, _) =>
+                    ColoredBox(color: colors[NeriToken.card]),
+                errorWidget: (_, _, _) => const _FileCard(),
+              ),
+            },
+          ),
         );
       },
     );

@@ -16,16 +16,21 @@ const _dismissVelocity = 700.9;
 typedef OptionsCallback =
     void Function(BuildContext context, WidgetRef ref, String url);
 
-Future<void> openFullscreen(BuildContext context, WidgetBuilder builder) {
+Future<void> openFullscreen(
+  BuildContext context,
+  WidgetBuilder builder, {
+  bool fade = true,
+  Duration duration = _open,
+}) {
   return Navigator.of(context, rootNavigator: true).push(
     PageRouteBuilder<void>(
       opaque: false,
-      barrierColor: Colors.black,
-      transitionDuration: _open,
-      reverseTransitionDuration: _open,
+      barrierColor: fade ? Colors.black : null,
+      transitionDuration: duration,
+      reverseTransitionDuration: duration,
       pageBuilder: (context, _, _) => builder(context),
       transitionsBuilder: (_, animation, _, child) =>
-          FadeTransition(opacity: animation, child: child),
+          fade ? FadeTransition(opacity: animation, child: child) : child,
     ),
   );
 }
@@ -36,14 +41,30 @@ class FullscreenShell extends StatefulWidget {
     required this.child,
     this.onOptions,
     this.bottom,
+    this.dismissible = true,
+    this.reveal = kAlwaysCompleteAnimation,
   });
 
   final Widget child;
   final VoidCallback? onOptions;
   final Widget? bottom;
+  final bool dismissible;
+  final Animation<double> reveal;
+
+  static double dragOf(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<_Drag>()?.offset ?? 0;
 
   @override
   State<FullscreenShell> createState() => _FullscreenShellState();
+}
+
+class _Drag extends InheritedWidget {
+  const _Drag({required this.offset, required super.child});
+
+  final double offset;
+
+  @override
+  bool updateShouldNotify(_Drag old) => old.offset != offset;
 }
 
 class _FullscreenShellState extends State<FullscreenShell> {
@@ -78,29 +99,45 @@ class _FullscreenShellState extends State<FullscreenShell> {
 
   @override
   Widget build(BuildContext context) {
-    final opacity = (1 - _drag / (_dismissDistance * 3)).clamp(0.0, 1.0);
+    final reveal = widget.reveal;
+    final dismissible = widget.dismissible && _controls;
 
-    return Scaffold(
-      backgroundColor: Colors.black.withValues(alpha: opacity),
-      body: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: _toggleControls,
-        onVerticalDragUpdate: _onDragUpdate,
-        onVerticalDragEnd: _onDragEnd,
-        child: Transform.translate(
-          offset: Offset(0, _drag),
-          child: Stack(
-            children: [
-              Center(child: widget.child),
-              _Controls(
-                visible: _controls,
-                onOptions: widget.onOptions,
-                bottom: widget.bottom,
-              ),
-            ],
+    return AnimatedBuilder(
+      animation: reveal,
+      builder: (context, _) {
+        final opacity = (1 - _drag / (_dismissDistance * 3)).clamp(0.0, 1.0);
+        final controls = (1 - _drag / _dismissDistance).clamp(0.0, 1.0);
+
+        return Scaffold(
+          backgroundColor: Colors.black.withValues(
+            alpha: opacity * reveal.value,
           ),
-        ),
-      ),
+          body: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: _toggleControls,
+            onVerticalDragUpdate: dismissible ? _onDragUpdate : null,
+            onVerticalDragEnd: dismissible ? _onDragEnd : null,
+            child: Stack(
+              children: [
+                Transform.translate(
+                  offset: Offset(0, _drag),
+                  child: Center(
+                    child: _Drag(offset: _drag, child: widget.child),
+                  ),
+                ),
+                Opacity(
+                  opacity: controls * reveal.value,
+                  child: _Controls(
+                    visible: _controls,
+                    onOptions: widget.onOptions,
+                    bottom: widget.bottom,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }
