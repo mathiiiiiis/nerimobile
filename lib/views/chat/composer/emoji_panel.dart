@@ -1,20 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:nerimobile/models/custom_emoji.dart';
+
+import 'package:nerimobile/models/server.dart';
 
 import 'package:nerimobile/stores/composer/composer_store.dart';
+import 'package:nerimobile/stores/emoji/custom_emoji_store.dart';
 import 'package:nerimobile/stores/emoji/recent_emoji_store.dart';
+import 'package:nerimobile/stores/server/server_store.dart';
+
 import 'package:nerimobile/theme/core/theme_data.dart';
 import 'package:nerimobile/theme/core/token.dart';
 import 'package:nerimobile/theme/sizing/dimens.dart';
 import 'package:nerimobile/theme/sizing/radius.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
+
 import 'package:nerimobile/theme/typography/text_styles.dart';
 import 'package:nerimobile/utils/emoji_catalog.dart';
 import 'package:nerimobile/utils/emoji_entries.dart';
 import 'package:nerimobile/utils/emoji_shortcodes.dart';
+
 import 'package:nerimobile/views/app_text_field.dart';
+import 'package:nerimobile/views/avatar.dart';
 import 'package:nerimobile/views/chat/composer/composer_panel.dart';
+import 'package:nerimobile/views/chat/message/emoji/custom_emoji.dart'
+    as custom;
 import 'package:nerimobile/views/chat/message/emoji/twemoji.dart';
 
 const _headerEmoji = 16.0;
@@ -51,18 +62,76 @@ class EmojiPanelNotifier extends Notifier<EmojiPane> {
   }
 }
 
+sealed class _Entry {
+  const _Entry();
+
+  String get name;
+}
+
+class _Unicode extends _Entry {
+  const _Unicode(this.emoji);
+
+  final CatalogEmoji emoji;
+
+  @override
+  String get name => emoji.name;
+}
+
+class _Custom extends _Entry {
+  const _Custom(this.emoji);
+
+  final CustomEmoji emoji;
+
+  @override
+  String get name => emoji.name;
+}
+
+//gif without webp is the legacy animated format
+custom.CustomEmojiKind _kindOf(CustomEmoji emoji) => switch (emoji) {
+  CustomEmoji(gif: true, webp: true) => custom.CustomEmojiKind.animatedWebp,
+  CustomEmoji(gif: true) => custom.CustomEmojiKind.animatedGif,
+  _ => custom.CustomEmojiKind.static,
+};
+
+sealed class _Icon {
+  const _Icon();
+}
+
+class _RecentIcon extends _Icon {
+  const _RecentIcon();
+}
+
+class _EmojiIcon extends _Icon {
+  const _EmojiIcon(this.unicode);
+
+  final String unicode;
+}
+
+class _ServerIcon extends _Icon {
+  const _ServerIcon(this.server);
+
+  final Server? server;
+}
+
 //aliases are searchable too
-List<CatalogEmoji> _matches(String query) {
-  final starts = <CatalogEmoji>[];
-  final contains = <CatalogEmoji>[];
+List<_Entry> _matches(String query, List<_Custom> customs) {
+  final starts = <_Entry>[];
+  final contains = <_Entry>[];
   final seen = <String>{};
+
+  for (final custom in customs) {
+    final at = custom.name.toLowerCase().indexOf(query);
+    if (at < 0) continue;
+
+    (at == 0 ? starts : contains).add(custom);
+  }
 
   for (final MapEntry(key: name, value: emoji) in emojiShortcodes.entries) {
     final at = name.indexOf(query);
     final entry = emojiEntries[emoji];
     if (at < 0 || entry == null || !seen.add(emoji)) continue;
 
-    (at == 0 ? starts : contains).add(entry);
+    (at == 0 ? starts : contains).add(_Unicode(entry));
   }
 
   return [...starts, ...contains];
@@ -76,29 +145,39 @@ class _Header extends _Row {
   const _Header(this.category, this.icon);
 
   final String category;
-  final CatalogEmoji? icon;
+  final _Icon icon;
 }
 
 class _Emojis extends _Row {
   const _Emojis(this.emojis);
 
-  final List<CatalogEmoji> emojis;
+  final List<_Entry> emojis;
 }
 
-List<_Row> _emojiRows(List<CatalogEmoji> emojis, int columns) => [
+List<_Row> _emojiRows(List<_Entry> emojis, int columns) => [
   for (var i = 0; i < emojis.length; i += columns)
     _Emojis(emojis.sublist(i, (i + columns).clamp(0, emojis.length))),
 ];
 
-List<_Row> _rows(List<CatalogEmoji> recents, int columns) => [
+List<_Row> _rows(
+  List<CatalogEmoji> recents,
+  Map<String, List<CustomEmoji>> customs,
+  Map<String, Server> servers,
+  int columns,
+) => [
   if (recents.isNotEmpty) ...[
-    _Header('Recent', null), //TODO: add l10n
-    ..._emojiRows(recents, columns),
+    _Header('Recent', _RecentIcon()), //TODO: add l10n
+    ..._emojiRows([for (final emoji in recents) _Unicode(emoji)], columns),
   ],
+  for (final MapEntry(key: serverId, value: emojis) in customs.entries)
+    if (emojis.isNotEmpty) ...[
+      _Header(servers[serverId]?.name ?? '', _ServerIcon(servers[serverId])),
+      ..._emojiRows([for (final emoji in emojis) _Custom(emoji)], columns),
+    ],
   for (final MapEntry(key: category, value: emojis)
       in emojiCatalog.entries) ...[
-    _Header(category, emojis.first),
-    ..._emojiRows(emojis, columns),
+    _Header(category, _EmojiIcon(emojis.first.emoji)),
+    ..._emojiRows([for (final emoji in emojis) _Unicode(emoji)], columns),
   ],
 ];
 
@@ -119,7 +198,7 @@ class _EmojiPanelState extends ConsumerState<EmojiPanel> {
   var _query = '';
   var _rowList = const <_Row>[];
   var _headers = const <int>[];
-  var _icons = const <CatalogEmoji?>[];
+  var _icons = const <_Icon>[];
   var _active = 0;
 
   @override
@@ -153,17 +232,24 @@ class _EmojiPanelState extends ConsumerState<EmojiPanel> {
 
   void _relayout() {
     final recents = ref.read(recentEmojisProvider).value ?? const [];
+    final customs = ref.read(uniqueCustomEmojisProvider);
 
     _rowList = _query.isEmpty
-        ? _rows(recents, _columns)
-        : _emojiRows(_matches(_query), _columns);
+        ? _rows(recents, customs, ref.read(serversProvider), _columns)
+        : _emojiRows(
+            _matches(_query, [
+              for (final emojis in customs.values)
+                for (final emoji in emojis) _Custom(emoji),
+            ]),
+            _columns,
+          );
     _headers = [
       for (var i = 0; i < _rowList.length; i++)
         if (_rowList[i] is _Header) i,
     ];
     _icons = [
-      if (recents.isNotEmpty) null,
-      for (final emojis in emojiCatalog.values) emojis.first,
+      for (final row in _rowList)
+        if (row case _Header(:final icon)) icon,
     ];
   }
 
@@ -190,11 +276,13 @@ class _EmojiPanelState extends ConsumerState<EmojiPanel> {
     _scroll.jumpTo(_headers[category] * _extent);
   }
 
-  void _pick(CatalogEmoji emoji) {
+  void _pick(_Entry entry) {
     ref
         .read(composerProvider(widget.channelId).notifier)
-        .insert(':${emoji.name}: ');
-    ref.read(recentEmojisProvider.notifier).use(emoji);
+        .insert(':${entry.name}: ');
+    if (entry case _Unicode(:final emoji)) {
+      ref.read(recentEmojisProvider.notifier).use(emoji);
+    }
   }
 
   @override
@@ -299,7 +387,7 @@ class _Sidebar extends StatefulWidget {
   });
 
   final int active;
-  final List<CatalogEmoji?> icons;
+  final List<_Icon> icons;
   final ValueChanged<int> onTap;
 
   @override
@@ -319,8 +407,11 @@ class _SidebarState extends State<_Sidebar> {
   @override
   void didUpdateWidget(_Sidebar old) {
     super.didUpdateWidget(old);
-    if (widget.active < 0 || widget.active == old.active || !_scroll.hasClients)
+    if (widget.active < 0 ||
+        widget.active == old.active ||
+        !_scroll.hasClients) {
       return;
+    }
 
     final item = context.neriSize.dimen(NeriDimen.controlSize);
     final start = widget.active * item;
@@ -372,17 +463,10 @@ class _SidebarState extends State<_Sidebar> {
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
-                    if (widget.icons[i] case final icon?)
-                      Twemoji(
-                        unicode: icon.emoji,
-                        size: sizing.dimen(NeriDimen.iconSm),
-                      )
-                    else
-                      Icon(
-                        Symbols.schedule_rounded,
-                        size: sizing.dimen(NeriDimen.iconSm),
-                        color: colors[NeriToken.textSecondary],
-                      ),
+                    _CategoryIcon(
+                      icon: widget.icons[i],
+                      size: sizing.dimen(NeriDimen.iconSm),
+                    ),
                     if (i == widget.active)
                       Positioned(
                         left: 0,
@@ -405,11 +489,29 @@ class _SidebarState extends State<_Sidebar> {
   }
 }
 
+class _CategoryIcon extends StatelessWidget {
+  const _CategoryIcon({required this.icon, required this.size});
+
+  final _Icon icon;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) => switch (icon) {
+    _RecentIcon() => Icon(
+      Symbols.schedule_rounded,
+      size: size,
+      color: context.neri[NeriToken.textSecondary],
+    ),
+    _EmojiIcon(:final unicode) => Twemoji(unicode: unicode, size: size),
+    _ServerIcon(:final server) => Avatar(server: server, size: size * 1.1),
+  };
+}
+
 class _GroupHeader extends StatelessWidget {
   const _GroupHeader({required this.name, required this.icon});
 
   final String name;
-  final CatalogEmoji? icon;
+  final _Icon icon;
 
   @override
   Widget build(BuildContext context) {
@@ -433,14 +535,7 @@ class _GroupHeader extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           spacing: sizing.space(NeriSpacingRole.xs),
           children: [
-            if (icon case final icon?)
-              Twemoji(unicode: icon.emoji, size: _headerEmoji)
-            else
-              Icon(
-                Symbols.schedule_rounded,
-                size: _headerEmoji,
-                color: colors[NeriToken.textSecondary],
-              ),
+            _CategoryIcon(icon: icon, size: _headerEmoji),
             Text(
               name,
               style: context.neriText[NeriTextRole.labelSmall].copyWith(
@@ -462,22 +557,29 @@ class _EmojiCell extends StatelessWidget {
     required this.onTap,
   });
 
-  final CatalogEmoji emoji;
+  final _Entry emoji;
   final double extent;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
+    final size = context.neriSize.dimen(NeriDimen.pickerEmoji);
+
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: SizedBox.square(
         dimension: extent,
         child: Center(
-          child: Twemoji(
-            unicode: emoji.emoji,
-            size: context.neriSize.dimen(NeriDimen.pickerEmoji),
-          ),
+          child: switch (emoji) {
+            _Unicode(:final emoji) => Twemoji(unicode: emoji.emoji, size: size),
+            _Custom(:final emoji) => custom.CustomEmoji(
+              id: emoji.id,
+              name: emoji.name,
+              kind: _kindOf(emoji),
+              size: size,
+            ),
+          },
         ),
       ),
     );
