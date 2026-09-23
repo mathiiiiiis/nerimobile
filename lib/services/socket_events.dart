@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 //models
 import 'package:nerimobile/models/channel.dart';
+import 'package:nerimobile/models/custom_emoji.dart';
 import 'package:nerimobile/models/friend.dart';
 import 'package:nerimobile/models/inbox.dart';
 import 'package:nerimobile/models/message.dart';
@@ -15,6 +16,7 @@ import 'package:nerimobile/models/user_presence.dart';
 //stores
 import 'package:nerimobile/stores/channel/channel_store.dart';
 import 'package:nerimobile/stores/channel/typing_store.dart';
+import 'package:nerimobile/stores/emoji/custom_emoji_store.dart';
 import 'package:nerimobile/stores/inbox/inbox_store.dart';
 import 'package:nerimobile/stores/message/message_mention_store.dart';
 import 'package:nerimobile/stores/message/message_store.dart';
@@ -45,12 +47,19 @@ void handleSocketEvent(Ref ref, String event, dynamic payload) {
       onInboxClosed(ref, payload);
     case 'channel:typing':
       onChannelTyping(ref, payload);
+    case 'server:emoji_add':
+      onServerEmojiAdd(ref, payload);
+    case 'server:emoji_remove':
+      onServerEmojiRemove(ref, payload);
+    case 'server:emoji_update':
+      onServerEmojiUpdate(ref, payload);
   }
 }
 
 class AuthenticatedPayload {
   final User user;
   final List<Server> servers;
+  final List<CustomEmoji> customEmojis;
   final List<Channel> channels;
   final List<RawServerMember> serverMembers;
   final List<ServerRole> serverRoles;
@@ -63,6 +72,7 @@ class AuthenticatedPayload {
   AuthenticatedPayload({
     required this.user,
     required this.servers,
+    required this.customEmojis,
     required this.channels,
     required this.serverMembers,
     required this.serverRoles,
@@ -78,6 +88,14 @@ class AuthenticatedPayload {
   ) => AuthenticatedPayload(
     user: User.fromJson(json['user']),
     servers: (json['servers'] as List).map((s) => Server.fromJson(s)).toList(),
+    customEmojis: [
+      for (final server in (json['servers'] as List).cast<Map>())
+        for (final emoji in (server['customEmojis'] as List? ?? const []))
+          CustomEmoji.fromJson(
+            Map<String, dynamic>.from(emoji as Map),
+            server['id'],
+          ),
+    ],
     channels: (json['channels'] as List)
         .map((s) => Channel.fromJson(s))
         .toList(),
@@ -111,6 +129,7 @@ Future<void> onUserAuthenticated(Ref ref, dynamic payload) async {
     payload as Map<String, dynamic>,
   );
   ref.read(serversProvider.notifier).addServers(data.servers);
+  ref.read(customEmojisProvider.notifier).setEmojis(data.customEmojis);
   ref.read(channelsProvider.notifier).addChannels(data.channels);
   ref
       .read(lastSeenServerChannelIdsProvider.notifier)
@@ -130,6 +149,21 @@ Future<void> onUserAuthenticated(Ref ref, dynamic payload) async {
     ref.read(usersProvider.notifier).addUser(friend.recipient);
   }
 }
+
+void onServerEmojiAdd(Ref ref, dynamic payload) {
+  final serverId = payload['serverId'] as String;
+  ref
+      .read(customEmojisProvider.notifier)
+      .add(CustomEmoji.fromJson(payload['emoji'], serverId));
+}
+
+void onServerEmojiRemove(Ref ref, dynamic payload) => ref
+    .read(customEmojisProvider.notifier)
+    .remove(payload['serverId'], payload['emojiId']);
+
+void onServerEmojiUpdate(Ref ref, dynamic payload) => ref
+    .read(customEmojisProvider.notifier)
+    .rename(payload['serverId'], payload['emojiId'], payload['name']);
 
 void onMessageCreated(Ref ref, dynamic payload) {
   final message = Message.fromJson(payload["message"]);

@@ -1,0 +1,42 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:nerimobile/models/custom_emoji.dart';
+
+final customEmojisProvider =
+    NotifierProvider<CustomEmojiNotifier, Map<String, List<CustomEmoji>>>(
+      CustomEmojiNotifier.new,
+    );
+
+class CustomEmojiNotifier extends Notifier<Map<String, List<CustomEmoji>>> {
+  @override
+  Map<String, List<CustomEmoji>> build() => const {};
+
+  void setEmojis(List<CustomEmoji> emojis) {
+    final byServer = <String, List<CustomEmoji>>{};
+    for (final emoji in emojis) {
+      (byServer[emoji.serverId] ??= []).add(emoji);
+    }
+
+    state = byServer;
+  }
+
+  void add(CustomEmoji emoji) => state = {
+    ...state,
+    emoji.serverId: [...?state[emoji.serverId], emoji],
+  };
+
+  void remove(String serverId, String emojiId) => state = {
+    ...state,
+    serverId: [
+      for (final emoji in state[serverId] ?? const <CustomEmoji>[])
+        if (emoji.id != emojiId) emoji,
+    ],
+  };
+
+  void rename(String serverId, String emojiId, String name) => state = {
+    ...state,
+    serverId: [
+      for (final emoji in state[serverId] ?? const <CustomEmoji>[])
+        if (emoji.id == emojiId) emoji.renamed(name) else emoji,
+    ],
+  };
+}
