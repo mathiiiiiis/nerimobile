@@ -22,6 +22,9 @@ class CustomEmoji {
         webp: json['webp'] ?? false,
       );
 
+  //maps formats to markup types
+  String get type => gif ? (webp ? 'wace' : 'ace') : 'ce';
+
   CustomEmoji renamed(String name) =>
       CustomEmoji(id: id, name: name, serverId: serverId, gif: gif, webp: webp);
 }

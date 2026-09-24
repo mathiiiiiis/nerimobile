@@ -5,6 +5,7 @@ import 'package:material_symbols_icons/symbols.dart';
 import 'package:nerimobile/models/message.dart';
 import 'package:nerimobile/stores/channel/channel_store.dart';
 import 'package:nerimobile/stores/composer/composer_store.dart';
+import 'package:nerimobile/stores/emoji/custom_emoji_store.dart';
 import 'package:nerimobile/stores/inbox/inbox_store.dart';
 
 import 'package:nerimobile/stores/message/message_store.dart';
@@ -16,6 +17,7 @@ import 'package:nerimobile/theme/sizing/dimens.dart';
 import 'package:nerimobile/theme/sizing/radius.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/theme/typography/text_styles.dart';
+import 'package:nerimobile/utils/emoji_markup.dart';
 import 'package:nerimobile/views/chat/composer/attachment_panel.dart';
 import 'package:nerimobile/views/chat/composer/composer_bar.dart';
 import 'package:nerimobile/views/chat/composer/emoji_panel.dart';
@@ -117,7 +119,10 @@ class _ComposerState extends ConsumerState<Composer>
   Future<void> _send() async {
     if (!_canSend) return;
 
-    final content = _controller.text.trim();
+    final content = replaceShortcodes(
+      _controller.text.trim(),
+      ref.read(customEmojiNamesProvider),
+    );
     final composer = ref.read(composerProvider(widget.channelId));
     if (composer.editing case final editing?) return _save(editing, content);
 

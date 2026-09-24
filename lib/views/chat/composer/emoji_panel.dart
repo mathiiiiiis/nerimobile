@@ -86,13 +86,6 @@ class _Custom extends _Entry {
   String get name => emoji.name;
 }
 
-//gif without webp is the legacy animated format
-custom.CustomEmojiKind _kindOf(CustomEmoji emoji) => switch (emoji) {
-  CustomEmoji(gif: true, webp: true) => custom.CustomEmojiKind.animatedWebp,
-  CustomEmoji(gif: true) => custom.CustomEmojiKind.animatedGif,
-  _ => custom.CustomEmojiKind.static,
-};
-
 sealed class _Icon {
   const _Icon();
 }
@@ -576,7 +569,7 @@ class _EmojiCell extends StatelessWidget {
             _Custom(:final emoji) => custom.CustomEmoji(
               id: emoji.id,
               name: emoji.name,
-              kind: _kindOf(emoji),
+              kind: custom.CustomEmojiKind.fromType(emoji.type)!,
               size: size,
             ),
           },
