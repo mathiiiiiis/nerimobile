@@ -28,6 +28,13 @@ String buildImageUrl(
 String proxiedEmbedPath(String url, {String? mime}) =>
     'proxy/${Uri.encodeComponent(url)}/embed.${mime?.split('/').last ?? 'webp'}';
 
+//third party gifs stay still until requested
+String proxiedGifUrl(String url, {bool animate = false}) => buildImageUrl(
+  proxiedEmbedPath(url, mime: 'image/gif'),
+  animate: animate,
+  forceIsAnimated: true,
+);
+
 String proxiedImageUrl(String url) =>
     '${cdnUrl}proxy/${Uri.encodeComponent(url)}/a';
 

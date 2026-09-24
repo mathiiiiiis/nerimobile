@@ -50,4 +50,5 @@ flutter:
 
   assets:
     - assets/icon/
+    - assets/klipy/
     - assets/fonts/OFL.txt

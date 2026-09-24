@@ -24,6 +24,7 @@ import 'package:nerimobile/utils/emoji_shortcodes.dart';
 import 'package:nerimobile/views/app_text_field.dart';
 import 'package:nerimobile/views/avatar.dart';
 import 'package:nerimobile/views/chat/composer/composer_panel.dart';
+import 'package:nerimobile/views/chat/composer/gif_panel.dart';
 import 'package:nerimobile/views/chat/message/emoji/custom_emoji.dart'
     as custom;
 import 'package:nerimobile/views/chat/message/emoji/twemoji.dart';
@@ -32,11 +33,28 @@ import 'package:nerimobile/views/skeleton/skeleton.dart';
 const _headerEmoji = 16.0;
 const _indicatorWidth = 2.0;
 const _indicatorHeight = 0.4;
-const _disabledOpacity = 0.4;
 const _searchHeight = 34.0;
 const _sidebarFollow = Duration(milliseconds: 200);
 
 enum EmojiPane { closed, open, searching }
+
+enum PickerTab { emojis, gifs }
+
+final pickerTabProvider =
+    NotifierProvider.family<PickerTabNotifier, PickerTab, String>(
+      PickerTabNotifier.new,
+    );
+
+class PickerTabNotifier extends Notifier<PickerTab> {
+  PickerTabNotifier(this.channelId);
+
+  final String channelId;
+
+  @override
+  PickerTab build() => PickerTab.emojis;
+
+  void select(PickerTab tab) => state = tab;
+}
 
 final emojiPaneProvider =
     NotifierProvider.family<EmojiPanelNotifier, EmojiPane, String>(
@@ -194,6 +212,7 @@ class _EmojiPanelState extends ConsumerState<EmojiPanel> {
   var _headers = const <int>[];
   var _icons = const <_Icon>[];
   var _active = 0;
+  var _gifsOpened = false;
 
   @override
   void initState() {
@@ -296,6 +315,10 @@ class _EmojiPanelState extends ConsumerState<EmojiPanel> {
       }
     });
 
+    ref.listen(pickerTabProvider(widget.channelId), (_, tab) {
+      if (tab != PickerTab.emojis) _searchFocus.unfocus();
+    });
+
     ref.listen(emojiPaneProvider(widget.channelId), (previous, pane) {
       if (pane != EmojiPane.closed) {
         if (previous == EmojiPane.closed) setState(_relayout);
@@ -309,6 +332,8 @@ class _EmojiPanelState extends ConsumerState<EmojiPanel> {
 
     final sizing = context.neriSize;
     final gap = sizing.space(NeriSpacingRole.sm);
+    final tab = ref.watch(pickerTabProvider(widget.channelId));
+    if (tab == PickerTab.gifs) _gifsOpened = true;
 
     return ComposerPanelFrame(
       expansion: 0,
@@ -318,44 +343,61 @@ class _EmojiPanelState extends ConsumerState<EmojiPanel> {
           spacing: gap,
           children: [
             Expanded(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                spacing: gap,
+              child: IndexedStack(
+                index: tab.index,
+                sizing: StackFit.expand,
                 children: [
-                  _Sidebar(
-                    active: _query.isEmpty ? _active : -1,
-                    icons: _icons,
-                    onTap: _jumpTo,
-                  ),
-                  Expanded(
-                    child: Stack(
-                      children: [
-                        Positioned.fill(child: _list()),
-                        Positioned(
-                          top: 0,
-                          left: 0,
-                          right: 0,
-                          child: AppTextField(
-                            dense: true,
-                            background: NeriToken.card,
-                            controller: _search,
-                            focusNode: _searchFocus,
-                            onChanged: _onQuery,
-                            hintText: 'Search Emojis...', //TODO: add l10n
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                  _emojis(gap),
+                  if (_gifsOpened)
+                    GifPanel(channelId: widget.channelId)
+                  else
+                    const SizedBox.shrink(),
                 ],
               ),
             ),
-            const _Tabs(),
+            _Tabs(
+              tab: tab,
+              onTap: (tab) => ref
+                  .read(pickerTabProvider(widget.channelId).notifier)
+                  .select(tab),
+            ),
           ],
         ),
       ),
     );
   }
+
+  Widget _emojis(double gap) => Row(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    spacing: gap,
+    children: [
+      _Sidebar(
+        active: _query.isEmpty ? _active : -1,
+        icons: _icons,
+        onTap: _jumpTo,
+      ),
+      Expanded(
+        child: Stack(
+          children: [
+            Positioned.fill(child: _list()),
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: AppTextField(
+                dense: true,
+                background: NeriToken.card,
+                controller: _search,
+                focusNode: _searchFocus,
+                onChanged: _onQuery,
+                hintText: 'Search Emojis...', //TODO: add l10n
+              ),
+            ),
+          ],
+        ),
+      ),
+    ],
+  );
 
   Widget _list() => LayoutBuilder(
     builder: (context, constraints) {
@@ -604,27 +646,30 @@ class _EmojiCell extends StatelessWidget {
 }
 
 class _Tabs extends StatelessWidget {
-  const _Tabs();
+  const _Tabs({required this.tab, required this.onTap});
+
+  final PickerTab tab;
+  final ValueChanged<PickerTab> onTap;
 
   @override
   Widget build(BuildContext context) {
     return Row(
       spacing: context.neriSize.space(NeriSpacingRole.xs),
-      children: const [
+      children: [
         Expanded(
           child: _Tab(
             icon: Symbols.sentiment_excited_rounded,
             label: 'Emojis', //TODO: add l10n
-            selected: true,
+            selected: tab == PickerTab.emojis,
+            onTap: () => onTap(PickerTab.emojis),
           ),
         ),
         Expanded(
-          child: Opacity(
-            opacity: _disabledOpacity,
-            child: _Tab(
-              icon: Symbols.gif_rounded,
-              label: 'GIFs', //TODO: add l10n
-            ),
+          child: _Tab(
+            icon: Symbols.gif_rounded,
+            label: 'GIFs', //TODO: add l10n
+            selected: tab == PickerTab.gifs,
+            onTap: () => onTap(PickerTab.gifs),
           ),
         ),
       ],
@@ -633,10 +678,16 @@ class _Tabs extends StatelessWidget {
 }
 
 class _Tab extends StatelessWidget {
-  const _Tab({required this.icon, required this.label, this.selected = false});
+  const _Tab({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.selected = false,
+  });
 
   final IconData icon;
   final String label;
+  final VoidCallback onTap;
   final bool selected;
 
   @override
@@ -644,28 +695,32 @@ class _Tab extends StatelessWidget {
     final colors = context.neri;
     final sizing = context.neriSize;
 
-    return Container(
-      height: sizing.dimen(NeriDimen.controlSize),
-      decoration: BoxDecoration(
-        color: selected ? colors[NeriToken.card] : null,
-        borderRadius: sizing.rounded(NeriRadiusRole.md),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        spacing: sizing.space(NeriSpacingRole.xs),
-        children: [
-          Icon(
-            icon,
-            size: sizing.dimen(NeriDimen.iconSm),
-            color: colors[NeriToken.text],
-          ),
-          Text(
-            label,
-            style: context.neriText[NeriTextRole.labelLarge].copyWith(
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        height: sizing.dimen(NeriDimen.controlSize),
+        decoration: BoxDecoration(
+          color: selected ? colors[NeriToken.card] : null,
+          borderRadius: sizing.rounded(NeriRadiusRole.md),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          spacing: sizing.space(NeriSpacingRole.xs),
+          children: [
+            Icon(
+              icon,
+              size: sizing.dimen(NeriDimen.iconSm),
               color: colors[NeriToken.text],
             ),
-          ),
-        ],
+            Text(
+              label,
+              style: context.neriText[NeriTextRole.labelLarge].copyWith(
+                color: colors[NeriToken.text],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
