@@ -44,12 +44,14 @@ class CustomEmoji extends StatelessWidget {
     required this.name,
     required this.kind,
     this.size,
+    this.placeholder,
   });
 
   final String id;
   final String name;
   final CustomEmojiKind kind;
   final double? size;
+  final Widget? placeholder;
 
   @override
   Widget build(BuildContext context) {
@@ -67,7 +69,7 @@ class CustomEmoji extends StatelessWidget {
       fit: BoxFit.contain,
       fadeInDuration: Duration.zero,
       fadeOutDuration: Duration.zero,
-      placeholder: (_, _) => SizedBox(width: size, height: size),
+      placeholder: (_, _) => placeholder ?? SizedBox(width: size, height: size),
       errorWidget: (_, _, _) => Text(':$name'),
     );
   }

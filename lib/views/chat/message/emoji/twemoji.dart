@@ -6,10 +6,16 @@ import 'package:nerimobile/utils/emojis.dart';
 import 'package:nerimobile/views/chat/message/emoji/emoji_size.dart';
 
 class Twemoji extends StatelessWidget {
-  const Twemoji({super.key, required this.unicode, this.size});
+  const Twemoji({
+    super.key,
+    required this.unicode,
+    this.size,
+    this.placeholder,
+  });
 
   final String unicode;
   final double? size;
+  final Widget? placeholder;
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +25,8 @@ class Twemoji extends StatelessWidget {
       CachedSvgLoader(unicodeToTwemojiUrl(unicode)),
       width: size,
       height: size,
-      placeholderBuilder: (_) => SizedBox.square(dimension: size),
+      placeholderBuilder: (_) =>
+          placeholder ?? SizedBox.square(dimension: size),
       errorBuilder: (_, _, _) => Text(unicode),
     );
   }

@@ -27,6 +27,7 @@ import 'package:nerimobile/views/chat/composer/composer_panel.dart';
 import 'package:nerimobile/views/chat/message/emoji/custom_emoji.dart'
     as custom;
 import 'package:nerimobile/views/chat/message/emoji/twemoji.dart';
+import 'package:nerimobile/views/skeleton/skeleton.dart';
 
 const _headerEmoji = 16.0;
 const _indicatorWidth = 2.0;
@@ -574,6 +575,7 @@ class _EmojiCell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final size = context.neriSize.dimen(NeriDimen.pickerEmoji);
+    final placeholder = SkeletonBlock(width: size, height: size);
 
     return GestureDetector(
       onTap: onTap,
@@ -582,12 +584,17 @@ class _EmojiCell extends StatelessWidget {
         dimension: extent,
         child: Center(
           child: switch (emoji) {
-            _Unicode(:final emoji) => Twemoji(unicode: emoji.emoji, size: size),
+            _Unicode(:final emoji) => Twemoji(
+              unicode: emoji.emoji,
+              size: size,
+              placeholder: placeholder,
+            ),
             _Custom(:final emoji) => custom.CustomEmoji(
               id: emoji.id,
               name: emoji.name,
               kind: custom.CustomEmojiKind.fromType(emoji.type)!,
               size: size,
+              placeholder: placeholder,
             ),
           },
         ),
