@@ -25,6 +25,9 @@ String buildImageUrl(
   return uri.replace(queryParameters: newParams).toString();
 }
 
+String proxiedEmbedPath(String url, {String? mime}) =>
+    'proxy/${Uri.encodeComponent(url)}/embed.${mime?.split('/').last ?? 'webp'}';
+
 String proxiedImageUrl(String url) =>
     '${cdnUrl}proxy/${Uri.encodeComponent(url)}/a';
 

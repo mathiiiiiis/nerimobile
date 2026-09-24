@@ -167,6 +167,13 @@ class Embed {
   bool get hasDetails =>
       title != null || description != null || siteName != null;
 
+  String? get imageSource => switch (imageUrl) {
+    null => null,
+    final url when url.startsWith('https://') || url.startsWith('http://') =>
+      url,
+    final url => 'https://$domain/$url',
+  };
+
   Embed({
     this.type,
     this.domain,

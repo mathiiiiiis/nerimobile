@@ -24,6 +24,7 @@ import 'package:nerimobile/views/chat/audio/audio_player.dart';
 import 'package:nerimobile/views/chat/fullscreen/fullscreen_shell.dart';
 import 'package:nerimobile/views/chat/fullscreen/image_fullscreen.dart';
 import 'package:nerimobile/views/chat/video/video_player.dart';
+import 'package:nerimobile/views/skeleton/skeleton.dart';
 
 const _maxWidth = 600.0;
 const _maxHeight = 350.0;
@@ -94,7 +95,7 @@ class _Attachment extends StatelessWidget {
     if (!attachment.isImage) return _FileCard(attachment: attachment);
 
     return _Media(
-      url: buildImageUrl(path, animate: true),
+      url: (_) => buildImageUrl(path, animate: true),
       width: attachment.width?.toDouble(),
       height: attachment.height?.toDouble(),
       onOptions: onOptions,
@@ -110,10 +111,17 @@ class _EmbedView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final image = embed.imageUrl == null
+    final source = embed.imageSource;
+    final image = source == null
         ? null
         : _Media(
-            url: embed.imageUrl!,
+            url: (pixels) => buildImageUrl(
+              proxiedEmbedPath(source, mime: embed.imageMime),
+              size: pixels,
+              animate: true,
+              forceIsAnimated: embed.animated,
+            ),
+            link: source,
             width: embed.imageWidth?.toDouble(),
             height: embed.imageHeight?.toDouble(),
             onOptions: onOptions,
@@ -190,7 +198,8 @@ class _LinkCard extends StatelessWidget {
 
 class _Media extends StatelessWidget {
   const _Media({
-    required String this.url,
+    required String Function(int pixels) this.url,
+    this.link,
     this.width,
     this.height,
     this.onOptions,
@@ -199,25 +208,26 @@ class _Media extends StatelessWidget {
 
   const _Media.file(File this.file, {this.uploadId})
     : url = null,
+      link = null,
       width = null,
       height = null,
       onOptions = null;
 
-  final String? url;
+  final String? Function(int pixels)? url;
+  final String? link;
   final File? file;
   final String? uploadId;
   final double? width;
   final double? height;
   final OptionsCallback? onOptions;
 
-  ImageProvider get _image => switch (file) {
+  ImageProvider _image(String? url) => switch (file) {
     final file? => FileImage(file),
     null => CachedNetworkImageProvider(url!, cacheManager: mediaCache),
   };
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.neri;
     final sizing = context.neriSize;
 
     return LayoutBuilder(
@@ -229,15 +239,19 @@ class _Media extends StatelessWidget {
           maxWidth: available,
           maxHeight: _maxHeight,
         );
+        final pixels =
+            max(size.width, size.height) *
+            MediaQuery.devicePixelRatioOf(context);
+        final url = this.url?.call(pixels.round());
 
         return GestureDetector(
           onTap: () {
             final box = context.findRenderObject()! as RenderBox;
             openImageFullscreen(
               context,
-              _image,
+              _image(url),
               from: box.localToGlobal(Offset.zero) & box.size,
-              url: url,
+              url: link ?? url,
               onOptions: onOptions,
             );
           },
@@ -271,8 +285,13 @@ class _Media extends StatelessWidget {
                 fit: BoxFit.cover,
                 fadeInDuration: Duration.zero,
                 fadeOutDuration: Duration.zero,
-                placeholder: (_, _) =>
-                    ColoredBox(color: colors[NeriToken.card]),
+                placeholder: (_, _) => SkeletonScope(
+                  child: SkeletonBlock(
+                    width: size.width,
+                    height: size.height,
+                    shape: NeriRadiusRole.image,
+                  ),
+                ),
                 errorWidget: (_, _, _) => const _FileCard(),
               ),
             },
