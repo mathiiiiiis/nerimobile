@@ -280,6 +280,12 @@ class _EmojiPanelState extends ConsumerState<EmojiPanel> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(recentEmojisProvider, (previous, recents) {
+      if (previous?.value == null && recents.value != null) {
+        setState(_relayout);
+      }
+    });
+
     ref.listen(emojiPaneProvider(widget.channelId), (previous, pane) {
       if (pane != EmojiPane.closed) {
         if (previous == EmojiPane.closed) setState(_relayout);
