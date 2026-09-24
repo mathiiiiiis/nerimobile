@@ -41,3 +41,5 @@ class Gif {
 }
 
 typedef GifPage = ({List<Gif> gifs, String? next});
+
+typedef GifResults = ({List<Gif> gifs, String? next, bool loadingMore});

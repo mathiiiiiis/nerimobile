@@ -32,6 +32,8 @@ const _searchHeight = 34.0;
 const _resultRow = 110.0;
 const _debounce = Duration(milliseconds: 350);
 const _flexScale = 1000;
+const _loadMoreExtent = 400.0;
+const _skeletonRow = 3;
 
 typedef _Row = ({List<Gif> gifs, double height, bool justified});
 
@@ -172,9 +174,13 @@ class _ResultBody extends ConsumerWidget {
     final results = ref.watch(gifSearchProvider(query));
 
     return switch (results) {
-      AsyncData(:final value) when value.isNotEmpty => _Results(
-        gifs: value,
+      AsyncData(:final value) when value.gifs.isNotEmpty => _Results(
+        key: ValueKey(query),
+        gifs: value.gifs,
+        hasMore: value.next != null,
         onPick: onPick,
+        onLoadMore: () =>
+            ref.read(gifSearchProvider(query).notifier).loadMore(),
       ),
       AsyncData() => _pinned(
         context,
@@ -361,10 +367,18 @@ class _Failed extends StatelessWidget {
 }
 
 class _Results extends StatelessWidget {
-  const _Results({required this.gifs, required this.onPick});
+  const _Results({
+    super.key,
+    required this.gifs,
+    required this.hasMore,
+    required this.onPick,
+    required this.onLoadMore,
+  });
 
   final List<Gif> gifs;
+  final bool hasMore;
   final ValueChanged<Gif> onPick;
+  final VoidCallback onLoadMore;
 
   @override
   Widget build(BuildContext context) {
@@ -373,17 +387,53 @@ class _Results extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final rows = _rows(gifs, width: constraints.maxWidth, gap: gap);
-        return ListView.separated(
-          padding: EdgeInsets.only(top: _searchInset(context)),
-          itemCount: rows.length + 1,
-          separatorBuilder: (context, index) => SizedBox(height: gap),
-          itemBuilder: (context, index) => index == rows.length
-              ? const Center(child: _Credit())
-              : _ResultRow(row: rows[index], gap: gap, onPick: onPick),
+        return NotificationListener<ScrollNotification>(
+          onNotification: (notification) {
+            if (hasMore && notification.metrics.extentAfter < _loadMoreExtent) {
+              onLoadMore();
+            }
+            return false;
+          },
+          child: ListView.separated(
+            padding: EdgeInsets.only(top: _searchInset(context)),
+            itemCount: rows.length + 1,
+            separatorBuilder: (context, index) => SizedBox(height: gap),
+            itemBuilder: (context, index) => switch (index) {
+              _ when index < rows.length => _ResultRow(
+                row: rows[index],
+                gap: gap,
+                onPick: onPick,
+              ),
+              _ when hasMore => _LoadingRow(gap: gap),
+              _ => const Center(child: _Credit()),
+            },
+          ),
         );
       },
     );
   }
+}
+
+class _LoadingRow extends StatelessWidget {
+  const _LoadingRow({required this.gap});
+
+  final double gap;
+
+  @override
+  Widget build(BuildContext context) => SkeletonScope(
+    child: Row(
+      spacing: gap,
+      children: [
+        for (var i = 0; i < _skeletonRow; i++)
+          const Expanded(
+            child: SkeletonBlock(
+              height: _resultRow,
+              shape: NeriRadiusRole.image,
+            ),
+          ),
+      ],
+    ),
+  );
 }
 
 List<_Row> _rows(List<Gif> gifs, {required double width, required double gap}) {

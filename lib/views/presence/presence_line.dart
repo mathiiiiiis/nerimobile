@@ -120,15 +120,15 @@ class _ActivityLine extends StatelessWidget {
                   text: activity.action,
                   style: TextStyle(color: colors[NeriToken.text]),
                 ),
+                TextSpan(
+                  text: ' ${activity.name}',
+                  style: TextStyle(color: colors[NeriToken.textPlaceholder]),
+                ),
                 if (extra > 0)
                   TextSpan(
                     text: ' +$extra',
                     style: TextStyle(color: colors[NeriToken.textPlaceholder]),
                   ),
-                TextSpan(
-                  text: ' ${activity.name}',
-                  style: TextStyle(color: colors[NeriToken.textPlaceholder]),
-                ),
               ],
             ),
             maxLines: 1,
