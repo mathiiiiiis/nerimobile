@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nerimobile/stores/message/upload_progress_store.dart';
+import 'package:nerimobile/stores/window/window_focus_store.dart';
 import 'package:nerimobile/theme/sizing/border.dart';
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -103,14 +104,15 @@ class _Attachment extends StatelessWidget {
   }
 }
 
-class _EmbedView extends StatelessWidget {
+class _EmbedView extends ConsumerWidget {
   const _EmbedView({required this.embed, this.onOptions});
 
   final Embed embed;
   final OptionsCallback? onOptions;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final animate = ref.watch(windowFocusProvider);
     final source = embed.imageSource;
     final image = source == null
         ? null
@@ -118,7 +120,7 @@ class _EmbedView extends StatelessWidget {
             url: (pixels) => buildImageUrl(
               proxiedEmbedPath(source, mime: embed.imageMime),
               size: pixels,
-              animate: true,
+              animate: animate,
               forceIsAnimated: embed.animated,
             ),
             link: source,
@@ -285,6 +287,7 @@ class _Media extends StatelessWidget {
                 fit: BoxFit.cover,
                 fadeInDuration: Duration.zero,
                 fadeOutDuration: Duration.zero,
+                useOldImageOnUrlChange: true,
                 placeholder: (_, _) => SkeletonScope(
                   child: SkeletonBlock(
                     width: size.width,
