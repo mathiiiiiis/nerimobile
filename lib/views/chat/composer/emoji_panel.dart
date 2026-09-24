@@ -153,14 +153,14 @@ List<_Row> _emojiRows(List<_Entry> emojis, int columns) => [
 ];
 
 List<_Row> _rows(
-  List<CatalogEmoji> recents,
+  List<_Entry> recents,
   Map<String, List<CustomEmoji>> customs,
   Map<String, Server> servers,
   int columns,
 ) => [
   if (recents.isNotEmpty) ...[
     _Header('Recent', _RecentIcon()), //TODO: add l10n
-    ..._emojiRows([for (final emoji in recents) _Unicode(emoji)], columns),
+    ..._emojiRows(recents, columns),
   ],
   for (final MapEntry(key: serverId, value: emojis) in customs.entries)
     if (emojis.isNotEmpty) ...[
@@ -224,8 +224,15 @@ class _EmojiPanelState extends ConsumerState<EmojiPanel> {
   }
 
   void _relayout() {
-    final recents = ref.read(recentEmojisProvider).value ?? const [];
     final customs = ref.read(uniqueCustomEmojisProvider);
+    final byId = ref.read(customEmojiIdsProvider);
+    final recents = [
+      for (final recent in ref.read(recentEmojisProvider).value ?? const [])
+        if (recent.custom)
+          if (byId[recent.key] case final emoji?) _Custom(emoji) else null
+        else if (emojiEntries[recent.key] case final emoji?)
+          _Unicode(emoji),
+    ].nonNulls.toList();
 
     _rowList = _query.isEmpty
         ? _rows(recents, customs, ref.read(serversProvider), _columns)
@@ -273,9 +280,11 @@ class _EmojiPanelState extends ConsumerState<EmojiPanel> {
     ref
         .read(composerProvider(widget.channelId).notifier)
         .insert(':${entry.name}: ');
-    if (entry case _Unicode(:final emoji)) {
-      ref.read(recentEmojisProvider.notifier).use(emoji);
-    }
+
+    ref.read(recentEmojisProvider.notifier).use(switch (entry) {
+      _Unicode(:final emoji) => (key: emoji.emoji, custom: false),
+      _Custom(:final emoji) => (key: emoji.id, custom: true),
+    });
   }
 
   @override

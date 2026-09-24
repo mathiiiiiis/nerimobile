@@ -2,27 +2,22 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:nerimobile/db/daos/recent_emoji_dao.dart';
 import 'package:nerimobile/db/database.dart';
-import 'package:nerimobile/utils/emoji_catalog.dart';
-import 'package:nerimobile/utils/emoji_entries.dart';
+
+typedef RecentEmoji = ({String key, bool custom});
 
 final recentEmojisProvider =
-    AsyncNotifierProvider<RecentEmojiNotifier, List<CatalogEmoji>>(
+    AsyncNotifierProvider<RecentEmojiNotifier, List<RecentEmoji>>(
       RecentEmojiNotifier.new,
     );
 
-class RecentEmojiNotifier extends AsyncNotifier<List<CatalogEmoji>> {
+class RecentEmojiNotifier extends AsyncNotifier<List<RecentEmoji>> {
   RecentEmojiDao get _dao => RecentEmojiDao(ref.read(databaseProvider));
 
   @override
-  Future<List<CatalogEmoji>> build() => _load();
+  Future<List<RecentEmoji>> build() => _dao.all();
 
-  Future<List<CatalogEmoji>> _load() async {
-    final recents = await _dao.all();
-    return [for (final emoji in recents) ?emojiEntries[emoji]];
-  }
-
-  Future<void> use(CatalogEmoji emoji) async {
-    await _dao.use(emoji.emoji);
-    state = AsyncData(await _load());
+  Future<void> use(RecentEmoji emoji) async {
+    await _dao.use(emoji);
+    state = AsyncData(await _dao.all());
   }
 }

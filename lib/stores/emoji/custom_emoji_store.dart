@@ -35,6 +35,13 @@ final customEmojiNamesProvider = Provider<Map<String, CustomEmoji>>(
   },
 );
 
+final customEmojiIdsProvider = Provider<Map<String, CustomEmoji>>(
+  (ref) => {
+    for (final emojis in ref.watch(uniqueCustomEmojisProvider).values)
+      for (final emoji in emojis) emoji.id: emoji,
+  },
+);
+
 class CustomEmojiNotifier extends Notifier<Map<String, List<CustomEmoji>>> {
   @override
   Map<String, List<CustomEmoji>> build() => const {};

@@ -1331,6 +1331,19 @@ class $RecentEmojisTable extends RecentEmojis
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _customMeta = const VerificationMeta('custom');
+  @override
+  late final GeneratedColumn<bool> custom = GeneratedColumn<bool>(
+    'custom',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("custom" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   static const VerificationMeta _usedAtMeta = const VerificationMeta('usedAt');
   @override
   late final GeneratedColumn<int> usedAt = GeneratedColumn<int>(
@@ -1341,7 +1354,7 @@ class $RecentEmojisTable extends RecentEmojis
     requiredDuringInsert: true,
   );
   @override
-  List<GeneratedColumn> get $columns => [emoji, usedAt];
+  List<GeneratedColumn> get $columns => [emoji, custom, usedAt];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -1361,6 +1374,12 @@ class $RecentEmojisTable extends RecentEmojis
       );
     } else if (isInserting) {
       context.missing(_emojiMeta);
+    }
+    if (data.containsKey('custom')) {
+      context.handle(
+        _customMeta,
+        custom.isAcceptableOrUnknown(data['custom']!, _customMeta),
+      );
     }
     if (data.containsKey('used_at')) {
       context.handle(
@@ -1383,6 +1402,10 @@ class $RecentEmojisTable extends RecentEmojis
         DriftSqlType.string,
         data['${effectivePrefix}emoji'],
       )!,
+      custom: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}custom'],
+      )!,
       usedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}used_at'],
@@ -1398,18 +1421,28 @@ class $RecentEmojisTable extends RecentEmojis
 
 class RecentEmojiRow extends DataClass implements Insertable<RecentEmojiRow> {
   final String emoji;
+  final bool custom;
   final int usedAt;
-  const RecentEmojiRow({required this.emoji, required this.usedAt});
+  const RecentEmojiRow({
+    required this.emoji,
+    required this.custom,
+    required this.usedAt,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['emoji'] = Variable<String>(emoji);
+    map['custom'] = Variable<bool>(custom);
     map['used_at'] = Variable<int>(usedAt);
     return map;
   }
 
   RecentEmojisCompanion toCompanion(bool nullToAbsent) {
-    return RecentEmojisCompanion(emoji: Value(emoji), usedAt: Value(usedAt));
+    return RecentEmojisCompanion(
+      emoji: Value(emoji),
+      custom: Value(custom),
+      usedAt: Value(usedAt),
+    );
   }
 
   factory RecentEmojiRow.fromJson(
@@ -1419,6 +1452,7 @@ class RecentEmojiRow extends DataClass implements Insertable<RecentEmojiRow> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return RecentEmojiRow(
       emoji: serializer.fromJson<String>(json['emoji']),
+      custom: serializer.fromJson<bool>(json['custom']),
       usedAt: serializer.fromJson<int>(json['usedAt']),
     );
   }
@@ -1427,15 +1461,21 @@ class RecentEmojiRow extends DataClass implements Insertable<RecentEmojiRow> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'emoji': serializer.toJson<String>(emoji),
+      'custom': serializer.toJson<bool>(custom),
       'usedAt': serializer.toJson<int>(usedAt),
     };
   }
 
-  RecentEmojiRow copyWith({String? emoji, int? usedAt}) =>
-      RecentEmojiRow(emoji: emoji ?? this.emoji, usedAt: usedAt ?? this.usedAt);
+  RecentEmojiRow copyWith({String? emoji, bool? custom, int? usedAt}) =>
+      RecentEmojiRow(
+        emoji: emoji ?? this.emoji,
+        custom: custom ?? this.custom,
+        usedAt: usedAt ?? this.usedAt,
+      );
   RecentEmojiRow copyWithCompanion(RecentEmojisCompanion data) {
     return RecentEmojiRow(
       emoji: data.emoji.present ? data.emoji.value : this.emoji,
+      custom: data.custom.present ? data.custom.value : this.custom,
       usedAt: data.usedAt.present ? data.usedAt.value : this.usedAt,
     );
   }
@@ -1444,43 +1484,50 @@ class RecentEmojiRow extends DataClass implements Insertable<RecentEmojiRow> {
   String toString() {
     return (StringBuffer('RecentEmojiRow(')
           ..write('emoji: $emoji, ')
+          ..write('custom: $custom, ')
           ..write('usedAt: $usedAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(emoji, usedAt);
+  int get hashCode => Object.hash(emoji, custom, usedAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is RecentEmojiRow &&
           other.emoji == this.emoji &&
+          other.custom == this.custom &&
           other.usedAt == this.usedAt);
 }
 
 class RecentEmojisCompanion extends UpdateCompanion<RecentEmojiRow> {
   final Value<String> emoji;
+  final Value<bool> custom;
   final Value<int> usedAt;
   final Value<int> rowid;
   const RecentEmojisCompanion({
     this.emoji = const Value.absent(),
+    this.custom = const Value.absent(),
     this.usedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   RecentEmojisCompanion.insert({
     required String emoji,
+    this.custom = const Value.absent(),
     required int usedAt,
     this.rowid = const Value.absent(),
   }) : emoji = Value(emoji),
        usedAt = Value(usedAt);
-  static Insertable<RecentEmojiRow> custom({
+  static Insertable<RecentEmojiRow> createCustom({
     Expression<String>? emoji,
+    Expression<bool>? custom,
     Expression<int>? usedAt,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (emoji != null) 'emoji': emoji,
+      if (custom != null) 'custom': custom,
       if (usedAt != null) 'used_at': usedAt,
       if (rowid != null) 'rowid': rowid,
     });
@@ -1488,11 +1535,13 @@ class RecentEmojisCompanion extends UpdateCompanion<RecentEmojiRow> {
 
   RecentEmojisCompanion copyWith({
     Value<String>? emoji,
+    Value<bool>? custom,
     Value<int>? usedAt,
     Value<int>? rowid,
   }) {
     return RecentEmojisCompanion(
       emoji: emoji ?? this.emoji,
+      custom: custom ?? this.custom,
       usedAt: usedAt ?? this.usedAt,
       rowid: rowid ?? this.rowid,
     );
@@ -1503,6 +1552,9 @@ class RecentEmojisCompanion extends UpdateCompanion<RecentEmojiRow> {
     final map = <String, Expression>{};
     if (emoji.present) {
       map['emoji'] = Variable<String>(emoji.value);
+    }
+    if (custom.present) {
+      map['custom'] = Variable<bool>(custom.value);
     }
     if (usedAt.present) {
       map['used_at'] = Variable<int>(usedAt.value);
@@ -1517,6 +1569,7 @@ class RecentEmojisCompanion extends UpdateCompanion<RecentEmojiRow> {
   String toString() {
     return (StringBuffer('RecentEmojisCompanion(')
           ..write('emoji: $emoji, ')
+          ..write('custom: $custom, ')
           ..write('usedAt: $usedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -2653,12 +2706,14 @@ typedef $$InboxesTableProcessedTableManager =
 typedef $$RecentEmojisTableCreateCompanionBuilder =
     RecentEmojisCompanion Function({
       required String emoji,
+      Value<bool> custom,
       required int usedAt,
       Value<int> rowid,
     });
 typedef $$RecentEmojisTableUpdateCompanionBuilder =
     RecentEmojisCompanion Function({
       Value<String> emoji,
+      Value<bool> custom,
       Value<int> usedAt,
       Value<int> rowid,
     });
@@ -2674,6 +2729,11 @@ class $$RecentEmojisTableFilterComposer
   });
   ColumnFilters<String> get emoji => $composableBuilder(
     column: $table.emoji,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get custom => $composableBuilder(
+    column: $table.custom,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -2697,6 +2757,11 @@ class $$RecentEmojisTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get custom => $composableBuilder(
+    column: $table.custom,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get usedAt => $composableBuilder(
     column: $table.usedAt,
     builder: (column) => ColumnOrderings(column),
@@ -2714,6 +2779,9 @@ class $$RecentEmojisTableAnnotationComposer
   });
   GeneratedColumn<String> get emoji =>
       $composableBuilder(column: $table.emoji, builder: (column) => column);
+
+  GeneratedColumn<bool> get custom =>
+      $composableBuilder(column: $table.custom, builder: (column) => column);
 
   GeneratedColumn<int> get usedAt =>
       $composableBuilder(column: $table.usedAt, builder: (column) => column);
@@ -2751,20 +2819,24 @@ class $$RecentEmojisTableTableManager
           updateCompanionCallback:
               ({
                 Value<String> emoji = const Value.absent(),
+                Value<bool> custom = const Value.absent(),
                 Value<int> usedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => RecentEmojisCompanion(
                 emoji: emoji,
+                custom: custom,
                 usedAt: usedAt,
                 rowid: rowid,
               ),
           createCompanionCallback:
               ({
                 required String emoji,
+                Value<bool> custom = const Value.absent(),
                 required int usedAt,
                 Value<int> rowid = const Value.absent(),
               }) => RecentEmojisCompanion.insert(
                 emoji: emoji,
+                custom: custom,
                 usedAt: usedAt,
                 rowid: rowid,
               ),
