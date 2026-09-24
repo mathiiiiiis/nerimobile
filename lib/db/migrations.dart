@@ -10,7 +10,10 @@ MigrationStrategy migrations(NeriDatabase db) => MigrationStrategy(
       await m.createTable(db.announcements);
       await m.createTable(db.dismissedAnnouncements);
     }
-    if (from < 3) await m.createTable(db.recentEmojis);
-    if (from < 4) await m.addColumn(db.recentEmojis, db.recentEmojis.custom);
+    if (from < 3) {
+      await m.createTable(db.recentEmojis);
+    } else if (from < 4) {
+      await m.addColumn(db.recentEmojis, db.recentEmojis.custom);
+    }
   },
 );
