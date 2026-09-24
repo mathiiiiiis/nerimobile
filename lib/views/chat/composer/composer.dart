@@ -18,6 +18,7 @@ import 'package:nerimobile/theme/sizing/radius.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/theme/typography/text_styles.dart';
 import 'package:nerimobile/utils/emoji_markup.dart';
+import 'package:nerimobile/utils/emoji_warmup.dart';
 import 'package:nerimobile/views/chat/composer/attachment_panel.dart';
 import 'package:nerimobile/views/chat/composer/composer_bar.dart';
 import 'package:nerimobile/views/chat/composer/emoji_panel.dart';
@@ -56,6 +57,9 @@ class _ComposerState extends ConsumerState<Composer>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _controller.addListener(_onChanged);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) warmEmojiCache(context);
+    });
   }
 
   //system keyboard dismissal doesnt clear focus

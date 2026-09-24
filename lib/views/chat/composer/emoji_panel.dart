@@ -366,22 +366,24 @@ class _EmojiPanelState extends ConsumerState<EmojiPanel> {
           top: _searchHeight + context.neriSize.space(NeriSpacingRole.sm),
         ),
         itemCount: _rowList.length,
-        itemBuilder: (context, index) => switch (_rowList[index]) {
-          _Header(:final category, :final icon) => _GroupHeader(
-            name: category,
-            icon: icon,
-          ),
-          _Emojis(:final emojis) => Row(
-            children: [
-              for (final emoji in emojis)
-                _EmojiCell(
-                  emoji: emoji,
-                  extent: _extent,
-                  onTap: () => _pick(emoji),
-                ),
-            ],
-          ),
-        },
+        itemBuilder: (context, index) => RepaintBoundary(
+          child: switch (_rowList[index]) {
+            _Header(:final category, :final icon) => _GroupHeader(
+              name: category,
+              icon: icon,
+            ),
+            _Emojis(:final emojis) => Row(
+              children: [
+                for (final emoji in emojis)
+                  _EmojiCell(
+                    emoji: emoji,
+                    extent: _extent,
+                    onTap: () => _pick(emoji),
+                  ),
+              ],
+            ),
+          },
+        ),
       );
     },
   );
