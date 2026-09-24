@@ -9,3 +9,20 @@ final gifCategoriesProvider = FutureProvider<List<GifCategory>>((ref) {
   ref.keepAlive();
   return fetchGifCategories(ref.read(dioProvider));
 });
+
+final gifSearchProvider =
+    AsyncNotifierProvider.family<GifSearchNotifier, List<Gif>, String>(
+      GifSearchNotifier.new,
+    );
+
+class GifSearchNotifier extends AsyncNotifier<List<Gif>> {
+  GifSearchNotifier(this.query);
+
+  final String query;
+
+  @override
+  Future<List<Gif>> build() async {
+    final page = await searchGifs(ref.read(dioProvider), query);
+    return page.gifs;
+  }
+}

@@ -349,7 +349,15 @@ class _EmojiPanelState extends ConsumerState<EmojiPanel> {
                 children: [
                   _emojis(gap),
                   if (_gifsOpened)
-                    GifPanel(channelId: widget.channelId)
+                    GifPanel(
+                      channelId: widget.channelId,
+                      onSearching: (searching) => ref
+                          .read(emojiPaneProvider(widget.channelId).notifier)
+                          .search(searching),
+                      onPicked: () => ref
+                          .read(emojiPaneProvider(widget.channelId).notifier)
+                          .close(),
+                    )
                   else
                     const SizedBox.shrink(),
                 ],

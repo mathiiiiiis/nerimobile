@@ -7,3 +7,18 @@ Future<List<GifCategory>> fetchGifCategories(Dio dio) async {
       .map((category) => GifCategory.fromJson(category as Map<String, dynamic>))
       .toList();
 }
+
+Future<GifPage> searchGifs(Dio dio, String query, {String? pos}) async {
+  final response = await dio.get(
+    '/v2/tenor/search',
+    queryParameters: {'query': query, 'pos': ?pos},
+  );
+  final data = response.data as Map<String, dynamic>;
+
+  return (
+    gifs: (data['results'] as List<dynamic>)
+        .map((gif) => Gif.fromJson(gif as Map<String, dynamic>))
+        .toList(),
+    next: data['next'] as String?,
+  );
+}
