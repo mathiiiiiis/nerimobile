@@ -348,9 +348,11 @@ class _Field extends StatelessWidget {
 
     return Container(
       constraints: const BoxConstraints(minHeight: _fieldHeight),
-      padding: EdgeInsets.symmetric(
-        horizontal: sizing.space(NeriSpacingRole.lg),
-        vertical: sizing.space(NeriSpacingRole.md),
+      padding: EdgeInsets.fromLTRB(
+        sizing.space(NeriSpacingRole.lg),
+        sizing.space(NeriSpacingRole.xs),
+        sizing.space(NeriSpacingRole.sm),
+        sizing.space(NeriSpacingRole.xs),
       ),
       decoration: BoxDecoration(
         color: colors[NeriToken.chatInputBackground],
@@ -360,14 +362,24 @@ class _Field extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.end,
         spacing: sizing.space(NeriSpacingRole.sm),
         children: [
-          Expanded(child: _input(context)),
+          Expanded(
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                vertical: sizing.space(NeriSpacingRole.sm),
+              ),
+              child: _input(context),
+            ),
+          ),
           GestureDetector(
             onTap: onEmojis,
             behavior: HitTestBehavior.opaque,
-            child: Icon(
-              Symbols.mood_rounded,
-              size: sizing.dimen(NeriDimen.iconSm),
-              color: colors[NeriToken.textSecondary],
+            child: SizedBox.square(
+              dimension: sizing.dimen(NeriDimen.controlSize),
+              child: Icon(
+                Symbols.mood_rounded,
+                size: sizing.dimen(NeriDimen.iconSm),
+                color: colors[NeriToken.textSecondary],
+              ),
             ),
           ),
         ],
