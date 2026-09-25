@@ -948,6 +948,439 @@ class DismissedAnnouncementsCompanion
   }
 }
 
+class $FavoriteGifsTable extends FavoriteGifs
+    with TableInfo<$FavoriteGifsTable, FavoriteGifRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $FavoriteGifsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _urlMeta = const VerificationMeta('url');
+  @override
+  late final GeneratedColumn<String> url = GeneratedColumn<String>(
+    'url',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _previewUrlMeta = const VerificationMeta(
+    'previewUrl',
+  );
+  @override
+  late final GeneratedColumn<String> previewUrl = GeneratedColumn<String>(
+    'preview_url',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _previewWidthMeta = const VerificationMeta(
+    'previewWidth',
+  );
+  @override
+  late final GeneratedColumn<int> previewWidth = GeneratedColumn<int>(
+    'preview_width',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _previewHeightMeta = const VerificationMeta(
+    'previewHeight',
+  );
+  @override
+  late final GeneratedColumn<int> previewHeight = GeneratedColumn<int>(
+    'preview_height',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _sourceMeta = const VerificationMeta('source');
+  @override
+  late final GeneratedColumn<String> source = GeneratedColumn<String>(
+    'source',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _savedAtMeta = const VerificationMeta(
+    'savedAt',
+  );
+  @override
+  late final GeneratedColumn<int> savedAt = GeneratedColumn<int>(
+    'saved_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    url,
+    previewUrl,
+    previewWidth,
+    previewHeight,
+    source,
+    savedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'favorite_gifs';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<FavoriteGifRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('url')) {
+      context.handle(
+        _urlMeta,
+        url.isAcceptableOrUnknown(data['url']!, _urlMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_urlMeta);
+    }
+    if (data.containsKey('preview_url')) {
+      context.handle(
+        _previewUrlMeta,
+        previewUrl.isAcceptableOrUnknown(data['preview_url']!, _previewUrlMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_previewUrlMeta);
+    }
+    if (data.containsKey('preview_width')) {
+      context.handle(
+        _previewWidthMeta,
+        previewWidth.isAcceptableOrUnknown(
+          data['preview_width']!,
+          _previewWidthMeta,
+        ),
+      );
+    }
+    if (data.containsKey('preview_height')) {
+      context.handle(
+        _previewHeightMeta,
+        previewHeight.isAcceptableOrUnknown(
+          data['preview_height']!,
+          _previewHeightMeta,
+        ),
+      );
+    }
+    if (data.containsKey('source')) {
+      context.handle(
+        _sourceMeta,
+        source.isAcceptableOrUnknown(data['source']!, _sourceMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_sourceMeta);
+    }
+    if (data.containsKey('saved_at')) {
+      context.handle(
+        _savedAtMeta,
+        savedAt.isAcceptableOrUnknown(data['saved_at']!, _savedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_savedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {url};
+  @override
+  FavoriteGifRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return FavoriteGifRow(
+      url: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}url'],
+      )!,
+      previewUrl: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}preview_url'],
+      )!,
+      previewWidth: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}preview_width'],
+      ),
+      previewHeight: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}preview_height'],
+      ),
+      source: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source'],
+      )!,
+      savedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}saved_at'],
+      )!,
+    );
+  }
+
+  @override
+  $FavoriteGifsTable createAlias(String alias) {
+    return $FavoriteGifsTable(attachedDatabase, alias);
+  }
+}
+
+class FavoriteGifRow extends DataClass implements Insertable<FavoriteGifRow> {
+  final String url;
+  final String previewUrl;
+  final int? previewWidth;
+  final int? previewHeight;
+  final String source;
+  final int savedAt;
+  const FavoriteGifRow({
+    required this.url,
+    required this.previewUrl,
+    this.previewWidth,
+    this.previewHeight,
+    required this.source,
+    required this.savedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['url'] = Variable<String>(url);
+    map['preview_url'] = Variable<String>(previewUrl);
+    if (!nullToAbsent || previewWidth != null) {
+      map['preview_width'] = Variable<int>(previewWidth);
+    }
+    if (!nullToAbsent || previewHeight != null) {
+      map['preview_height'] = Variable<int>(previewHeight);
+    }
+    map['source'] = Variable<String>(source);
+    map['saved_at'] = Variable<int>(savedAt);
+    return map;
+  }
+
+  FavoriteGifsCompanion toCompanion(bool nullToAbsent) {
+    return FavoriteGifsCompanion(
+      url: Value(url),
+      previewUrl: Value(previewUrl),
+      previewWidth: previewWidth == null && nullToAbsent
+          ? const Value.absent()
+          : Value(previewWidth),
+      previewHeight: previewHeight == null && nullToAbsent
+          ? const Value.absent()
+          : Value(previewHeight),
+      source: Value(source),
+      savedAt: Value(savedAt),
+    );
+  }
+
+  factory FavoriteGifRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return FavoriteGifRow(
+      url: serializer.fromJson<String>(json['url']),
+      previewUrl: serializer.fromJson<String>(json['previewUrl']),
+      previewWidth: serializer.fromJson<int?>(json['previewWidth']),
+      previewHeight: serializer.fromJson<int?>(json['previewHeight']),
+      source: serializer.fromJson<String>(json['source']),
+      savedAt: serializer.fromJson<int>(json['savedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'url': serializer.toJson<String>(url),
+      'previewUrl': serializer.toJson<String>(previewUrl),
+      'previewWidth': serializer.toJson<int?>(previewWidth),
+      'previewHeight': serializer.toJson<int?>(previewHeight),
+      'source': serializer.toJson<String>(source),
+      'savedAt': serializer.toJson<int>(savedAt),
+    };
+  }
+
+  FavoriteGifRow copyWith({
+    String? url,
+    String? previewUrl,
+    Value<int?> previewWidth = const Value.absent(),
+    Value<int?> previewHeight = const Value.absent(),
+    String? source,
+    int? savedAt,
+  }) => FavoriteGifRow(
+    url: url ?? this.url,
+    previewUrl: previewUrl ?? this.previewUrl,
+    previewWidth: previewWidth.present ? previewWidth.value : this.previewWidth,
+    previewHeight: previewHeight.present
+        ? previewHeight.value
+        : this.previewHeight,
+    source: source ?? this.source,
+    savedAt: savedAt ?? this.savedAt,
+  );
+  FavoriteGifRow copyWithCompanion(FavoriteGifsCompanion data) {
+    return FavoriteGifRow(
+      url: data.url.present ? data.url.value : this.url,
+      previewUrl: data.previewUrl.present
+          ? data.previewUrl.value
+          : this.previewUrl,
+      previewWidth: data.previewWidth.present
+          ? data.previewWidth.value
+          : this.previewWidth,
+      previewHeight: data.previewHeight.present
+          ? data.previewHeight.value
+          : this.previewHeight,
+      source: data.source.present ? data.source.value : this.source,
+      savedAt: data.savedAt.present ? data.savedAt.value : this.savedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FavoriteGifRow(')
+          ..write('url: $url, ')
+          ..write('previewUrl: $previewUrl, ')
+          ..write('previewWidth: $previewWidth, ')
+          ..write('previewHeight: $previewHeight, ')
+          ..write('source: $source, ')
+          ..write('savedAt: $savedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    url,
+    previewUrl,
+    previewWidth,
+    previewHeight,
+    source,
+    savedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is FavoriteGifRow &&
+          other.url == this.url &&
+          other.previewUrl == this.previewUrl &&
+          other.previewWidth == this.previewWidth &&
+          other.previewHeight == this.previewHeight &&
+          other.source == this.source &&
+          other.savedAt == this.savedAt);
+}
+
+class FavoriteGifsCompanion extends UpdateCompanion<FavoriteGifRow> {
+  final Value<String> url;
+  final Value<String> previewUrl;
+  final Value<int?> previewWidth;
+  final Value<int?> previewHeight;
+  final Value<String> source;
+  final Value<int> savedAt;
+  final Value<int> rowid;
+  const FavoriteGifsCompanion({
+    this.url = const Value.absent(),
+    this.previewUrl = const Value.absent(),
+    this.previewWidth = const Value.absent(),
+    this.previewHeight = const Value.absent(),
+    this.source = const Value.absent(),
+    this.savedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  FavoriteGifsCompanion.insert({
+    required String url,
+    required String previewUrl,
+    this.previewWidth = const Value.absent(),
+    this.previewHeight = const Value.absent(),
+    required String source,
+    required int savedAt,
+    this.rowid = const Value.absent(),
+  }) : url = Value(url),
+       previewUrl = Value(previewUrl),
+       source = Value(source),
+       savedAt = Value(savedAt);
+  static Insertable<FavoriteGifRow> custom({
+    Expression<String>? url,
+    Expression<String>? previewUrl,
+    Expression<int>? previewWidth,
+    Expression<int>? previewHeight,
+    Expression<String>? source,
+    Expression<int>? savedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (url != null) 'url': url,
+      if (previewUrl != null) 'preview_url': previewUrl,
+      if (previewWidth != null) 'preview_width': previewWidth,
+      if (previewHeight != null) 'preview_height': previewHeight,
+      if (source != null) 'source': source,
+      if (savedAt != null) 'saved_at': savedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  FavoriteGifsCompanion copyWith({
+    Value<String>? url,
+    Value<String>? previewUrl,
+    Value<int?>? previewWidth,
+    Value<int?>? previewHeight,
+    Value<String>? source,
+    Value<int>? savedAt,
+    Value<int>? rowid,
+  }) {
+    return FavoriteGifsCompanion(
+      url: url ?? this.url,
+      previewUrl: previewUrl ?? this.previewUrl,
+      previewWidth: previewWidth ?? this.previewWidth,
+      previewHeight: previewHeight ?? this.previewHeight,
+      source: source ?? this.source,
+      savedAt: savedAt ?? this.savedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (url.present) {
+      map['url'] = Variable<String>(url.value);
+    }
+    if (previewUrl.present) {
+      map['preview_url'] = Variable<String>(previewUrl.value);
+    }
+    if (previewWidth.present) {
+      map['preview_width'] = Variable<int>(previewWidth.value);
+    }
+    if (previewHeight.present) {
+      map['preview_height'] = Variable<int>(previewHeight.value);
+    }
+    if (source.present) {
+      map['source'] = Variable<String>(source.value);
+    }
+    if (savedAt.present) {
+      map['saved_at'] = Variable<int>(savedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FavoriteGifsCompanion(')
+          ..write('url: $url, ')
+          ..write('previewUrl: $previewUrl, ')
+          ..write('previewWidth: $previewWidth, ')
+          ..write('previewHeight: $previewHeight, ')
+          ..write('source: $source, ')
+          ..write('savedAt: $savedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $InboxesTable extends Inboxes with TableInfo<$InboxesTable, InboxRow> {
   @override
   final GeneratedDatabase attachedDatabase;
@@ -1892,6 +2325,7 @@ abstract class _$NeriDatabase extends GeneratedDatabase {
   late final $ChannelsTable channels = $ChannelsTable(this);
   late final $DismissedAnnouncementsTable dismissedAnnouncements =
       $DismissedAnnouncementsTable(this);
+  late final $FavoriteGifsTable favoriteGifs = $FavoriteGifsTable(this);
   late final $InboxesTable inboxes = $InboxesTable(this);
   late final $RecentEmojisTable recentEmojis = $RecentEmojisTable(this);
   late final $UsersTable users = $UsersTable(this);
@@ -1903,6 +2337,7 @@ abstract class _$NeriDatabase extends GeneratedDatabase {
     announcements,
     channels,
     dismissedAnnouncements,
+    favoriteGifs,
     inboxes,
     recentEmojis,
     users,
@@ -2498,6 +2933,240 @@ typedef $$DismissedAnnouncementsTableProcessedTableManager =
       DismissedAnnouncementRow,
       PrefetchHooks Function()
     >;
+typedef $$FavoriteGifsTableCreateCompanionBuilder =
+    FavoriteGifsCompanion Function({
+      required String url,
+      required String previewUrl,
+      Value<int?> previewWidth,
+      Value<int?> previewHeight,
+      required String source,
+      required int savedAt,
+      Value<int> rowid,
+    });
+typedef $$FavoriteGifsTableUpdateCompanionBuilder =
+    FavoriteGifsCompanion Function({
+      Value<String> url,
+      Value<String> previewUrl,
+      Value<int?> previewWidth,
+      Value<int?> previewHeight,
+      Value<String> source,
+      Value<int> savedAt,
+      Value<int> rowid,
+    });
+
+class $$FavoriteGifsTableFilterComposer
+    extends Composer<_$NeriDatabase, $FavoriteGifsTable> {
+  $$FavoriteGifsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get url => $composableBuilder(
+    column: $table.url,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get previewUrl => $composableBuilder(
+    column: $table.previewUrl,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get previewWidth => $composableBuilder(
+    column: $table.previewWidth,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get previewHeight => $composableBuilder(
+    column: $table.previewHeight,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get source => $composableBuilder(
+    column: $table.source,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get savedAt => $composableBuilder(
+    column: $table.savedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$FavoriteGifsTableOrderingComposer
+    extends Composer<_$NeriDatabase, $FavoriteGifsTable> {
+  $$FavoriteGifsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get url => $composableBuilder(
+    column: $table.url,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get previewUrl => $composableBuilder(
+    column: $table.previewUrl,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get previewWidth => $composableBuilder(
+    column: $table.previewWidth,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get previewHeight => $composableBuilder(
+    column: $table.previewHeight,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get source => $composableBuilder(
+    column: $table.source,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get savedAt => $composableBuilder(
+    column: $table.savedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$FavoriteGifsTableAnnotationComposer
+    extends Composer<_$NeriDatabase, $FavoriteGifsTable> {
+  $$FavoriteGifsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get url =>
+      $composableBuilder(column: $table.url, builder: (column) => column);
+
+  GeneratedColumn<String> get previewUrl => $composableBuilder(
+    column: $table.previewUrl,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get previewWidth => $composableBuilder(
+    column: $table.previewWidth,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get previewHeight => $composableBuilder(
+    column: $table.previewHeight,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get source =>
+      $composableBuilder(column: $table.source, builder: (column) => column);
+
+  GeneratedColumn<int> get savedAt =>
+      $composableBuilder(column: $table.savedAt, builder: (column) => column);
+}
+
+class $$FavoriteGifsTableTableManager
+    extends
+        RootTableManager<
+          _$NeriDatabase,
+          $FavoriteGifsTable,
+          FavoriteGifRow,
+          $$FavoriteGifsTableFilterComposer,
+          $$FavoriteGifsTableOrderingComposer,
+          $$FavoriteGifsTableAnnotationComposer,
+          $$FavoriteGifsTableCreateCompanionBuilder,
+          $$FavoriteGifsTableUpdateCompanionBuilder,
+          (
+            FavoriteGifRow,
+            BaseReferences<_$NeriDatabase, $FavoriteGifsTable, FavoriteGifRow>,
+          ),
+          FavoriteGifRow,
+          PrefetchHooks Function()
+        > {
+  $$FavoriteGifsTableTableManager(_$NeriDatabase db, $FavoriteGifsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$FavoriteGifsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$FavoriteGifsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$FavoriteGifsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> url = const Value.absent(),
+                Value<String> previewUrl = const Value.absent(),
+                Value<int?> previewWidth = const Value.absent(),
+                Value<int?> previewHeight = const Value.absent(),
+                Value<String> source = const Value.absent(),
+                Value<int> savedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => FavoriteGifsCompanion(
+                url: url,
+                previewUrl: previewUrl,
+                previewWidth: previewWidth,
+                previewHeight: previewHeight,
+                source: source,
+                savedAt: savedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String url,
+                required String previewUrl,
+                Value<int?> previewWidth = const Value.absent(),
+                Value<int?> previewHeight = const Value.absent(),
+                required String source,
+                required int savedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => FavoriteGifsCompanion.insert(
+                url: url,
+                previewUrl: previewUrl,
+                previewWidth: previewWidth,
+                previewHeight: previewHeight,
+                source: source,
+                savedAt: savedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$FavoriteGifsTable, FavoriteGifRow>(table),
+                  BaseReferences<
+                    _$NeriDatabase,
+                    $FavoriteGifsTable,
+                    FavoriteGifRow
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$FavoriteGifsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$NeriDatabase,
+      $FavoriteGifsTable,
+      FavoriteGifRow,
+      $$FavoriteGifsTableFilterComposer,
+      $$FavoriteGifsTableOrderingComposer,
+      $$FavoriteGifsTableAnnotationComposer,
+      $$FavoriteGifsTableCreateCompanionBuilder,
+      $$FavoriteGifsTableUpdateCompanionBuilder,
+      (
+        FavoriteGifRow,
+        BaseReferences<_$NeriDatabase, $FavoriteGifsTable, FavoriteGifRow>,
+      ),
+      FavoriteGifRow,
+      PrefetchHooks Function()
+    >;
 typedef $$InboxesTableCreateCompanionBuilder =
     InboxesCompanion Function({
       required String id,
@@ -3070,6 +3739,8 @@ class $NeriDatabaseManager {
         _db,
         _db.dismissedAnnouncements,
       );
+  $$FavoriteGifsTableTableManager get favoriteGifs =>
+      $$FavoriteGifsTableTableManager(_db, _db.favoriteGifs);
   $$InboxesTableTableManager get inboxes =>
       $$InboxesTableTableManager(_db, _db.inboxes);
   $$RecentEmojisTableTableManager get recentEmojis =>

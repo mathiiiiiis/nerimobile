@@ -10,6 +10,11 @@ class GifCategory {
   );
 }
 
+enum GifSource { klipy, cdn, other }
+
+double gifRatio(int? width, int? height) =>
+    (width ?? 0) > 0 && (height ?? 0) > 0 ? width! / height! : 1;
+
 class Gif {
   final String url;
   final String gifUrl;
@@ -33,11 +38,36 @@ class Gif {
     previewHeight: json['previewHeight'] as int?,
   );
 
-  double get ratio {
-    final width = previewWidth ?? 0;
-    final height = previewHeight ?? 0;
-    return width > 0 && height > 0 ? width / height : 1;
-  }
+  double get ratio => gifRatio(previewWidth, previewHeight);
+}
+
+class FavoriteGif {
+  final String url;
+  final String previewUrl;
+  final int? previewWidth;
+  final int? previewHeight;
+  final GifSource source;
+  final int savedAt;
+
+  FavoriteGif({
+    required this.url,
+    required this.previewUrl,
+    required this.source,
+    required this.savedAt,
+    this.previewWidth,
+    this.previewHeight,
+  });
+
+  factory FavoriteGif.of(Gif gif, GifSource source) => FavoriteGif(
+    url: gif.gifUrl,
+    previewUrl: gif.previewUrl,
+    previewWidth: gif.previewWidth,
+    previewHeight: gif.previewHeight,
+    source: source,
+    savedAt: DateTime.now().millisecondsSinceEpoch,
+  );
+
+  double get ratio => gifRatio(previewWidth, previewHeight);
 }
 
 typedef GifPage = ({List<Gif> gifs, String? next});

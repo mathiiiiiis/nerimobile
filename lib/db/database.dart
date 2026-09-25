@@ -5,6 +5,7 @@ import 'package:nerimobile/db/connection.dart';
 import 'package:nerimobile/db/migrations.dart';
 import 'package:nerimobile/db/tables/announcements.dart';
 import 'package:nerimobile/db/tables/channels.dart';
+import 'package:nerimobile/db/tables/favorite_gifs.dart';
 import 'package:nerimobile/db/tables/inboxes.dart';
 import 'package:nerimobile/db/tables/recent_emojis.dart';
 import 'package:nerimobile/db/tables/users.dart';
@@ -16,6 +17,7 @@ part 'database.g.dart';
     Announcements,
     Channels,
     DismissedAnnouncements,
+    FavoriteGifs,
     Inboxes,
     RecentEmojis,
     Users,
