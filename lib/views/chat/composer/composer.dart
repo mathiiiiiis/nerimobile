@@ -185,7 +185,7 @@ class _ComposerState extends ConsumerState<Composer>
         : TextSelection.collapsed(offset: value.text.length);
 
     _controller.value = value.replaced(selection, text);
-    if (ref.read(emojiPaneProvider(widget.channelId)) == EmojiPane.closed) {
+    if (ref.read(emojiPaneProvider(widget.channelId)).open) {
       _focus.requestFocus();
     }
   }
@@ -233,8 +233,8 @@ class _ComposerState extends ConsumerState<Composer>
       composerProvider(widget.channelId).select((c) => c.attachment != null),
     );
     final picker = ref.watch(attachmentPickerProvider(widget.channelId));
-    final emojis =
-        ref.watch(emojiPaneProvider(widget.channelId)) != EmojiPane.closed;
+    final emoji = ref.watch(emojiPaneProvider(widget.channelId));
+    final emojis = emoji.open;
     final picking = picker.open;
 
     return PopScope(
@@ -246,7 +246,8 @@ class _ComposerState extends ConsumerState<Composer>
           attachmentPickerProvider(widget.channelId).notifier,
         );
         if (emojis) {
-          return ref.read(emojiPaneProvider(widget.channelId).notifier).close();
+          final pane = ref.read(emojiPaneProvider(widget.channelId).notifier);
+          return emoji.expanded ? pane.collapse() : pane.close();
         }
         if (picker.expanded) return notifier.collapse();
         if (picking) return notifier.close();

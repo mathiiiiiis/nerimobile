@@ -36,7 +36,17 @@ const _indicatorHeight = 0.4;
 const _searchHeight = 34.0;
 const _sidebarFollow = Duration(milliseconds: 200);
 
-enum EmojiPane { closed, open, searching }
+enum EmojiPane { closed, collapsed, expanded }
+
+class EmojiPaneState {
+  const EmojiPaneState({required this.mode, this.searching = false});
+
+  final EmojiPane mode;
+  final bool searching;
+
+  bool get open => mode != EmojiPane.closed;
+  bool get expanded => mode == EmojiPane.expanded;
+}
 
 enum PickerTab { emojis, gifs }
 
@@ -57,28 +67,34 @@ class PickerTabNotifier extends Notifier<PickerTab> {
 }
 
 final emojiPaneProvider =
-    NotifierProvider.family<EmojiPanelNotifier, EmojiPane, String>(
+    NotifierProvider.family<EmojiPanelNotifier, EmojiPaneState, String>(
       EmojiPanelNotifier.new,
     );
 
-class EmojiPanelNotifier extends Notifier<EmojiPane> {
+class EmojiPanelNotifier extends Notifier<EmojiPaneState> {
   EmojiPanelNotifier(this.channelId);
 
   final String channelId;
 
   @override
-  EmojiPane build() => EmojiPane.closed;
+  EmojiPaneState build() => const EmojiPaneState(mode: EmojiPane.closed);
 
-  void open() => state = EmojiPane.open;
-  void close() => state = EmojiPane.closed;
+  void open() => collapse();
 
-  void toggle() =>
-      state = state == EmojiPane.closed ? EmojiPane.open : EmojiPane.closed;
+  void expand() => _mode(EmojiPane.expanded);
+  void collapse() => _mode(EmojiPane.collapsed);
+
+  void close() => state = const EmojiPaneState(mode: EmojiPane.closed);
+
+  void toggle() => state.open ? close() : collapse();
 
   void search(bool searching) {
-    if (state == EmojiPane.closed) return;
-    state = searching ? EmojiPane.searching : EmojiPane.open;
+    if (!state.open) return;
+    state = EmojiPaneState(mode: state.mode, searching: searching);
   }
+
+  void _mode(EmojiPane mode) =>
+      state = EmojiPaneState(mode: mode, searching: state.searching);
 }
 
 sealed class _Entry {
@@ -320,8 +336,8 @@ class _EmojiPanelState extends ConsumerState<EmojiPanel> {
     });
 
     ref.listen(emojiPaneProvider(widget.channelId), (previous, pane) {
-      if (pane != EmojiPane.closed) {
-        if (previous == EmojiPane.closed) setState(_relayout);
+      if (pane.open) {
+        if (previous?.open != true) setState(_relayout);
         return;
       }
 
