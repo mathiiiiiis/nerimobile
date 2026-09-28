@@ -9,6 +9,7 @@ import 'package:material_symbols_icons/symbols.dart';
 
 import 'package:nerimobile/models/gif.dart';
 import 'package:nerimobile/stores/composer/composer_store.dart';
+import 'package:nerimobile/stores/gif/favorite_gif_store.dart';
 import 'package:nerimobile/stores/gif/gif_store.dart';
 import 'package:nerimobile/stores/window/window_focus_store.dart';
 import 'package:nerimobile/theme/core/theme_data.dart';
@@ -18,18 +19,20 @@ import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/theme/typography/text_styles.dart';
 import 'package:nerimobile/utils/caches.dart';
 import 'package:nerimobile/utils/image.dart';
+import 'package:nerimobile/utils/url.dart';
 import 'package:nerimobile/views/app_text_field.dart';
 import 'package:nerimobile/views/empty_state.dart';
+import 'package:nerimobile/views/modal/bottom_sheet.dart';
 import 'package:nerimobile/views/skeleton/skeleton.dart';
 
 const _columns = 2;
 const _tileRatio = 16 / 9;
-const _skeletonTiles = 6;
+const _skeletonTiles = 9;
 const _scrimOpacity = 0.65;
 const _scrimStop = 0.55;
 const _creditHeight = 14.0;
 const _searchHeight = 34.0;
-const _resultRow = 110.0;
+const _resultRow = 180.0;
 const _debounce = Duration(milliseconds: 350);
 const _flexScale = 1000;
 const _loadMoreExtent = 400.0;
@@ -507,19 +510,29 @@ class _ResultTile extends ConsumerWidget {
 
     return GestureDetector(
       onTap: onTap,
+      onLongPress: () {
+        Feedback.forLongPress(context);
+        _showGifSheet(context, gif);
+      },
       child: ClipRRect(
         borderRadius: context.neriSize.rounded(NeriRadiusRole.image),
-        child: CachedNetworkImage(
-          imageUrl: proxiedGifUrl(gif.previewUrl, animate: animate),
-          cacheManager: mediaCache,
-          fit: BoxFit.cover,
-          fadeInDuration: Duration.zero,
-          fadeOutDuration: Duration.zero,
-          useOldImageOnUrlChange: true,
-          placeholder: (_, _) => const SkeletonScope(
-            child: SkeletonBlock(height: double.infinity),
-          ),
-          errorWidget: (_, _, _) => ColoredBox(color: colors[NeriToken.card]),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            CachedNetworkImage(
+              imageUrl: proxiedGifUrl(gif.previewUrl, animate: animate),
+              cacheManager: mediaCache,
+              fit: BoxFit.cover,
+              fadeInDuration: Duration.zero,
+              fadeOutDuration: Duration.zero,
+              useOldImageOnUrlChange: true,
+              placeholder: (_, _) => const SkeletonScope(
+                child: SkeletonBlock(height: double.infinity),
+              ),
+              errorWidget: (_, _, _) =>
+                  ColoredBox(color: colors[NeriToken.card]),
+            ),
+          ],
         ),
       ),
     );
@@ -538,3 +551,42 @@ class _Credit extends StatelessWidget {
     semanticsLabel: 'Powered by KLIPY',
   );
 }
+
+void _toggleFavorite(WidgetRef ref, Gif gif) => ref
+    .read(favoriteGifsProvider.notifier)
+    .toggle(FavoriteGif.of(gif, GifSource.klipy));
+
+Future<void> _showGifSheet(BuildContext context, Gif gif) => showSheet<void>(
+  context,
+  builder: (context) => Consumer(
+    builder: (context, ref, _) {
+      final favorite = ref.watch(
+        favoriteUrlsProvider.select((urls) => urls.contains(gif.gifUrl)),
+      );
+
+      return SheetActions(
+        actions: [
+          SheetAction(
+            icon: Symbols.star_rounded,
+            filled: favorite,
+            dismiss: false,
+            label: favorite
+                ? 'Remove from favorites'
+                : 'Add to favorites', //TODO: add l10n
+            onTap: () => _toggleFavorite(ref, gif),
+          ),
+          SheetAction(
+            icon: Symbols.link_rounded,
+            label: 'Copy GIF link', //TODO: add l10n
+            onTap: () => openExternal(gif.url),
+          ),
+          SheetAction(
+            icon: Symbols.open_in_new_rounded,
+            label: 'Open in browser', //TODO: add l10n
+            onTap: () => openExternal(gif.url),
+          ),
+        ],
+      );
+    },
+  ),
+);

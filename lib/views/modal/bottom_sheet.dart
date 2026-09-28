@@ -13,12 +13,16 @@ class SheetAction {
     required this.label,
     required this.onTap,
     this.destructive = false,
+    this.filled = false,
+    this.dismiss = true,
   });
 
   final IconData icon;
   final String label;
   final VoidCallback onTap;
   final bool destructive;
+  final bool filled;
+  final bool dismiss;
 }
 
 Future<T?> showSheet<T>(
@@ -49,13 +53,13 @@ Future<void> showActionSheet(
 }) async {
   final picked = await showSheet<SheetAction>(
     context,
-    builder: (context) => _ActionSheet(header: header, actions: actions),
+    builder: (context) => SheetActions(header: header, actions: actions),
   );
   picked?.onTap();
 }
 
-class _ActionSheet extends StatelessWidget {
-  const _ActionSheet({required this.actions, this.header});
+class SheetActions extends StatelessWidget {
+  const SheetActions({super.key, required this.actions, this.header});
 
   final List<SheetAction> actions;
   final Widget? header;
@@ -104,7 +108,8 @@ class _ActionRow extends StatelessWidget {
         : colors[NeriToken.text];
 
     return InkWell(
-      onTap: () => Navigator.of(context).pop(action),
+      onTap: () =>
+          action.dismiss ? Navigator.of(context).pop(action) : action.onTap(),
       child: Padding(
         padding: EdgeInsets.symmetric(
           horizontal: sizing.space(NeriSpacingRole.lg),
@@ -115,6 +120,7 @@ class _ActionRow extends StatelessWidget {
           children: [
             Icon(
               action.icon,
+              fill: action.filled ? 1 : 0,
               size: sizing.dimen(NeriDimen.iconSm),
               color: action.destructive
                   ? color
