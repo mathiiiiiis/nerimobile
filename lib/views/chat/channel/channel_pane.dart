@@ -171,7 +171,7 @@ class _ChatState extends ConsumerState<_Chat> with WidgetsBindingObserver {
                 AttachmentPicker.collapsed => collapsed,
                 AttachmentPicker.expanded => expanded,
               }
-            : (emoji.open ? 0.0 : emojiHeight));
+            : (emoji.open ? emojiHeight : 0.0));
 
     //keeps list, composer and panel in sync
     return TweenAnimationBuilder<double>(

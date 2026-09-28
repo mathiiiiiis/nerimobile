@@ -185,7 +185,7 @@ class _ComposerState extends ConsumerState<Composer>
         : TextSelection.collapsed(offset: value.text.length);
 
     _controller.value = value.replaced(selection, text);
-    if (ref.read(emojiPaneProvider(widget.channelId)).open) {
+    if (!ref.read(emojiPaneProvider(widget.channelId)).open) {
       _focus.requestFocus();
     }
   }
