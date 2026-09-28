@@ -210,9 +210,14 @@ List<_Row> _rows(
 ];
 
 class EmojiPanel extends ConsumerStatefulWidget {
-  const EmojiPanel({super.key, required this.channelId});
+  const EmojiPanel({
+    super.key,
+    required this.channelId,
+    required this.expansion,
+  });
 
   final String channelId;
+  final double expansion;
 
   @override
   ConsumerState<EmojiPanel> createState() => _EmojiPanelState();
@@ -352,12 +357,13 @@ class _EmojiPanelState extends ConsumerState<EmojiPanel> {
     if (tab == PickerTab.gifs) _gifsOpened = true;
 
     return ComposerPanelFrame(
-      expansion: 0,
+      expansion: widget.expansion,
       child: Padding(
         padding: EdgeInsets.only(top: gap),
         child: Column(
           spacing: gap,
           children: [
+            const PanelDragHandle(),
             Expanded(
               child: IndexedStack(
                 index: tab.index,

@@ -59,3 +59,24 @@ class ComposerPanelFrame extends StatelessWidget {
     );
   }
 }
+
+class PanelDragHandle extends StatelessWidget {
+  const PanelDragHandle({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final sizing = context.neriSize;
+    final height = sizing.border(NeriBorderRole.thick);
+
+    return Center(
+      child: Container(
+        width: sizing.space(NeriSpacingRole.xxl),
+        height: height,
+        decoration: BoxDecoration(
+          color: context.neri[NeriToken.divider],
+          borderRadius: BorderRadius.circular(height),
+        ),
+      ),
+    );
+  }
+}

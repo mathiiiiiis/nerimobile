@@ -27,6 +27,11 @@ const _emojiHeight = 0.4;
 
 enum _Dock { attachments, emoji }
 
+enum _Snap { closed, collapsed, expanded }
+
+double _expansion(double visible, double collapsed, double expanded) =>
+    ((visible - collapsed) / (expanded - collapsed)).clamp(0.0, 1.0);
+
 class ChannelPane extends StatelessWidget {
   const ChannelPane({super.key, required this.channelId});
 
@@ -117,24 +122,43 @@ class _ChatState extends ConsumerState<_Chat> with WidgetsBindingObserver {
   //snap to nearest height unless flinging
   void _onDragEnd(
     DragEndDetails details, {
+    required bool attachments,
     required double collapsed,
     required double expanded,
   }) {
     final height = _drag ?? 0;
     final velocity = details.primaryVelocity ?? 0;
-    final picker = ref.read(
-      attachmentPickerProvider(widget.channelId).notifier,
-    );
 
     setState(() => _drag = null);
 
-    if (velocity < -_flingVelocity) return picker.expand();
-    if (velocity > _flingVelocity) {
-      return height > collapsed ? picker.collapse() : picker.close();
+    final snap = switch (velocity) {
+      < -_flingVelocity => _Snap.expanded,
+      > _flingVelocity => height > collapsed ? _Snap.collapsed : _Snap.closed,
+      _ when height > (collapsed + expanded) / 2 => _Snap.expanded,
+      _ when height > collapsed / 2 => _Snap.collapsed,
+      _ => _Snap.closed,
+    };
+
+    if (attachments) {
+      final picker = ref.read(
+        attachmentPickerProvider(widget.channelId).notifier,
+      );
+      return switch (snap) {
+        _Snap.expanded => picker.expand(),
+        _Snap.collapsed => picker.collapse(),
+        _Snap.closed => picker.close(),
+      };
     }
 
-    if (height > (collapsed + expanded) / 2) return picker.expand();
-    height > collapsed / 2 ? picker.collapse() : picker.close();
+    final pane = ref.read(emojiPaneProvider(widget.channelId).notifier);
+    switch (snap) {
+      case _Snap.expanded:
+        pane.expand();
+      case _Snap.collapsed:
+        pane.collapse();
+      case _Snap.closed:
+        pane.close();
+    }
   }
 
   @override
@@ -163,6 +187,7 @@ class _ChatState extends ConsumerState<_Chat> with WidgetsBindingObserver {
     final expanded = pane.height * _expandedHeight;
     final emojiHeight = pane.height * _emojiHeight;
     final safeBottom = MediaQuery.paddingOf(context).bottom;
+    final dockCollapsed = attachments ? collapsed : emojiHeight;
     final target =
         _drag ??
         (attachments
@@ -171,7 +196,11 @@ class _ChatState extends ConsumerState<_Chat> with WidgetsBindingObserver {
                 AttachmentPicker.collapsed => collapsed,
                 AttachmentPicker.expanded => expanded,
               }
-            : (emoji.open ? emojiHeight : 0.0));
+            : switch (emoji.mode) {
+                EmojiPane.closed => 0.0,
+                EmojiPane.collapsed => emojiHeight,
+                EmojiPane.expanded => expanded,
+              });
 
     //keeps list, composer and panel in sync
     return TweenAnimationBuilder<double>(
@@ -181,8 +210,8 @@ class _ChatState extends ConsumerState<_Chat> with WidgetsBindingObserver {
       builder: (context, shown, _) {
         //panel fills space above the keyboard
         final visible = max(0.0, shown - keyboard);
-        final lift = attachments ? min(visible, collapsed) : visible;
-        final frame = max(visible, attachments ? collapsed : emojiHeight);
+        final lift = min(visible, dockCollapsed);
+        final frame = max(visible, dockCollapsed);
 
         return Stack(
           children: [
@@ -222,19 +251,15 @@ class _ChatState extends ConsumerState<_Chat> with WidgetsBindingObserver {
               bottom: 0,
               child: GestureDetector(
                 behavior: HitTestBehavior.deferToChild,
-                onVerticalDragStart: attachments
-                    ? (_) => _onDragStart(visible)
-                    : null,
-                onVerticalDragUpdate: attachments
-                    ? (details) => _onDragUpdate(details, expanded)
-                    : null,
-                onVerticalDragEnd: attachments
-                    ? (details) => _onDragEnd(
-                        details,
-                        collapsed: collapsed,
-                        expanded: expanded,
-                      )
-                    : null,
+                onVerticalDragStart: (_) => _onDragStart(visible),
+                onVerticalDragUpdate: (details) =>
+                    _onDragUpdate(details, expanded),
+                onVerticalDragEnd: (details) => _onDragEnd(
+                  details,
+                  attachments: attachments,
+                  collapsed: dockCollapsed,
+                  expanded: expanded,
+                ),
                 child: SizedBox(
                   height: visible,
                   child: ClipRect(
@@ -245,12 +270,20 @@ class _ChatState extends ConsumerState<_Chat> with WidgetsBindingObserver {
                       child: attachments
                           ? AttachmentPanel(
                               channelId: widget.channelId,
-                              expansion:
-                                  ((visible - collapsed) /
-                                          (expanded - collapsed))
-                                      .clamp(0.0, 1.0),
+                              expansion: _expansion(
+                                visible,
+                                dockCollapsed,
+                                expanded,
+                              ),
                             )
-                          : EmojiPanel(channelId: widget.channelId),
+                          : EmojiPanel(
+                              channelId: widget.channelId,
+                              expansion: _expansion(
+                                visible,
+                                dockCollapsed,
+                                expanded,
+                              ),
+                            ),
                     ),
                   ),
                 ),

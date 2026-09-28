@@ -172,7 +172,7 @@ class AttachmentPanel extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         spacing: gap,
         children: [
-          const _DragHandle(),
+          const PanelDragHandle(),
           AnimatedSwitcher(
             duration: _headerFade,
             child: sheet
@@ -287,27 +287,6 @@ class AttachmentPanel extends ConsumerWidget {
           child: grid,
         );
       },
-    );
-  }
-}
-
-class _DragHandle extends StatelessWidget {
-  const _DragHandle();
-
-  @override
-  Widget build(BuildContext context) {
-    final sizing = context.neriSize;
-    final height = sizing.border(NeriBorderRole.thick);
-
-    return Center(
-      child: Container(
-        width: sizing.space(NeriSpacingRole.xxl),
-        height: height,
-        decoration: BoxDecoration(
-          color: context.neri[NeriToken.divider],
-          borderRadius: BorderRadius.circular(height),
-        ),
-      ),
     );
   }
 }
