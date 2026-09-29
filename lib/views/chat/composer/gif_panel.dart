@@ -323,7 +323,7 @@ class _FavoritesTile extends ConsumerWidget {
     final favorites = ref.watch(favoriteGifsProvider).value ?? const [];
     final preview = favorites.isEmpty
         ? null
-        : favorites[seed & favorites.length];
+        : favorites[seed % favorites.length];
 
     return GestureDetector(
       onTap: onTap,
@@ -769,38 +769,42 @@ Future<void> _showGifSheet(
   required String url,
   required FavoriteGif favorite,
   String? link,
-}) => showSheet<void>(
-  context,
-  builder: (context) => Consumer(
-    builder: (context, ref, _) {
-      final saved = ref.watch(
-        favoriteUrlsProvider.select((urls) => urls.contains(favorite.url)),
-      );
+}) async {
+  final picked = await showSheet<SheetAction>(
+    context,
+    builder: (context) => Consumer(
+      builder: (context, ref, _) {
+        final saved = ref.watch(
+          favoriteUrlsProvider.select((urls) => urls.contains(favorite.url)),
+        );
 
-      return SheetActions(
-        actions: [
-          SheetAction(
-            icon: Symbols.star_rounded,
-            filled: saved,
-            dismiss: false,
-            label: saved
-                ? 'Remove from favorites'
-                : 'Add to favorites', //TODO: add l10n
-            onTap: () =>
-                ref.read(favoriteGifsProvider.notifier).toggle(favorite),
-          ),
-          SheetAction(
-            icon: Symbols.link_rounded,
-            label: 'Copy GIF link', //TODO: add l10n
-            onTap: () => Clipboard.setData(ClipboardData(text: url)),
-          ),
-          SheetAction(
-            icon: Symbols.open_in_new_rounded,
-            label: 'Open in browser', //TODO: add l10n
-            onTap: () => openExternal(link ?? url),
-          ),
-        ],
-      );
-    },
-  ),
-);
+        return SheetActions(
+          actions: [
+            SheetAction(
+              icon: Symbols.star_rounded,
+              filled: saved,
+              dismiss: false,
+              label: saved
+                  ? 'Remove from favorites'
+                  : 'Add to favorites', //TODO: add l10n
+              onTap: () =>
+                  ref.read(favoriteGifsProvider.notifier).toggle(favorite),
+            ),
+            SheetAction(
+              icon: Symbols.link_rounded,
+              label: 'Copy GIF link', //TODO: add l10n
+              onTap: () => Clipboard.setData(ClipboardData(text: url)),
+            ),
+            SheetAction(
+              icon: Symbols.open_in_new_rounded,
+              label: 'Open in browser', //TODO: add l10n
+              onTap: () => openExternal(link ?? url),
+            ),
+          ],
+        );
+      },
+    ),
+  );
+
+  picked?.onTap();
+}
