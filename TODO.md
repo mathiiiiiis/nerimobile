@@ -15,6 +15,8 @@
 - [ ] `isValidUrl` rejects urls without a path, so it never matches real links
 - [x] Inline code spans never form
 - [x] Heading in a custom status keeps its block spacer and font size
+- [ ] Swiping a message to reply or edit closes the keyboard, the
+      message field*s `onTapOutside` unfocus should go
 
 ## Features
 
