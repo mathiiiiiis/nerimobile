@@ -51,7 +51,7 @@ Channel _model(ChannelRow row) => Channel(
   lastMessagedAt: row.lastMessagedAt,
   permissions: row.permissions == null
       ? null
-      : (jsonEncode(row.permissions!) as List)
+      : (jsonDecode(row.permissions!) as List)
             .map((e) => ChannelPermission.fromJson(e))
             .toList(),
 );
