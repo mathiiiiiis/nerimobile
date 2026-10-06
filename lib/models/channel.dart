@@ -73,4 +73,9 @@ class ChannelPermission {
         permissions: json['permissions'],
         roleId: json['roleId'],
       );
+
+  Map<String, dynamic> toJson() => {
+    'permissions': permissions,
+    'roleId': roleId,
+  };
 }

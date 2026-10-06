@@ -3,11 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nerimobile/db/daos/channel_dao.dart';
 import 'package:nerimobile/db/daos/inbox_dao.dart';
 import 'package:nerimobile/db/daos/server_dao.dart';
+import 'package:nerimobile/db/daos/server_member_dao.dart';
+import 'package:nerimobile/db/daos/server_role_dao.dart';
 import 'package:nerimobile/db/daos/user_dao.dart';
 import 'package:nerimobile/db/database.dart';
 import 'package:nerimobile/stores/auth/auth_store.dart';
 import 'package:nerimobile/stores/channel/channel_store.dart';
 import 'package:nerimobile/stores/inbox/inbox_store.dart';
+import 'package:nerimobile/stores/server/server_member_store.dart';
+import 'package:nerimobile/stores/server/server_roles_store.dart';
 import 'package:nerimobile/stores/server/server_store.dart';
 import 'package:nerimobile/stores/user/user_store.dart';
 
@@ -20,6 +24,8 @@ final cacheHydrationProvider = FutureProvider<void>((ref) async {
   final users = await UserDao(db).all();
   final channels = await ChannelDao(db).all();
   final servers = await ServerDao(db).all();
+  final roles = await ServerRoleDao(db).all();
+  final memberships = await ServerMemberDao(db).all();
   final inboxes = await InboxDao(
     db,
   ).all({for (final user in users) user.id: user});
@@ -33,6 +39,15 @@ final cacheHydrationProvider = FutureProvider<void>((ref) async {
   }
   if (ref.read(serversProvider).isEmpty) {
     ref.read(serversProvider.notifier).addServers(servers);
+  }
+  if (ref.read(serverRolesProvider).isEmpty) {
+    ref.read(serverRolesProvider.notifier).addServerRoles(roles);
+  }
+  if (ref.read(serverMembersProvider).isEmpty) {
+    final members = ref.read(serverMembersProvider.notifier);
+    for (final member in memberships) {
+      members.addServerMember(member.serverId, member);
+    }
   }
   if (ref.read(inboxProvider).isEmpty) {
     ref.read(inboxProvider.notifier).setInbox(inboxes);

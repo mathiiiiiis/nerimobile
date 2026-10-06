@@ -5,17 +5,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nerimobile/db/daos/channel_dao.dart';
 import 'package:nerimobile/db/daos/inbox_dao.dart';
 import 'package:nerimobile/db/daos/server_dao.dart';
+import 'package:nerimobile/db/daos/server_member_dao.dart';
+import 'package:nerimobile/db/daos/server_role_dao.dart';
 import 'package:nerimobile/db/daos/user_dao.dart';
 import 'package:nerimobile/db/database.dart';
 import 'package:nerimobile/stores/channel/channel_store.dart';
 import 'package:nerimobile/stores/connection/connection_store.dart';
 import 'package:nerimobile/stores/inbox/inbox_store.dart';
+import 'package:nerimobile/stores/server/server_member_store.dart';
+import 'package:nerimobile/stores/server/server_roles_store.dart';
 import 'package:nerimobile/stores/server/server_store.dart';
 import 'package:nerimobile/stores/user/user_store.dart';
 
 const _writeDelay = Duration(seconds: 1);
 
-enum _Cached { channels, inboxes, servers, users }
+enum _Cached { channels, inboxes, memberships, roles, servers, users }
 
 //batch write from busy channels
 class CacheSync {
@@ -23,6 +27,11 @@ class CacheSync {
     _ref.listen(channelsProvider, (_, _) => _schedule(_Cached.channels));
     _ref.listen(inboxProvider, (_, _) => _schedule(_Cached.inboxes));
     _ref.listen(serversProvider, (_, _) => _schedule(_Cached.servers));
+    _ref.listen(serverRolesProvider, (_, _) => _schedule(_Cached.roles));
+    _ref.listen(
+      serverMembersProvider,
+      (_, _) => _schedule(_Cached.memberships),
+    );
     _ref.listen(usersProvider, (_, _) => _schedule(_Cached.users));
   }
 
@@ -53,6 +62,18 @@ class CacheSync {
           await ChannelDao(db).sync(_ref.read(channelsProvider).values);
         case _Cached.inboxes:
           await InboxDao(db).sync(_ref.read(inboxProvider).values);
+        case _Cached.memberships:
+          final userId = _ref.read(currentUserProvider)?.id;
+          if (userId == null) continue;
+          await ServerMemberDao(db).sync([
+            for (final members in _ref.read(serverMembersProvider).values)
+              ?members[userId],
+          ]);
+        case _Cached.roles:
+          await ServerRoleDao(db).sync([
+            for (final roles in _ref.read(serverRolesProvider).values)
+              ...roles.values,
+          ]);
         case _Cached.servers:
           await ServerDao(db).sync(_ref.read(serversProvider).values);
         case _Cached.users:

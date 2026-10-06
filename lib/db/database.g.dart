@@ -348,6 +348,17 @@ class $ChannelsTable extends Channels
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _permissionsMeta = const VerificationMeta(
+    'permissions',
+  );
+  @override
+  late final GeneratedColumn<String> permissions = GeneratedColumn<String>(
+    'permissions',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -358,6 +369,7 @@ class $ChannelsTable extends Channels
     icon,
     categoryId,
     lastMessagedAt,
+    permissions,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -423,6 +435,15 @@ class $ChannelsTable extends Channels
         ),
       );
     }
+    if (data.containsKey('permissions')) {
+      context.handle(
+        _permissionsMeta,
+        permissions.isAcceptableOrUnknown(
+          data['permissions']!,
+          _permissionsMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -464,6 +485,10 @@ class $ChannelsTable extends Channels
         DriftSqlType.int,
         data['${effectivePrefix}last_messaged_at'],
       ),
+      permissions: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}permissions'],
+      ),
     );
   }
 
@@ -482,6 +507,7 @@ class ChannelRow extends DataClass implements Insertable<ChannelRow> {
   final String? icon;
   final String? categoryId;
   final int? lastMessagedAt;
+  final String? permissions;
   const ChannelRow({
     required this.id,
     required this.type,
@@ -491,6 +517,7 @@ class ChannelRow extends DataClass implements Insertable<ChannelRow> {
     this.icon,
     this.categoryId,
     this.lastMessagedAt,
+    this.permissions,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -515,6 +542,9 @@ class ChannelRow extends DataClass implements Insertable<ChannelRow> {
     if (!nullToAbsent || lastMessagedAt != null) {
       map['last_messaged_at'] = Variable<int>(lastMessagedAt);
     }
+    if (!nullToAbsent || permissions != null) {
+      map['permissions'] = Variable<String>(permissions);
+    }
     return map;
   }
 
@@ -536,6 +566,9 @@ class ChannelRow extends DataClass implements Insertable<ChannelRow> {
       lastMessagedAt: lastMessagedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(lastMessagedAt),
+      permissions: permissions == null && nullToAbsent
+          ? const Value.absent()
+          : Value(permissions),
     );
   }
 
@@ -553,6 +586,7 @@ class ChannelRow extends DataClass implements Insertable<ChannelRow> {
       icon: serializer.fromJson<String?>(json['icon']),
       categoryId: serializer.fromJson<String?>(json['categoryId']),
       lastMessagedAt: serializer.fromJson<int?>(json['lastMessagedAt']),
+      permissions: serializer.fromJson<String?>(json['permissions']),
     );
   }
   @override
@@ -567,6 +601,7 @@ class ChannelRow extends DataClass implements Insertable<ChannelRow> {
       'icon': serializer.toJson<String?>(icon),
       'categoryId': serializer.toJson<String?>(categoryId),
       'lastMessagedAt': serializer.toJson<int?>(lastMessagedAt),
+      'permissions': serializer.toJson<String?>(permissions),
     };
   }
 
@@ -579,6 +614,7 @@ class ChannelRow extends DataClass implements Insertable<ChannelRow> {
     Value<String?> icon = const Value.absent(),
     Value<String?> categoryId = const Value.absent(),
     Value<int?> lastMessagedAt = const Value.absent(),
+    Value<String?> permissions = const Value.absent(),
   }) => ChannelRow(
     id: id ?? this.id,
     type: type ?? this.type,
@@ -590,6 +626,7 @@ class ChannelRow extends DataClass implements Insertable<ChannelRow> {
     lastMessagedAt: lastMessagedAt.present
         ? lastMessagedAt.value
         : this.lastMessagedAt,
+    permissions: permissions.present ? permissions.value : this.permissions,
   );
   ChannelRow copyWithCompanion(ChannelsCompanion data) {
     return ChannelRow(
@@ -605,6 +642,9 @@ class ChannelRow extends DataClass implements Insertable<ChannelRow> {
       lastMessagedAt: data.lastMessagedAt.present
           ? data.lastMessagedAt.value
           : this.lastMessagedAt,
+      permissions: data.permissions.present
+          ? data.permissions.value
+          : this.permissions,
     );
   }
 
@@ -618,7 +658,8 @@ class ChannelRow extends DataClass implements Insertable<ChannelRow> {
           ..write('serverId: $serverId, ')
           ..write('icon: $icon, ')
           ..write('categoryId: $categoryId, ')
-          ..write('lastMessagedAt: $lastMessagedAt')
+          ..write('lastMessagedAt: $lastMessagedAt, ')
+          ..write('permissions: $permissions')
           ..write(')'))
         .toString();
   }
@@ -633,6 +674,7 @@ class ChannelRow extends DataClass implements Insertable<ChannelRow> {
     icon,
     categoryId,
     lastMessagedAt,
+    permissions,
   );
   @override
   bool operator ==(Object other) =>
@@ -645,7 +687,8 @@ class ChannelRow extends DataClass implements Insertable<ChannelRow> {
           other.serverId == this.serverId &&
           other.icon == this.icon &&
           other.categoryId == this.categoryId &&
-          other.lastMessagedAt == this.lastMessagedAt);
+          other.lastMessagedAt == this.lastMessagedAt &&
+          other.permissions == this.permissions);
 }
 
 class ChannelsCompanion extends UpdateCompanion<ChannelRow> {
@@ -657,6 +700,7 @@ class ChannelsCompanion extends UpdateCompanion<ChannelRow> {
   final Value<String?> icon;
   final Value<String?> categoryId;
   final Value<int?> lastMessagedAt;
+  final Value<String?> permissions;
   final Value<int> rowid;
   const ChannelsCompanion({
     this.id = const Value.absent(),
@@ -667,6 +711,7 @@ class ChannelsCompanion extends UpdateCompanion<ChannelRow> {
     this.icon = const Value.absent(),
     this.categoryId = const Value.absent(),
     this.lastMessagedAt = const Value.absent(),
+    this.permissions = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   ChannelsCompanion.insert({
@@ -678,6 +723,7 @@ class ChannelsCompanion extends UpdateCompanion<ChannelRow> {
     this.icon = const Value.absent(),
     this.categoryId = const Value.absent(),
     this.lastMessagedAt = const Value.absent(),
+    this.permissions = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        type = Value(type);
@@ -690,6 +736,7 @@ class ChannelsCompanion extends UpdateCompanion<ChannelRow> {
     Expression<String>? icon,
     Expression<String>? categoryId,
     Expression<int>? lastMessagedAt,
+    Expression<String>? permissions,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -701,6 +748,7 @@ class ChannelsCompanion extends UpdateCompanion<ChannelRow> {
       if (icon != null) 'icon': icon,
       if (categoryId != null) 'category_id': categoryId,
       if (lastMessagedAt != null) 'last_messaged_at': lastMessagedAt,
+      if (permissions != null) 'permissions': permissions,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -714,6 +762,7 @@ class ChannelsCompanion extends UpdateCompanion<ChannelRow> {
     Value<String?>? icon,
     Value<String?>? categoryId,
     Value<int?>? lastMessagedAt,
+    Value<String?>? permissions,
     Value<int>? rowid,
   }) {
     return ChannelsCompanion(
@@ -725,6 +774,7 @@ class ChannelsCompanion extends UpdateCompanion<ChannelRow> {
       icon: icon ?? this.icon,
       categoryId: categoryId ?? this.categoryId,
       lastMessagedAt: lastMessagedAt ?? this.lastMessagedAt,
+      permissions: permissions ?? this.permissions,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -756,6 +806,9 @@ class ChannelsCompanion extends UpdateCompanion<ChannelRow> {
     if (lastMessagedAt.present) {
       map['last_messaged_at'] = Variable<int>(lastMessagedAt.value);
     }
+    if (permissions.present) {
+      map['permissions'] = Variable<String>(permissions.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -773,6 +826,7 @@ class ChannelsCompanion extends UpdateCompanion<ChannelRow> {
           ..write('icon: $icon, ')
           ..write('categoryId: $categoryId, ')
           ..write('lastMessagedAt: $lastMessagedAt, ')
+          ..write('permissions: $permissions, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -2010,6 +2064,881 @@ class RecentEmojisCompanion extends UpdateCompanion<RecentEmojiRow> {
   }
 }
 
+class $ServerMembersTable extends ServerMembers
+    with TableInfo<$ServerMembersTable, ServerMemberRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ServerMembersTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _serverIdMeta = const VerificationMeta(
+    'serverId',
+  );
+  @override
+  late final GeneratedColumn<String> serverId = GeneratedColumn<String>(
+    'server_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
+  @override
+  late final GeneratedColumn<String> userId = GeneratedColumn<String>(
+    'user_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nicknameMeta = const VerificationMeta(
+    'nickname',
+  );
+  @override
+  late final GeneratedColumn<String> nickname = GeneratedColumn<String>(
+    'nickname',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _roleIdsMeta = const VerificationMeta(
+    'roleIds',
+  );
+  @override
+  late final GeneratedColumn<String> roleIds = GeneratedColumn<String>(
+    'role_ids',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    serverId,
+    userId,
+    nickname,
+    roleIds,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'server_members';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ServerMemberRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('server_id')) {
+      context.handle(
+        _serverIdMeta,
+        serverId.isAcceptableOrUnknown(data['server_id']!, _serverIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_serverIdMeta);
+    }
+    if (data.containsKey('user_id')) {
+      context.handle(
+        _userIdMeta,
+        userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_userIdMeta);
+    }
+    if (data.containsKey('nickname')) {
+      context.handle(
+        _nicknameMeta,
+        nickname.isAcceptableOrUnknown(data['nickname']!, _nicknameMeta),
+      );
+    }
+    if (data.containsKey('role_ids')) {
+      context.handle(
+        _roleIdsMeta,
+        roleIds.isAcceptableOrUnknown(data['role_ids']!, _roleIdsMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_roleIdsMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {serverId};
+  @override
+  ServerMemberRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ServerMemberRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      serverId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}server_id'],
+      )!,
+      userId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}user_id'],
+      )!,
+      nickname: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}nickname'],
+      ),
+      roleIds: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}role_ids'],
+      )!,
+    );
+  }
+
+  @override
+  $ServerMembersTable createAlias(String alias) {
+    return $ServerMembersTable(attachedDatabase, alias);
+  }
+}
+
+class ServerMemberRow extends DataClass implements Insertable<ServerMemberRow> {
+  final String id;
+  final String serverId;
+  final String userId;
+  final String? nickname;
+  final String roleIds;
+  const ServerMemberRow({
+    required this.id,
+    required this.serverId,
+    required this.userId,
+    this.nickname,
+    required this.roleIds,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['server_id'] = Variable<String>(serverId);
+    map['user_id'] = Variable<String>(userId);
+    if (!nullToAbsent || nickname != null) {
+      map['nickname'] = Variable<String>(nickname);
+    }
+    map['role_ids'] = Variable<String>(roleIds);
+    return map;
+  }
+
+  ServerMembersCompanion toCompanion(bool nullToAbsent) {
+    return ServerMembersCompanion(
+      id: Value(id),
+      serverId: Value(serverId),
+      userId: Value(userId),
+      nickname: nickname == null && nullToAbsent
+          ? const Value.absent()
+          : Value(nickname),
+      roleIds: Value(roleIds),
+    );
+  }
+
+  factory ServerMemberRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ServerMemberRow(
+      id: serializer.fromJson<String>(json['id']),
+      serverId: serializer.fromJson<String>(json['serverId']),
+      userId: serializer.fromJson<String>(json['userId']),
+      nickname: serializer.fromJson<String?>(json['nickname']),
+      roleIds: serializer.fromJson<String>(json['roleIds']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'serverId': serializer.toJson<String>(serverId),
+      'userId': serializer.toJson<String>(userId),
+      'nickname': serializer.toJson<String?>(nickname),
+      'roleIds': serializer.toJson<String>(roleIds),
+    };
+  }
+
+  ServerMemberRow copyWith({
+    String? id,
+    String? serverId,
+    String? userId,
+    Value<String?> nickname = const Value.absent(),
+    String? roleIds,
+  }) => ServerMemberRow(
+    id: id ?? this.id,
+    serverId: serverId ?? this.serverId,
+    userId: userId ?? this.userId,
+    nickname: nickname.present ? nickname.value : this.nickname,
+    roleIds: roleIds ?? this.roleIds,
+  );
+  ServerMemberRow copyWithCompanion(ServerMembersCompanion data) {
+    return ServerMemberRow(
+      id: data.id.present ? data.id.value : this.id,
+      serverId: data.serverId.present ? data.serverId.value : this.serverId,
+      userId: data.userId.present ? data.userId.value : this.userId,
+      nickname: data.nickname.present ? data.nickname.value : this.nickname,
+      roleIds: data.roleIds.present ? data.roleIds.value : this.roleIds,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ServerMemberRow(')
+          ..write('id: $id, ')
+          ..write('serverId: $serverId, ')
+          ..write('userId: $userId, ')
+          ..write('nickname: $nickname, ')
+          ..write('roleIds: $roleIds')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, serverId, userId, nickname, roleIds);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ServerMemberRow &&
+          other.id == this.id &&
+          other.serverId == this.serverId &&
+          other.userId == this.userId &&
+          other.nickname == this.nickname &&
+          other.roleIds == this.roleIds);
+}
+
+class ServerMembersCompanion extends UpdateCompanion<ServerMemberRow> {
+  final Value<String> id;
+  final Value<String> serverId;
+  final Value<String> userId;
+  final Value<String?> nickname;
+  final Value<String> roleIds;
+  final Value<int> rowid;
+  const ServerMembersCompanion({
+    this.id = const Value.absent(),
+    this.serverId = const Value.absent(),
+    this.userId = const Value.absent(),
+    this.nickname = const Value.absent(),
+    this.roleIds = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ServerMembersCompanion.insert({
+    required String id,
+    required String serverId,
+    required String userId,
+    this.nickname = const Value.absent(),
+    required String roleIds,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       serverId = Value(serverId),
+       userId = Value(userId),
+       roleIds = Value(roleIds);
+  static Insertable<ServerMemberRow> custom({
+    Expression<String>? id,
+    Expression<String>? serverId,
+    Expression<String>? userId,
+    Expression<String>? nickname,
+    Expression<String>? roleIds,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (serverId != null) 'server_id': serverId,
+      if (userId != null) 'user_id': userId,
+      if (nickname != null) 'nickname': nickname,
+      if (roleIds != null) 'role_ids': roleIds,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ServerMembersCompanion copyWith({
+    Value<String>? id,
+    Value<String>? serverId,
+    Value<String>? userId,
+    Value<String?>? nickname,
+    Value<String>? roleIds,
+    Value<int>? rowid,
+  }) {
+    return ServerMembersCompanion(
+      id: id ?? this.id,
+      serverId: serverId ?? this.serverId,
+      userId: userId ?? this.userId,
+      nickname: nickname ?? this.nickname,
+      roleIds: roleIds ?? this.roleIds,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (serverId.present) {
+      map['server_id'] = Variable<String>(serverId.value);
+    }
+    if (userId.present) {
+      map['user_id'] = Variable<String>(userId.value);
+    }
+    if (nickname.present) {
+      map['nickname'] = Variable<String>(nickname.value);
+    }
+    if (roleIds.present) {
+      map['role_ids'] = Variable<String>(roleIds.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ServerMembersCompanion(')
+          ..write('id: $id, ')
+          ..write('serverId: $serverId, ')
+          ..write('userId: $userId, ')
+          ..write('nickname: $nickname, ')
+          ..write('roleIds: $roleIds, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $ServerRolesTable extends ServerRoles
+    with TableInfo<$ServerRolesTable, ServerRoleRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ServerRolesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _serverIdMeta = const VerificationMeta(
+    'serverId',
+  );
+  @override
+  late final GeneratedColumn<String> serverId = GeneratedColumn<String>(
+    'server_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _hideRoleMeta = const VerificationMeta(
+    'hideRole',
+  );
+  @override
+  late final GeneratedColumn<bool> hideRole = GeneratedColumn<bool>(
+    'hide_role',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("hide_role" IN (0, 1))',
+    ),
+  );
+  static const VerificationMeta _hexColorMeta = const VerificationMeta(
+    'hexColor',
+  );
+  @override
+  late final GeneratedColumn<String> hexColor = GeneratedColumn<String>(
+    'hex_color',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _permissionsMeta = const VerificationMeta(
+    'permissions',
+  );
+  @override
+  late final GeneratedColumn<int> permissions = GeneratedColumn<int>(
+    'permissions',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _orderMeta = const VerificationMeta('order');
+  @override
+  late final GeneratedColumn<int> order = GeneratedColumn<int>(
+    'order',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _iconMeta = const VerificationMeta('icon');
+  @override
+  late final GeneratedColumn<String> icon = GeneratedColumn<String>(
+    'icon',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    serverId,
+    name,
+    hideRole,
+    hexColor,
+    permissions,
+    order,
+    icon,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'server_roles';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ServerRoleRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('server_id')) {
+      context.handle(
+        _serverIdMeta,
+        serverId.isAcceptableOrUnknown(data['server_id']!, _serverIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_serverIdMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('hide_role')) {
+      context.handle(
+        _hideRoleMeta,
+        hideRole.isAcceptableOrUnknown(data['hide_role']!, _hideRoleMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_hideRoleMeta);
+    }
+    if (data.containsKey('hex_color')) {
+      context.handle(
+        _hexColorMeta,
+        hexColor.isAcceptableOrUnknown(data['hex_color']!, _hexColorMeta),
+      );
+    }
+    if (data.containsKey('permissions')) {
+      context.handle(
+        _permissionsMeta,
+        permissions.isAcceptableOrUnknown(
+          data['permissions']!,
+          _permissionsMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_permissionsMeta);
+    }
+    if (data.containsKey('order')) {
+      context.handle(
+        _orderMeta,
+        order.isAcceptableOrUnknown(data['order']!, _orderMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_orderMeta);
+    }
+    if (data.containsKey('icon')) {
+      context.handle(
+        _iconMeta,
+        icon.isAcceptableOrUnknown(data['icon']!, _iconMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ServerRoleRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ServerRoleRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      serverId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}server_id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      hideRole: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}hide_role'],
+      )!,
+      hexColor: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}hex_color'],
+      ),
+      permissions: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}permissions'],
+      )!,
+      order: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}order'],
+      )!,
+      icon: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}icon'],
+      ),
+    );
+  }
+
+  @override
+  $ServerRolesTable createAlias(String alias) {
+    return $ServerRolesTable(attachedDatabase, alias);
+  }
+}
+
+class ServerRoleRow extends DataClass implements Insertable<ServerRoleRow> {
+  final String id;
+  final String serverId;
+  final String name;
+  final bool hideRole;
+  final String? hexColor;
+  final int permissions;
+  final int order;
+  final String? icon;
+  const ServerRoleRow({
+    required this.id,
+    required this.serverId,
+    required this.name,
+    required this.hideRole,
+    this.hexColor,
+    required this.permissions,
+    required this.order,
+    this.icon,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['server_id'] = Variable<String>(serverId);
+    map['name'] = Variable<String>(name);
+    map['hide_role'] = Variable<bool>(hideRole);
+    if (!nullToAbsent || hexColor != null) {
+      map['hex_color'] = Variable<String>(hexColor);
+    }
+    map['permissions'] = Variable<int>(permissions);
+    map['order'] = Variable<int>(order);
+    if (!nullToAbsent || icon != null) {
+      map['icon'] = Variable<String>(icon);
+    }
+    return map;
+  }
+
+  ServerRolesCompanion toCompanion(bool nullToAbsent) {
+    return ServerRolesCompanion(
+      id: Value(id),
+      serverId: Value(serverId),
+      name: Value(name),
+      hideRole: Value(hideRole),
+      hexColor: hexColor == null && nullToAbsent
+          ? const Value.absent()
+          : Value(hexColor),
+      permissions: Value(permissions),
+      order: Value(order),
+      icon: icon == null && nullToAbsent ? const Value.absent() : Value(icon),
+    );
+  }
+
+  factory ServerRoleRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ServerRoleRow(
+      id: serializer.fromJson<String>(json['id']),
+      serverId: serializer.fromJson<String>(json['serverId']),
+      name: serializer.fromJson<String>(json['name']),
+      hideRole: serializer.fromJson<bool>(json['hideRole']),
+      hexColor: serializer.fromJson<String?>(json['hexColor']),
+      permissions: serializer.fromJson<int>(json['permissions']),
+      order: serializer.fromJson<int>(json['order']),
+      icon: serializer.fromJson<String?>(json['icon']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'serverId': serializer.toJson<String>(serverId),
+      'name': serializer.toJson<String>(name),
+      'hideRole': serializer.toJson<bool>(hideRole),
+      'hexColor': serializer.toJson<String?>(hexColor),
+      'permissions': serializer.toJson<int>(permissions),
+      'order': serializer.toJson<int>(order),
+      'icon': serializer.toJson<String?>(icon),
+    };
+  }
+
+  ServerRoleRow copyWith({
+    String? id,
+    String? serverId,
+    String? name,
+    bool? hideRole,
+    Value<String?> hexColor = const Value.absent(),
+    int? permissions,
+    int? order,
+    Value<String?> icon = const Value.absent(),
+  }) => ServerRoleRow(
+    id: id ?? this.id,
+    serverId: serverId ?? this.serverId,
+    name: name ?? this.name,
+    hideRole: hideRole ?? this.hideRole,
+    hexColor: hexColor.present ? hexColor.value : this.hexColor,
+    permissions: permissions ?? this.permissions,
+    order: order ?? this.order,
+    icon: icon.present ? icon.value : this.icon,
+  );
+  ServerRoleRow copyWithCompanion(ServerRolesCompanion data) {
+    return ServerRoleRow(
+      id: data.id.present ? data.id.value : this.id,
+      serverId: data.serverId.present ? data.serverId.value : this.serverId,
+      name: data.name.present ? data.name.value : this.name,
+      hideRole: data.hideRole.present ? data.hideRole.value : this.hideRole,
+      hexColor: data.hexColor.present ? data.hexColor.value : this.hexColor,
+      permissions: data.permissions.present
+          ? data.permissions.value
+          : this.permissions,
+      order: data.order.present ? data.order.value : this.order,
+      icon: data.icon.present ? data.icon.value : this.icon,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ServerRoleRow(')
+          ..write('id: $id, ')
+          ..write('serverId: $serverId, ')
+          ..write('name: $name, ')
+          ..write('hideRole: $hideRole, ')
+          ..write('hexColor: $hexColor, ')
+          ..write('permissions: $permissions, ')
+          ..write('order: $order, ')
+          ..write('icon: $icon')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    serverId,
+    name,
+    hideRole,
+    hexColor,
+    permissions,
+    order,
+    icon,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ServerRoleRow &&
+          other.id == this.id &&
+          other.serverId == this.serverId &&
+          other.name == this.name &&
+          other.hideRole == this.hideRole &&
+          other.hexColor == this.hexColor &&
+          other.permissions == this.permissions &&
+          other.order == this.order &&
+          other.icon == this.icon);
+}
+
+class ServerRolesCompanion extends UpdateCompanion<ServerRoleRow> {
+  final Value<String> id;
+  final Value<String> serverId;
+  final Value<String> name;
+  final Value<bool> hideRole;
+  final Value<String?> hexColor;
+  final Value<int> permissions;
+  final Value<int> order;
+  final Value<String?> icon;
+  final Value<int> rowid;
+  const ServerRolesCompanion({
+    this.id = const Value.absent(),
+    this.serverId = const Value.absent(),
+    this.name = const Value.absent(),
+    this.hideRole = const Value.absent(),
+    this.hexColor = const Value.absent(),
+    this.permissions = const Value.absent(),
+    this.order = const Value.absent(),
+    this.icon = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ServerRolesCompanion.insert({
+    required String id,
+    required String serverId,
+    required String name,
+    required bool hideRole,
+    this.hexColor = const Value.absent(),
+    required int permissions,
+    required int order,
+    this.icon = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       serverId = Value(serverId),
+       name = Value(name),
+       hideRole = Value(hideRole),
+       permissions = Value(permissions),
+       order = Value(order);
+  static Insertable<ServerRoleRow> custom({
+    Expression<String>? id,
+    Expression<String>? serverId,
+    Expression<String>? name,
+    Expression<bool>? hideRole,
+    Expression<String>? hexColor,
+    Expression<int>? permissions,
+    Expression<int>? order,
+    Expression<String>? icon,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (serverId != null) 'server_id': serverId,
+      if (name != null) 'name': name,
+      if (hideRole != null) 'hide_role': hideRole,
+      if (hexColor != null) 'hex_color': hexColor,
+      if (permissions != null) 'permissions': permissions,
+      if (order != null) 'order': order,
+      if (icon != null) 'icon': icon,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ServerRolesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? serverId,
+    Value<String>? name,
+    Value<bool>? hideRole,
+    Value<String?>? hexColor,
+    Value<int>? permissions,
+    Value<int>? order,
+    Value<String?>? icon,
+    Value<int>? rowid,
+  }) {
+    return ServerRolesCompanion(
+      id: id ?? this.id,
+      serverId: serverId ?? this.serverId,
+      name: name ?? this.name,
+      hideRole: hideRole ?? this.hideRole,
+      hexColor: hexColor ?? this.hexColor,
+      permissions: permissions ?? this.permissions,
+      order: order ?? this.order,
+      icon: icon ?? this.icon,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (serverId.present) {
+      map['server_id'] = Variable<String>(serverId.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (hideRole.present) {
+      map['hide_role'] = Variable<bool>(hideRole.value);
+    }
+    if (hexColor.present) {
+      map['hex_color'] = Variable<String>(hexColor.value);
+    }
+    if (permissions.present) {
+      map['permissions'] = Variable<int>(permissions.value);
+    }
+    if (order.present) {
+      map['order'] = Variable<int>(order.value);
+    }
+    if (icon.present) {
+      map['icon'] = Variable<String>(icon.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ServerRolesCompanion(')
+          ..write('id: $id, ')
+          ..write('serverId: $serverId, ')
+          ..write('name: $name, ')
+          ..write('hideRole: $hideRole, ')
+          ..write('hexColor: $hexColor, ')
+          ..write('permissions: $permissions, ')
+          ..write('order: $order, ')
+          ..write('icon: $icon, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $ServersTable extends Servers with TableInfo<$ServersTable, ServerRow> {
   @override
   final GeneratedDatabase attachedDatabase;
@@ -2803,6 +3732,8 @@ abstract class _$NeriDatabase extends GeneratedDatabase {
   late final $FavoriteGifsTable favoriteGifs = $FavoriteGifsTable(this);
   late final $InboxesTable inboxes = $InboxesTable(this);
   late final $RecentEmojisTable recentEmojis = $RecentEmojisTable(this);
+  late final $ServerMembersTable serverMembers = $ServerMembersTable(this);
+  late final $ServerRolesTable serverRoles = $ServerRolesTable(this);
   late final $ServersTable servers = $ServersTable(this);
   late final $UsersTable users = $UsersTable(this);
   @override
@@ -2816,6 +3747,8 @@ abstract class _$NeriDatabase extends GeneratedDatabase {
     favoriteGifs,
     inboxes,
     recentEmojis,
+    serverMembers,
+    serverRoles,
     servers,
     users,
   ];
@@ -3006,6 +3939,7 @@ typedef $$ChannelsTableCreateCompanionBuilder =
       Value<String?> icon,
       Value<String?> categoryId,
       Value<int?> lastMessagedAt,
+      Value<String?> permissions,
       Value<int> rowid,
     });
 typedef $$ChannelsTableUpdateCompanionBuilder =
@@ -3018,6 +3952,7 @@ typedef $$ChannelsTableUpdateCompanionBuilder =
       Value<String?> icon,
       Value<String?> categoryId,
       Value<int?> lastMessagedAt,
+      Value<String?> permissions,
       Value<int> rowid,
     });
 
@@ -3067,6 +4002,11 @@ class $$ChannelsTableFilterComposer
 
   ColumnFilters<int> get lastMessagedAt => $composableBuilder(
     column: $table.lastMessagedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get permissions => $composableBuilder(
+    column: $table.permissions,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -3119,6 +4059,11 @@ class $$ChannelsTableOrderingComposer
     column: $table.lastMessagedAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get permissions => $composableBuilder(
+    column: $table.permissions,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$ChannelsTableAnnotationComposer
@@ -3155,6 +4100,11 @@ class $$ChannelsTableAnnotationComposer
 
   GeneratedColumn<int> get lastMessagedAt => $composableBuilder(
     column: $table.lastMessagedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get permissions => $composableBuilder(
+    column: $table.permissions,
     builder: (column) => column,
   );
 }
@@ -3198,6 +4148,7 @@ class $$ChannelsTableTableManager
                 Value<String?> icon = const Value.absent(),
                 Value<String?> categoryId = const Value.absent(),
                 Value<int?> lastMessagedAt = const Value.absent(),
+                Value<String?> permissions = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ChannelsCompanion(
                 id: id,
@@ -3208,6 +4159,7 @@ class $$ChannelsTableTableManager
                 icon: icon,
                 categoryId: categoryId,
                 lastMessagedAt: lastMessagedAt,
+                permissions: permissions,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -3220,6 +4172,7 @@ class $$ChannelsTableTableManager
                 Value<String?> icon = const Value.absent(),
                 Value<String?> categoryId = const Value.absent(),
                 Value<int?> lastMessagedAt = const Value.absent(),
+                Value<String?> permissions = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ChannelsCompanion.insert(
                 id: id,
@@ -3230,6 +4183,7 @@ class $$ChannelsTableTableManager
                 icon: icon,
                 categoryId: categoryId,
                 lastMessagedAt: lastMessagedAt,
+                permissions: permissions,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -4020,6 +4974,487 @@ typedef $$RecentEmojisTableProcessedTableManager =
       RecentEmojiRow,
       PrefetchHooks Function()
     >;
+typedef $$ServerMembersTableCreateCompanionBuilder =
+    ServerMembersCompanion Function({
+      required String id,
+      required String serverId,
+      required String userId,
+      Value<String?> nickname,
+      required String roleIds,
+      Value<int> rowid,
+    });
+typedef $$ServerMembersTableUpdateCompanionBuilder =
+    ServerMembersCompanion Function({
+      Value<String> id,
+      Value<String> serverId,
+      Value<String> userId,
+      Value<String?> nickname,
+      Value<String> roleIds,
+      Value<int> rowid,
+    });
+
+class $$ServerMembersTableFilterComposer
+    extends Composer<_$NeriDatabase, $ServerMembersTable> {
+  $$ServerMembersTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get serverId => $composableBuilder(
+    column: $table.serverId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get userId => $composableBuilder(
+    column: $table.userId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get nickname => $composableBuilder(
+    column: $table.nickname,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get roleIds => $composableBuilder(
+    column: $table.roleIds,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$ServerMembersTableOrderingComposer
+    extends Composer<_$NeriDatabase, $ServerMembersTable> {
+  $$ServerMembersTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get serverId => $composableBuilder(
+    column: $table.serverId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get userId => $composableBuilder(
+    column: $table.userId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get nickname => $composableBuilder(
+    column: $table.nickname,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get roleIds => $composableBuilder(
+    column: $table.roleIds,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$ServerMembersTableAnnotationComposer
+    extends Composer<_$NeriDatabase, $ServerMembersTable> {
+  $$ServerMembersTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get serverId =>
+      $composableBuilder(column: $table.serverId, builder: (column) => column);
+
+  GeneratedColumn<String> get userId =>
+      $composableBuilder(column: $table.userId, builder: (column) => column);
+
+  GeneratedColumn<String> get nickname =>
+      $composableBuilder(column: $table.nickname, builder: (column) => column);
+
+  GeneratedColumn<String> get roleIds =>
+      $composableBuilder(column: $table.roleIds, builder: (column) => column);
+}
+
+class $$ServerMembersTableTableManager
+    extends
+        RootTableManager<
+          _$NeriDatabase,
+          $ServerMembersTable,
+          ServerMemberRow,
+          $$ServerMembersTableFilterComposer,
+          $$ServerMembersTableOrderingComposer,
+          $$ServerMembersTableAnnotationComposer,
+          $$ServerMembersTableCreateCompanionBuilder,
+          $$ServerMembersTableUpdateCompanionBuilder,
+          (
+            ServerMemberRow,
+            BaseReferences<
+              _$NeriDatabase,
+              $ServerMembersTable,
+              ServerMemberRow
+            >,
+          ),
+          ServerMemberRow,
+          PrefetchHooks Function()
+        > {
+  $$ServerMembersTableTableManager(_$NeriDatabase db, $ServerMembersTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ServerMembersTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ServerMembersTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ServerMembersTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> serverId = const Value.absent(),
+                Value<String> userId = const Value.absent(),
+                Value<String?> nickname = const Value.absent(),
+                Value<String> roleIds = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ServerMembersCompanion(
+                id: id,
+                serverId: serverId,
+                userId: userId,
+                nickname: nickname,
+                roleIds: roleIds,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String serverId,
+                required String userId,
+                Value<String?> nickname = const Value.absent(),
+                required String roleIds,
+                Value<int> rowid = const Value.absent(),
+              }) => ServerMembersCompanion.insert(
+                id: id,
+                serverId: serverId,
+                userId: userId,
+                nickname: nickname,
+                roleIds: roleIds,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$ServerMembersTable, ServerMemberRow>(table),
+                  BaseReferences<
+                    _$NeriDatabase,
+                    $ServerMembersTable,
+                    ServerMemberRow
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$ServerMembersTableProcessedTableManager =
+    ProcessedTableManager<
+      _$NeriDatabase,
+      $ServerMembersTable,
+      ServerMemberRow,
+      $$ServerMembersTableFilterComposer,
+      $$ServerMembersTableOrderingComposer,
+      $$ServerMembersTableAnnotationComposer,
+      $$ServerMembersTableCreateCompanionBuilder,
+      $$ServerMembersTableUpdateCompanionBuilder,
+      (
+        ServerMemberRow,
+        BaseReferences<_$NeriDatabase, $ServerMembersTable, ServerMemberRow>,
+      ),
+      ServerMemberRow,
+      PrefetchHooks Function()
+    >;
+typedef $$ServerRolesTableCreateCompanionBuilder =
+    ServerRolesCompanion Function({
+      required String id,
+      required String serverId,
+      required String name,
+      required bool hideRole,
+      Value<String?> hexColor,
+      required int permissions,
+      required int order,
+      Value<String?> icon,
+      Value<int> rowid,
+    });
+typedef $$ServerRolesTableUpdateCompanionBuilder =
+    ServerRolesCompanion Function({
+      Value<String> id,
+      Value<String> serverId,
+      Value<String> name,
+      Value<bool> hideRole,
+      Value<String?> hexColor,
+      Value<int> permissions,
+      Value<int> order,
+      Value<String?> icon,
+      Value<int> rowid,
+    });
+
+class $$ServerRolesTableFilterComposer
+    extends Composer<_$NeriDatabase, $ServerRolesTable> {
+  $$ServerRolesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get serverId => $composableBuilder(
+    column: $table.serverId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get hideRole => $composableBuilder(
+    column: $table.hideRole,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get hexColor => $composableBuilder(
+    column: $table.hexColor,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get permissions => $composableBuilder(
+    column: $table.permissions,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get order => $composableBuilder(
+    column: $table.order,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get icon => $composableBuilder(
+    column: $table.icon,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$ServerRolesTableOrderingComposer
+    extends Composer<_$NeriDatabase, $ServerRolesTable> {
+  $$ServerRolesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get serverId => $composableBuilder(
+    column: $table.serverId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get hideRole => $composableBuilder(
+    column: $table.hideRole,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get hexColor => $composableBuilder(
+    column: $table.hexColor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get permissions => $composableBuilder(
+    column: $table.permissions,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get order => $composableBuilder(
+    column: $table.order,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get icon => $composableBuilder(
+    column: $table.icon,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$ServerRolesTableAnnotationComposer
+    extends Composer<_$NeriDatabase, $ServerRolesTable> {
+  $$ServerRolesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get serverId =>
+      $composableBuilder(column: $table.serverId, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<bool> get hideRole =>
+      $composableBuilder(column: $table.hideRole, builder: (column) => column);
+
+  GeneratedColumn<String> get hexColor =>
+      $composableBuilder(column: $table.hexColor, builder: (column) => column);
+
+  GeneratedColumn<int> get permissions => $composableBuilder(
+    column: $table.permissions,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get order =>
+      $composableBuilder(column: $table.order, builder: (column) => column);
+
+  GeneratedColumn<String> get icon =>
+      $composableBuilder(column: $table.icon, builder: (column) => column);
+}
+
+class $$ServerRolesTableTableManager
+    extends
+        RootTableManager<
+          _$NeriDatabase,
+          $ServerRolesTable,
+          ServerRoleRow,
+          $$ServerRolesTableFilterComposer,
+          $$ServerRolesTableOrderingComposer,
+          $$ServerRolesTableAnnotationComposer,
+          $$ServerRolesTableCreateCompanionBuilder,
+          $$ServerRolesTableUpdateCompanionBuilder,
+          (
+            ServerRoleRow,
+            BaseReferences<_$NeriDatabase, $ServerRolesTable, ServerRoleRow>,
+          ),
+          ServerRoleRow,
+          PrefetchHooks Function()
+        > {
+  $$ServerRolesTableTableManager(_$NeriDatabase db, $ServerRolesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ServerRolesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ServerRolesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ServerRolesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> serverId = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<bool> hideRole = const Value.absent(),
+                Value<String?> hexColor = const Value.absent(),
+                Value<int> permissions = const Value.absent(),
+                Value<int> order = const Value.absent(),
+                Value<String?> icon = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ServerRolesCompanion(
+                id: id,
+                serverId: serverId,
+                name: name,
+                hideRole: hideRole,
+                hexColor: hexColor,
+                permissions: permissions,
+                order: order,
+                icon: icon,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String serverId,
+                required String name,
+                required bool hideRole,
+                Value<String?> hexColor = const Value.absent(),
+                required int permissions,
+                required int order,
+                Value<String?> icon = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ServerRolesCompanion.insert(
+                id: id,
+                serverId: serverId,
+                name: name,
+                hideRole: hideRole,
+                hexColor: hexColor,
+                permissions: permissions,
+                order: order,
+                icon: icon,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$ServerRolesTable, ServerRoleRow>(table),
+                  BaseReferences<
+                    _$NeriDatabase,
+                    $ServerRolesTable,
+                    ServerRoleRow
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$ServerRolesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$NeriDatabase,
+      $ServerRolesTable,
+      ServerRoleRow,
+      $$ServerRolesTableFilterComposer,
+      $$ServerRolesTableOrderingComposer,
+      $$ServerRolesTableAnnotationComposer,
+      $$ServerRolesTableCreateCompanionBuilder,
+      $$ServerRolesTableUpdateCompanionBuilder,
+      (
+        ServerRoleRow,
+        BaseReferences<_$NeriDatabase, $ServerRolesTable, ServerRoleRow>,
+      ),
+      ServerRoleRow,
+      PrefetchHooks Function()
+    >;
 typedef $$ServersTableCreateCompanionBuilder =
     ServersCompanion Function({
       required String id,
@@ -4469,6 +5904,10 @@ class $NeriDatabaseManager {
       $$InboxesTableTableManager(_db, _db.inboxes);
   $$RecentEmojisTableTableManager get recentEmojis =>
       $$RecentEmojisTableTableManager(_db, _db.recentEmojis);
+  $$ServerMembersTableTableManager get serverMembers =>
+      $$ServerMembersTableTableManager(_db, _db.serverMembers);
+  $$ServerRolesTableTableManager get serverRoles =>
+      $$ServerRolesTableTableManager(_db, _db.serverRoles);
   $$ServersTableTableManager get servers =>
       $$ServersTableTableManager(_db, _db.servers);
   $$UsersTableTableManager get users =>

@@ -10,6 +10,7 @@ class Channels extends Table {
   TextColumn get icon => text().nullable()();
   TextColumn get categoryId => text().nullable()();
   IntColumn get lastMessagedAt => integer().nullable()();
+  TextColumn get permissions => text().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};

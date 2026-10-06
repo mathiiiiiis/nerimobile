@@ -8,6 +8,8 @@ import 'package:nerimobile/db/tables/channels.dart';
 import 'package:nerimobile/db/tables/favorite_gifs.dart';
 import 'package:nerimobile/db/tables/inboxes.dart';
 import 'package:nerimobile/db/tables/recent_emojis.dart';
+import 'package:nerimobile/db/tables/server_members.dart';
+import 'package:nerimobile/db/tables/server_roles.dart';
 import 'package:nerimobile/db/tables/servers.dart';
 import 'package:nerimobile/db/tables/users.dart';
 
@@ -21,6 +23,8 @@ part 'database.g.dart';
     FavoriteGifs,
     Inboxes,
     RecentEmojis,
+    ServerMembers,
+    ServerRoles,
     Servers,
     Users,
   ],

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:drift/drift.dart';
 
 import 'package:nerimobile/db/database.dart';
@@ -33,6 +35,9 @@ ChannelsCompanion _row(Channel channel) => ChannelsCompanion.insert(
   icon: Value(channel.icon),
   categoryId: Value(channel.categoryId),
   lastMessagedAt: Value(channel.lastMessagedAt),
+  permissions: Value(
+    channel.permissions == null ? null : jsonEncode(channel.permissions),
+  ),
 );
 
 Channel _model(ChannelRow row) => Channel(
@@ -44,4 +49,9 @@ Channel _model(ChannelRow row) => Channel(
   icon: row.icon,
   categoryId: row.categoryId,
   lastMessagedAt: row.lastMessagedAt,
+  permissions: row.permissions == null
+      ? null
+      : (jsonEncode(row.permissions!) as List)
+            .map((e) => ChannelPermission.fromJson(e))
+            .toList(),
 );
