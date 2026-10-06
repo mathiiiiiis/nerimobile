@@ -4,22 +4,25 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:nerimobile/db/daos/channel_dao.dart';
 import 'package:nerimobile/db/daos/inbox_dao.dart';
+import 'package:nerimobile/db/daos/server_dao.dart';
 import 'package:nerimobile/db/daos/user_dao.dart';
 import 'package:nerimobile/db/database.dart';
 import 'package:nerimobile/stores/channel/channel_store.dart';
 import 'package:nerimobile/stores/connection/connection_store.dart';
 import 'package:nerimobile/stores/inbox/inbox_store.dart';
+import 'package:nerimobile/stores/server/server_store.dart';
 import 'package:nerimobile/stores/user/user_store.dart';
 
 const _writeDelay = Duration(seconds: 1);
 
-enum _Cached { channels, inboxes, users }
+enum _Cached { channels, inboxes, servers, users }
 
 //batch write from busy channels
 class CacheSync {
   CacheSync(this._ref) {
     _ref.listen(channelsProvider, (_, _) => _schedule(_Cached.channels));
     _ref.listen(inboxProvider, (_, _) => _schedule(_Cached.inboxes));
+    _ref.listen(serversProvider, (_, _) => _schedule(_Cached.servers));
     _ref.listen(usersProvider, (_, _) => _schedule(_Cached.users));
   }
 
@@ -50,6 +53,8 @@ class CacheSync {
           await ChannelDao(db).sync(_ref.read(channelsProvider).values);
         case _Cached.inboxes:
           await InboxDao(db).sync(_ref.read(inboxProvider).values);
+        case _Cached.servers:
+          await ServerDao(db).sync(_ref.read(serversProvider).values);
         case _Cached.users:
           await UserDao(db).sync(_ref.read(usersProvider).values);
       }
