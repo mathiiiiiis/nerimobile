@@ -358,41 +358,39 @@ class _EmojiPanelState extends ConsumerState<EmojiPanel> {
 
     return ComposerPanelFrame(
       expansion: widget.expansion,
-      child: Padding(
-        padding: EdgeInsets.only(top: gap),
-        child: Column(
-          spacing: gap,
-          children: [
-            const PanelDragHandle(),
-            Expanded(
-              child: IndexedStack(
-                index: tab.index,
-                sizing: StackFit.expand,
-                children: [
-                  _emojis(gap),
-                  if (_gifsOpened)
-                    GifPanel(
-                      channelId: widget.channelId,
-                      onSearching: (searching) => ref
-                          .read(emojiPaneProvider(widget.channelId).notifier)
-                          .search(searching),
-                      onPicked: () => ref
-                          .read(emojiPaneProvider(widget.channelId).notifier)
-                          .close(),
-                    )
-                  else
-                    const SizedBox.shrink(),
-                ],
-              ),
+
+      child: Column(
+        spacing: gap,
+        children: [
+          const PanelDragHandle(),
+          Expanded(
+            child: IndexedStack(
+              index: tab.index,
+              sizing: StackFit.expand,
+              children: [
+                _emojis(gap),
+                if (_gifsOpened)
+                  GifPanel(
+                    channelId: widget.channelId,
+                    onSearching: (searching) => ref
+                        .read(emojiPaneProvider(widget.channelId).notifier)
+                        .search(searching),
+                    onPicked: () => ref
+                        .read(emojiPaneProvider(widget.channelId).notifier)
+                        .close(),
+                  )
+                else
+                  const SizedBox.shrink(),
+              ],
             ),
-            _Tabs(
-              tab: tab,
-              onTap: (tab) => ref
-                  .read(pickerTabProvider(widget.channelId).notifier)
-                  .select(tab),
-            ),
-          ],
-        ),
+          ),
+          _Tabs(
+            tab: tab,
+            onTap: (tab) => ref
+                .read(pickerTabProvider(widget.channelId).notifier)
+                .select(tab),
+          ),
+        ],
       ),
     );
   }

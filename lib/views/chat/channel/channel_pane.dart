@@ -29,6 +29,9 @@ enum _Dock { attachments, emoji }
 
 enum _Snap { closed, collapsed, expanded }
 
+double _snap(double value, double ratio) =>
+    (value * ratio).roundToDouble() / ratio;
+
 double _expansion(double visible, double collapsed, double expanded) =>
     ((visible - collapsed) / (expanded - collapsed)).clamp(0.0, 1.0);
 
@@ -209,8 +212,9 @@ class _ChatState extends ConsumerState<_Chat> with WidgetsBindingObserver {
       curve: _panelCurve,
       builder: (context, shown, _) {
         //panel fills space above the keyboard
-        final visible = max(0.0, shown - keyboard);
-        final lift = min(visible, dockCollapsed);
+        final ratio = MediaQuery.devicePixelRatioOf(context);
+        final visible = _snap(max(0.0, shown - keyboard), ratio);
+        final lift = _snap(min(visible, dockCollapsed), ratio);
         final frame = max(visible, dockCollapsed);
 
         return Stack(
