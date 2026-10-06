@@ -120,14 +120,17 @@ class Attachment {
   bool get isImage => _isKind('image');
   bool get isVideo => _isKind('video');
   bool get isAudio => _isKind('audio');
+  bool get isAnimated =>
+      _mime == 'image/gif' || (path?.endsWith('#a') ?? false);
 
-  bool _isKind(String kind) {
+  bool _isKind(String kind) => _mime?.startsWith('$kind/') ?? false;
+
+  String? get _mime {
     final ownMime = mime;
     final ownPath = path;
-    final mimeType = (ownMime != null && ownMime.isNotEmpty)
+    return (ownMime != null && ownMime.isNotEmpty)
         ? ownMime
         : (ownPath != null ? lookupMimeType(ownPath) : null);
-    return mimeType?.startsWith('$kind/') ?? false;
   }
 
   factory Attachment.fromJson(Map<String, dynamic> json) => Attachment(

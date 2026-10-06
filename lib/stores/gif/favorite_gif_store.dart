@@ -30,7 +30,7 @@ class FavoriteGifNotifier extends AsyncNotifier<List<FavoriteGif>> {
   }
 
   Future<void> toggle(FavoriteGif gif) async {
-    final saved = state.value?.any((saved) => saved.url == gif.url) ?? false;
+    final saved = (await future).any((saved) => saved.url == gif.url);
     await (saved ? remove(gif.url) : add(gif));
   }
 }

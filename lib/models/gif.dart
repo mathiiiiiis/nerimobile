@@ -1,3 +1,5 @@
+import 'package:nerimobile/config.dart';
+
 class GifCategory {
   final String searchTerm;
   final String image;
@@ -11,6 +13,17 @@ class GifCategory {
 }
 
 enum GifSource { klipy, cdn, other }
+
+const _pickerHosts = ['klipy.com', 'tenor.com'];
+
+GifSource gifSource(String url) {
+  if (url.startsWith(cdnUrl)) return GifSource.cdn;
+
+  final host = Uri.tryParse(url)?.host ?? '';
+  return _pickerHosts.any((picker) => host.endsWith(picker))
+      ? GifSource.klipy
+      : GifSource.other;
+}
 
 double gifRatio(int? width, int? height) =>
     (width ?? 0) > 0 && (height ?? 0) > 0 ? width! / height! : 1;
@@ -57,6 +70,16 @@ class FavoriteGif {
     this.previewWidth,
     this.previewHeight,
   });
+
+  factory FavoriteGif.link(String url, {int? width, int? height}) =>
+      FavoriteGif(
+        url: url,
+        previewUrl: url,
+        previewWidth: width,
+        previewHeight: height,
+        source: gifSource(url),
+        savedAt: DateTime.now().millisecondsSinceEpoch,
+      );
 
   factory FavoriteGif.of(Gif gif, GifSource source) => FavoriteGif(
     url: gif.gifUrl,

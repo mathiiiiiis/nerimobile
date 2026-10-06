@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:nerimobile/config.dart';
+import 'package:nerimobile/models/gif.dart';
 
 import 'package:nerimobile/models/message.dart';
 import 'package:nerimobile/stores/composer/composer_store.dart';
+import 'package:nerimobile/stores/gif/favorite_gif_store.dart';
 import 'package:nerimobile/stores/message/message_store.dart';
 import 'package:nerimobile/utils/url.dart';
 import 'package:nerimobile/views/chat/message/message_access.dart';
@@ -18,8 +21,25 @@ Future<void> showMessageContextMenu(
   String? mediaUrl,
 }) async {
   final access = MessageAccess.read(ref, message);
+  final favorite = _favorite(message);
+  final saved =
+      favorite != null &&
+      (await ref.read(
+        favoriteGifsProvider.future,
+      )).any((gif) => gif.url == favorite.url);
+
+  if (!context.mounted) return;
 
   final actions = [
+    if (favorite != null)
+      SheetAction(
+        icon: Symbols.star_rounded,
+        filled: saved,
+        label: saved
+            ? 'Remove from favorites'
+            : 'Add to favorites', //TODO: add l10n
+        onTap: () => ref.read(favoriteGifsProvider.notifier).toggle(favorite),
+      ),
     if (mediaUrl != null) ...[
       SheetAction(
         icon: Symbols.open_in_new_rounded,
@@ -88,6 +108,33 @@ Future<void> showMessageContextMenu(
   if (actions.isEmpty) return;
 
   await showActionSheet(context, actions: actions);
+}
+
+FavoriteGif? _favorite(Message message) {
+  final attachment = message.attachments.firstOrNull;
+  if (attachment != null) {
+    final path = attachment.path;
+    if (path == null || !attachment.isAnimated || attachment.expireAt != null) {
+      return null;
+    }
+
+    return FavoriteGif.link(
+      '$cdnUrl$path',
+      width: attachment.width,
+      height: attachment.height,
+    );
+  }
+
+  final embed = message.embed;
+  final source = embed?.imageSource;
+  if (embed == null || source == null) return null;
+  if (embed.animated != true && embed.imageMime != 'image/gif') return null;
+
+  return FavoriteGif.link(
+    source,
+    width: embed.imageWidth,
+    height: embed.imageHeight,
+  );
 }
 
 Future<void> _delete(
