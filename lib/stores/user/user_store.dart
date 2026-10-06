@@ -5,6 +5,10 @@ final currentUserProvider = NotifierProvider<CurrentUserNotifier, User?>(
   CurrentUserNotifier.new,
 );
 
+final currentUserIdProvider = NotifierProvider<CurrentUserIdNotifier, String?>(
+  CurrentUserIdNotifier.new,
+);
+
 final usersProvider = NotifierProvider<UsersNotifier, Map<String, User>>(
   UsersNotifier.new,
 );
@@ -14,6 +18,13 @@ class CurrentUserNotifier extends Notifier<User?> {
   User? build() => null;
 
   void setCurrentUser(User? user) => state = user;
+}
+
+class CurrentUserIdNotifier extends Notifier<String?> {
+  @override
+  String? build() => ref.watch(currentUserProvider)?.id;
+
+  void hydrate(String id) => state ??= id;
 }
 
 class UsersNotifier extends Notifier<Map<String, User>> {

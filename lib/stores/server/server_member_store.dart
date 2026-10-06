@@ -28,6 +28,7 @@ class ServerMembersNotifier
         serverId: raw.serverId,
         roleIds: raw.roleIds,
         nickname: raw.nickname,
+        muteExpireAt: raw.muteExpireAt,
       );
     }
     state = next;

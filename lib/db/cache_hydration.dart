@@ -49,6 +49,10 @@ final cacheHydrationProvider = FutureProvider<void>((ref) async {
       members.addServerMember(member.serverId, member);
     }
   }
+  //resolve perms before auth, memberships only old own rows
+  if (memberships.isNotEmpty) {
+    ref.read(currentUserIdProvider.notifier).hydrate(memberships.first.userId);
+  }
   if (ref.read(inboxProvider).isEmpty) {
     ref.read(inboxProvider.notifier).setInbox(inboxes);
   }
