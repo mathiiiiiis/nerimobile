@@ -30,7 +30,7 @@ import 'package:nerimobile/views/skeleton/skeleton.dart';
 
 const _columns = 2;
 const _tileRatio = 16 / 9;
-const _skeletonTiles = 9;
+const _skeletonTiles = 10;
 const _scrimOpacity = 0.65;
 const _scrimStop = 0.55;
 const _searchHeight = 34.0;
