@@ -47,6 +47,22 @@ void handleSocketEvent(Ref ref, String event, dynamic payload) {
       onInboxClosed(ref, payload);
     case 'channel:typing':
       onChannelTyping(ref, payload);
+    case 'server:joined':
+      onServerJoined(ref, payload);
+    case 'server:left':
+      onServerLeft(ref, payload);
+    case 'server:updated':
+      onServerUpdated(ref, payload);
+    case 'server:channel_created':
+      onServerChannelCreated(ref, payload);
+    case 'server:channel_updated':
+      onServerChannelUpdated(ref, payload);
+    case 'server:channel_deleted':
+      onServerChannelDeleted(ref, payload);
+    case 'server:channel_order_updated':
+      onServerChannelOrderUpdated(ref, payload);
+    case 'server:channel_permissions_updated':
+      onServerChannelPermissionUpdated(ref, payload);
     case 'server:emoji_add':
       onServerEmojiAdd(ref, payload);
     case 'server:emoji_remove':
@@ -90,11 +106,7 @@ class AuthenticatedPayload {
     servers: (json['servers'] as List).map((s) => Server.fromJson(s)).toList(),
     customEmojis: [
       for (final server in (json['servers'] as List).cast<Map>())
-        for (final emoji in (server['customEmojis'] as List? ?? const []))
-          CustomEmoji.fromJson(
-            Map<String, dynamic>.from(emoji as Map),
-            server['id'],
-          ),
+        ..._serverEmojis(server),
     ],
     channels: (json['channels'] as List)
         .map((s) => Channel.fromJson(s))
@@ -119,6 +131,11 @@ class AuthenticatedPayload {
   );
 }
 
+List<CustomEmoji> _serverEmojis(Map server) => [
+  for (final emoji in (server['customEmojis'] as List? ?? const []))
+    CustomEmoji.fromJson(Map<String, dynamic>.from(emoji as Map), server['id']),
+];
+
 AuthenticatedPayload _parseAuthenticatedPayload(Map<String, dynamic> json) {
   return AuthenticatedPayload.fromJson(json);
 }
@@ -128,14 +145,14 @@ Future<void> onUserAuthenticated(Ref ref, dynamic payload) async {
     _parseAuthenticatedPayload,
     payload as Map<String, dynamic>,
   );
-  ref.read(serversProvider.notifier).addServers(data.servers);
+  ref.read(serversProvider.notifier).setServers(data.servers);
   ref.read(customEmojisProvider.notifier).setEmojis(data.customEmojis);
-  ref.read(channelsProvider.notifier).addChannels(data.channels);
+  ref.read(channelsProvider.notifier).setChannels(data.channels);
   ref
       .read(lastSeenServerChannelIdsProvider.notifier)
       .setLastSeenServerChannelIds(data.lastSeenServerChannelIds);
-  ref.read(serverMembersProvider.notifier).addServerMembers(data.serverMembers);
-  ref.read(serverRolesProvider.notifier).addServerRoles(data.serverRoles);
+  ref.read(serverMembersProvider.notifier).setServerMembers(data.serverMembers);
+  ref.read(serverRolesProvider.notifier).setServerRoles(data.serverRoles);
   ref.read(presencesProvider.notifier).addPresences(data.presences);
   ref.read(currentUserProvider.notifier).setCurrentUser(data.user);
   ref.read(messageMentionsProvider.notifier).setMentions(data.messageMentions);
@@ -149,6 +166,72 @@ Future<void> onUserAuthenticated(Ref ref, dynamic payload) async {
     ref.read(usersProvider.notifier).addUser(friend.recipient);
   }
 }
+
+void onServerJoined(Ref ref, dynamic payload) {
+  final server = payload['server'] as Map<String, dynamic>;
+  final serverId = server['id'] as String;
+
+  ref
+      .read(customEmojisProvider.notifier)
+      .addServerEmojis(serverId, _serverEmojis(server));
+  ref.read(serverRolesProvider.notifier).addServerRoles([
+    for (final role in payload['roles'] as List) ServerRole.fromJson(role),
+  ]);
+  ref.read(channelsProvider.notifier).addChannels([
+    for (final channel in payload['channels'] as List)
+      Channel.fromJson(channel),
+  ]);
+  ref.read(serverMembersProvider.notifier).addServerMembers([
+    for (final member in payload['members'] as List)
+      RawServerMember.fromJson(member),
+  ]);
+  ref.read(presencesProvider.notifier).addPresences([
+    for (final presence in payload['memberPresences'] as List? ?? const [])
+      UserPresence.fromJson(presence),
+  ]);
+  //last so server with missing channels are never shown
+  ref.read(serversProvider.notifier).addServer(Server.fromJson(server));
+}
+
+void onServerLeft(Ref ref, dynamic payload) {
+  final serverId = payload['serverId'] as String;
+
+  ref.read(serversProvider.notifier).removeServer(serverId);
+  ref.read(channelsProvider.notifier).removeServerChannels(serverId);
+  ref.read(serverRolesProvider.notifier).removeServer(serverId);
+  ref.read(serverMembersProvider.notifier).removeServer(serverId);
+  ref.read(customEmojisProvider.notifier).removeServer(serverId);
+}
+
+void onServerUpdated(Ref ref, dynamic payload) => ref
+    .read(serversProvider.notifier)
+    .updateServer(payload['serverId'], payload['updated']);
+
+void onServerChannelCreated(Ref ref, dynamic payload) => ref
+    .read(channelsProvider.notifier)
+    .addChannel(Channel.fromJson(payload['channelId']));
+
+void onServerChannelUpdated(Ref ref, dynamic payload) => ref
+    .read(channelsProvider.notifier)
+    .updateChannel(payload['channelId'], payload['updated']);
+
+void onServerChannelDeleted(Ref ref, dynamic payload) => ref
+    .read(channelsProvider.notifier)
+    .removeServerChannel(payload['channelId']);
+
+void onServerChannelOrderUpdated(Ref ref, dynamic payload) => ref
+    .read(channelsProvider.notifier)
+    .updateServerChannelOrder(
+      List<String>.from(payload['orderedChannelIds']),
+      payload['categoryId'],
+    );
+
+void onServerChannelPermissionUpdated(Ref ref, dynamic payload) => ref
+    .read(channelsProvider.notifier)
+    .setChannelPermission(
+      payload['channelId'],
+      ChannelPermission.fromJson(payload),
+    );
 
 void onServerEmojiAdd(Ref ref, dynamic payload) {
   final serverId = payload['serverId'] as String;

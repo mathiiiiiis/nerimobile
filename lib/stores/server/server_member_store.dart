@@ -14,9 +14,18 @@ class ServerMembersNotifier
   @override
   Map<String, Map<String, ServerMember>> build() => const {};
 
-  void addServerMembers(List<RawServerMember> list) {
+  void setServerMembers(List<RawServerMember> list) =>
+      state = _merged(const {}, list);
+
+  void addServerMembers(List<RawServerMember> list) =>
+      state = _merged(state, list);
+
+  Map<String, Map<String, ServerMember>> _merged(
+    Map<String, Map<String, ServerMember>> base,
+    List<RawServerMember> list,
+  ) {
     final next = {
-      for (final entry in state.entries) entry.key: {...entry.value},
+      for (final entry in base.entries) entry.key: {...entry.value},
     };
     final users = ref.read(usersProvider.notifier);
 
@@ -31,11 +40,13 @@ class ServerMembersNotifier
         muteExpireAt: raw.muteExpireAt,
       );
     }
-    state = next;
+    return next;
   }
 
   void addServerMember(String serverId, ServerMember member) => state = {
     ...state,
     serverId: {...?state[serverId], member.userId: member},
   };
+
+  void removeServer(String serverId) => state = {...state}..remove(serverId);
 }

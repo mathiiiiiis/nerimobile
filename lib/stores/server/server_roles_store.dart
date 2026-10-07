@@ -11,18 +11,27 @@ class ServerRolesNotifier
   @override
   Map<String, Map<String, ServerRole>> build() => const {};
 
-  void addServerRoles(List<ServerRole> list) {
+  void setServerRoles(List<ServerRole> list) => state = _merged(const {}, list);
+
+  void addServerRoles(List<ServerRole> list) => state = _merged(state, list);
+
+  Map<String, Map<String, ServerRole>> _merged(
+    Map<String, Map<String, ServerRole>> base,
+    List<ServerRole> list,
+  ) {
     final next = {
-      for (final entry in state.entries) entry.key: {...entry.value},
+      for (final entry in base.entries) entry.key: {...entry.value},
     };
     for (final role in list) {
       (next[role.serverId] ??= {})[role.id] = role;
     }
-    state = next;
+    return next;
   }
 
   void addServerRole(String serverId, ServerRole role) => state = {
     ...state,
     serverId: {...?state[serverId], role.id: role},
   };
+
+  void removeServer(String serverId) => state = {...state}..remove(serverId);
 }

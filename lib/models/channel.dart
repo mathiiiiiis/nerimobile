@@ -48,16 +48,23 @@ class Channel {
     lastMessagedAt: json['lastMessagedAt'] as int?,
   );
 
-  Channel copyWith({int? lastMessagedAt}) {
+  Channel copyWith({
+    int? lastMessagedAt,
+    String? name,
+    int? order,
+    String? Function()? icon,
+    String? Function()? categoryId,
+    List<ChannelPermission>? permissions,
+  }) {
     return Channel(
       id: id,
       type: type,
-      name: name,
+      name: name ?? this.name,
       serverId: serverId,
-      order: order,
-      icon: icon,
-      categoryId: categoryId,
-      permissions: permissions,
+      order: order ?? this.order,
+      icon: icon != null ? icon() : this.icon,
+      categoryId: categoryId != null ? categoryId() : this.categoryId,
+      permissions: permissions ?? this.permissions,
       lastMessagedAt: lastMessagedAt ?? this.lastMessagedAt,
     );
   }
@@ -70,7 +77,7 @@ class ChannelPermission {
 
   factory ChannelPermission.fromJson(Map<String, dynamic> json) =>
       ChannelPermission(
-        permissions: json['permissions'],
+        permissions: json['permissions'] ?? 0,
         roleId: json['roleId'],
       );
 

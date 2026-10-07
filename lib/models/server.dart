@@ -26,6 +26,17 @@ class Server {
     defaultRoleId: json['defaultRoleId'],
     createdById: json['createdById'],
   );
+
+  //avatar can be cleared to null
+  Server merge(Map<String, dynamic> updated) => Server(
+    id: id,
+    name: updated['name'] ?? name,
+    hexColor: hexColor,
+    avatar: updated.containsKey('avatar') ? updated['avatar'] : avatar,
+    defaultChannelId: updated['defaultChannelId'] ?? defaultChannelId,
+    defaultRoleId: defaultRoleId,
+    createdById: updated['createdById'] ?? createdById,
+  );
 }
 
 class ServerClan {

@@ -55,6 +55,11 @@ class CustomEmojiNotifier extends Notifier<Map<String, List<CustomEmoji>>> {
     state = byServer;
   }
 
+  void addServerEmojis(String serverId, List<CustomEmoji> emojis) =>
+      state = {...state, serverId: emojis};
+
+  void removeServer(String serverId) => state = {...state}..remove(serverId);
+
   void add(CustomEmoji emoji) => state = {
     ...state,
     emoji.serverId: [...?state[emoji.serverId], emoji],

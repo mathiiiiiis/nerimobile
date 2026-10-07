@@ -28,12 +28,21 @@ class ServersNotifier extends Notifier<Map<String, Server>> {
   @override
   Map<String, Server> build() => const {};
 
+  void setServers(List<Server> list) =>
+      state = {for (final server in list) server.id: server};
+
   void addServers(List<Server> list) =>
       state = {...state, for (final server in list) server.id: server};
 
   void addServer(Server server) => state = {...state, server.id: server};
 
   void removeServer(String id) => state = {...state}..remove(id);
+
+  void updateServer(String id, Map<String, dynamic> updated) {
+    final server = state[id];
+    if (server == null) return;
+    state = {...state, id: server.merge(updated)};
+  }
 }
 
 final currentServerProvider = Provider<Server?>((ref) {
