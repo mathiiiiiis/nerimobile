@@ -209,7 +209,7 @@ void onServerUpdated(Ref ref, dynamic payload) => ref
 
 void onServerChannelCreated(Ref ref, dynamic payload) => ref
     .read(channelsProvider.notifier)
-    .addChannel(Channel.fromJson(payload['channelId']));
+    .addChannel(Channel.fromJson(payload['channel']));
 
 void onServerChannelUpdated(Ref ref, dynamic payload) => ref
     .read(channelsProvider.notifier)
