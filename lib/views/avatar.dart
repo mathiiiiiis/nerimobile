@@ -21,11 +21,13 @@ class Avatar extends StatelessWidget {
   final User? user;
   final double size;
   final bool? animate;
+  final BorderRadius? borderRadius;
   const Avatar({
     super.key,
     this.server,
     this.user,
     this.animate,
+    this.borderRadius,
     required this.size,
   });
 
@@ -43,13 +45,19 @@ class Avatar extends StatelessWidget {
           )
         : null;
 
-    final fallback = _Initial(name: name, hexColor: hexColor, size: size);
+    final radius =
+        borderRadius ??
+        BorderRadius.circular(context.neriSize.radius(NeriRadiusRole.full));
+    final fallback = _Initial(
+      name: name,
+      hexColor: hexColor,
+      size: size,
+      borderRadius: radius,
+    );
     if (avatarUrl == null) return fallback;
 
     return ClipRRect(
-      borderRadius: BorderRadius.circular(
-        context.neriSize.radius(NeriRadiusRole.full),
-      ),
+      borderRadius: radius,
       child: CachedNetworkImage(
         imageUrl: avatarUrl,
         cacheManager: avatarCache,
@@ -70,11 +78,13 @@ class _Initial extends StatelessWidget {
     required this.name,
     required this.hexColor,
     required this.size,
+    required this.borderRadius,
   });
 
   final String name;
   final String hexColor;
   final double size;
+  final BorderRadius borderRadius;
 
   @override
   Widget build(BuildContext context) {
@@ -85,9 +95,7 @@ class _Initial extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(
         color: hexToColor(hexColor),
-        borderRadius: BorderRadius.circular(
-          context.neriSize.radius(NeriRadiusRole.full),
-        ),
+        borderRadius: borderRadius,
       ),
       alignment: Alignment.center,
       clipBehavior: Clip.antiAlias,
