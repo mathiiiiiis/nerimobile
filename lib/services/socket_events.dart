@@ -74,6 +74,7 @@ void handleSocketEvent(Ref ref, String event, dynamic payload) {
 
 class AuthenticatedPayload {
   final User user;
+  final List<String> orderedServerIds;
   final List<Server> servers;
   final List<CustomEmoji> customEmojis;
   final List<Channel> channels;
@@ -87,6 +88,7 @@ class AuthenticatedPayload {
 
   AuthenticatedPayload({
     required this.user,
+    required this.orderedServerIds,
     required this.servers,
     required this.customEmojis,
     required this.channels,
@@ -103,6 +105,9 @@ class AuthenticatedPayload {
     Map<String, dynamic> json,
   ) => AuthenticatedPayload(
     user: User.fromJson(json['user']),
+    orderedServerIds: List<String>.from(
+      json['user']['orderedServerIds'] ?? const [],
+    ),
     servers: (json['servers'] as List).map((s) => Server.fromJson(s)).toList(),
     customEmojis: [
       for (final server in (json['servers'] as List).cast<Map>())
@@ -146,6 +151,7 @@ Future<void> onUserAuthenticated(Ref ref, dynamic payload) async {
     payload as Map<String, dynamic>,
   );
   ref.read(serversProvider.notifier).setServers(data.servers);
+  ref.read(orderedServerIdsProvider.notifier).setIds(data.orderedServerIds);
   ref.read(customEmojisProvider.notifier).setEmojis(data.customEmojis);
   ref.read(channelsProvider.notifier).setChannels(data.channels);
   ref
@@ -191,17 +197,23 @@ void onServerJoined(Ref ref, dynamic payload) {
   ]);
   //last so server with missing channels are never shown
   ref.read(serversProvider.notifier).addServer(Server.fromJson(server));
+  ref.read(orderedServerIdsProvider.notifier).prepend(serverId);
 }
 
 void onServerLeft(Ref ref, dynamic payload) {
   final serverId = payload['serverId'] as String;
 
   ref.read(serversProvider.notifier).removeServer(serverId);
+  ref.read(orderedServerIdsProvider.notifier).remove(serverId);
   ref.read(channelsProvider.notifier).removeServerChannels(serverId);
   ref.read(serverRolesProvider.notifier).removeServer(serverId);
   ref.read(serverMembersProvider.notifier).removeServer(serverId);
   ref.read(customEmojisProvider.notifier).removeServer(serverId);
 }
+
+void onServerOrderUpdated(Ref ref, dynamic payload) => ref
+    .read(orderedServerIdsProvider.notifier)
+    .setIds(List<String>.from(payload['serverIds']));
 
 void onServerUpdated(Ref ref, dynamic payload) => ref
     .read(serversProvider.notifier)

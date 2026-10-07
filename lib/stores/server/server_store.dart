@@ -13,6 +13,11 @@ final currentServerIdProvider =
       CurrentServerIdNotifier.new,
     );
 
+final orderedServerIdsProvider =
+    NotifierProvider<OrderedServerIdsNotifier, List<String>>(
+      OrderedServerIdsNotifier.new,
+    );
+
 final serversProvider = NotifierProvider<ServersNotifier, Map<String, Server>>(
   ServersNotifier.new,
 );
@@ -22,6 +27,17 @@ class CurrentServerIdNotifier extends Notifier<String?> {
   String? build() => null;
 
   void setCurrentServerId(String? id) => state = id;
+}
+
+class OrderedServerIdsNotifier extends Notifier<List<String>> {
+  @override
+  List<String> build() => const [];
+
+  void setIds(List<String> ids) => state = [...ids];
+
+  void prepend(String id) => state = [id, ...state.where((e) => e != id)];
+
+  void remove(String id) => state = [...state.where((e) => e != id)];
 }
 
 class ServersNotifier extends Notifier<Map<String, Server>> {
@@ -44,6 +60,18 @@ class ServersNotifier extends Notifier<Map<String, Server>> {
     state = {...state, id: server.merge(updated)};
   }
 }
+
+final sortedServersProvider = Provider<List<Server>>((ref) {
+  final servers = ref.watch(serversProvider);
+  final ordered = ref.watch(orderedServerIdsProvider);
+  final listed = ordered.toSet();
+
+  return [
+    for (final server in servers.values)
+      if (!listed.contains(server.id)) server,
+    for (final id in ordered) ?servers[id],
+  ];
+});
 
 final currentServerProvider = Provider<Server?>((ref) {
   final id = ref.watch(currentServerIdProvider);

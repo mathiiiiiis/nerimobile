@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:nerimobile/db/daos/channel_dao.dart';
 import 'package:nerimobile/db/daos/inbox_dao.dart';
+import 'package:nerimobile/db/daos/ordered_server_id_dao.dart';
 import 'package:nerimobile/db/daos/server_dao.dart';
 import 'package:nerimobile/db/daos/server_member_dao.dart';
 import 'package:nerimobile/db/daos/server_role_dao.dart';
@@ -24,6 +25,7 @@ final cacheHydrationProvider = FutureProvider<void>((ref) async {
   final users = await UserDao(db).all();
   final channels = await ChannelDao(db).all();
   final servers = await ServerDao(db).all();
+  final orderedServerIds = await OrderedServerIdDao(db).all();
   final roles = await ServerRoleDao(db).all();
   final memberships = await ServerMemberDao(db).all();
   final inboxes = await InboxDao(
@@ -39,6 +41,9 @@ final cacheHydrationProvider = FutureProvider<void>((ref) async {
   }
   if (ref.read(serversProvider).isEmpty) {
     ref.read(serversProvider.notifier).addServers(servers);
+  }
+  if (ref.read(orderedServerIdsProvider).isEmpty) {
+    ref.read(orderedServerIdsProvider.notifier).setIds(orderedServerIds);
   }
   if (ref.read(serverRolesProvider).isEmpty) {
     ref.read(serverRolesProvider.notifier).addServerRoles(roles);

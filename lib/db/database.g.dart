@@ -1803,6 +1803,217 @@ class InboxesCompanion extends UpdateCompanion<InboxRow> {
   }
 }
 
+class $OrderedServerIdsTable extends OrderedServerIds
+    with TableInfo<$OrderedServerIdsTable, OrderedServerIdRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $OrderedServerIdsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _positionMeta = const VerificationMeta(
+    'position',
+  );
+  @override
+  late final GeneratedColumn<int> position = GeneratedColumn<int>(
+    'position',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, position];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'ordered_server_ids';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<OrderedServerIdRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('position')) {
+      context.handle(
+        _positionMeta,
+        position.isAcceptableOrUnknown(data['position']!, _positionMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_positionMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  OrderedServerIdRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return OrderedServerIdRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      position: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}position'],
+      )!,
+    );
+  }
+
+  @override
+  $OrderedServerIdsTable createAlias(String alias) {
+    return $OrderedServerIdsTable(attachedDatabase, alias);
+  }
+}
+
+class OrderedServerIdRow extends DataClass
+    implements Insertable<OrderedServerIdRow> {
+  final String id;
+  final int position;
+  const OrderedServerIdRow({required this.id, required this.position});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['position'] = Variable<int>(position);
+    return map;
+  }
+
+  OrderedServerIdsCompanion toCompanion(bool nullToAbsent) {
+    return OrderedServerIdsCompanion(id: Value(id), position: Value(position));
+  }
+
+  factory OrderedServerIdRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return OrderedServerIdRow(
+      id: serializer.fromJson<String>(json['id']),
+      position: serializer.fromJson<int>(json['position']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'position': serializer.toJson<int>(position),
+    };
+  }
+
+  OrderedServerIdRow copyWith({String? id, int? position}) =>
+      OrderedServerIdRow(
+        id: id ?? this.id,
+        position: position ?? this.position,
+      );
+  OrderedServerIdRow copyWithCompanion(OrderedServerIdsCompanion data) {
+    return OrderedServerIdRow(
+      id: data.id.present ? data.id.value : this.id,
+      position: data.position.present ? data.position.value : this.position,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('OrderedServerIdRow(')
+          ..write('id: $id, ')
+          ..write('position: $position')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, position);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is OrderedServerIdRow &&
+          other.id == this.id &&
+          other.position == this.position);
+}
+
+class OrderedServerIdsCompanion extends UpdateCompanion<OrderedServerIdRow> {
+  final Value<String> id;
+  final Value<int> position;
+  final Value<int> rowid;
+  const OrderedServerIdsCompanion({
+    this.id = const Value.absent(),
+    this.position = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  OrderedServerIdsCompanion.insert({
+    required String id,
+    required int position,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       position = Value(position);
+  static Insertable<OrderedServerIdRow> custom({
+    Expression<String>? id,
+    Expression<int>? position,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (position != null) 'position': position,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  OrderedServerIdsCompanion copyWith({
+    Value<String>? id,
+    Value<int>? position,
+    Value<int>? rowid,
+  }) {
+    return OrderedServerIdsCompanion(
+      id: id ?? this.id,
+      position: position ?? this.position,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (position.present) {
+      map['position'] = Variable<int>(position.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('OrderedServerIdsCompanion(')
+          ..write('id: $id, ')
+          ..write('position: $position, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $RecentEmojisTable extends RecentEmojis
     with TableInfo<$RecentEmojisTable, RecentEmojiRow> {
   @override
@@ -3731,6 +3942,9 @@ abstract class _$NeriDatabase extends GeneratedDatabase {
       $DismissedAnnouncementsTable(this);
   late final $FavoriteGifsTable favoriteGifs = $FavoriteGifsTable(this);
   late final $InboxesTable inboxes = $InboxesTable(this);
+  late final $OrderedServerIdsTable orderedServerIds = $OrderedServerIdsTable(
+    this,
+  );
   late final $RecentEmojisTable recentEmojis = $RecentEmojisTable(this);
   late final $ServerMembersTable serverMembers = $ServerMembersTable(this);
   late final $ServerRolesTable serverRoles = $ServerRolesTable(this);
@@ -3746,6 +3960,7 @@ abstract class _$NeriDatabase extends GeneratedDatabase {
     dismissedAnnouncements,
     favoriteGifs,
     inboxes,
+    orderedServerIds,
     recentEmojis,
     serverMembers,
     serverRoles,
@@ -4801,6 +5016,170 @@ typedef $$InboxesTableProcessedTableManager =
       $$InboxesTableUpdateCompanionBuilder,
       (InboxRow, BaseReferences<_$NeriDatabase, $InboxesTable, InboxRow>),
       InboxRow,
+      PrefetchHooks Function()
+    >;
+typedef $$OrderedServerIdsTableCreateCompanionBuilder =
+    OrderedServerIdsCompanion Function({
+      required String id,
+      required int position,
+      Value<int> rowid,
+    });
+typedef $$OrderedServerIdsTableUpdateCompanionBuilder =
+    OrderedServerIdsCompanion Function({
+      Value<String> id,
+      Value<int> position,
+      Value<int> rowid,
+    });
+
+class $$OrderedServerIdsTableFilterComposer
+    extends Composer<_$NeriDatabase, $OrderedServerIdsTable> {
+  $$OrderedServerIdsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get position => $composableBuilder(
+    column: $table.position,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$OrderedServerIdsTableOrderingComposer
+    extends Composer<_$NeriDatabase, $OrderedServerIdsTable> {
+  $$OrderedServerIdsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get position => $composableBuilder(
+    column: $table.position,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$OrderedServerIdsTableAnnotationComposer
+    extends Composer<_$NeriDatabase, $OrderedServerIdsTable> {
+  $$OrderedServerIdsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get position =>
+      $composableBuilder(column: $table.position, builder: (column) => column);
+}
+
+class $$OrderedServerIdsTableTableManager
+    extends
+        RootTableManager<
+          _$NeriDatabase,
+          $OrderedServerIdsTable,
+          OrderedServerIdRow,
+          $$OrderedServerIdsTableFilterComposer,
+          $$OrderedServerIdsTableOrderingComposer,
+          $$OrderedServerIdsTableAnnotationComposer,
+          $$OrderedServerIdsTableCreateCompanionBuilder,
+          $$OrderedServerIdsTableUpdateCompanionBuilder,
+          (
+            OrderedServerIdRow,
+            BaseReferences<
+              _$NeriDatabase,
+              $OrderedServerIdsTable,
+              OrderedServerIdRow
+            >,
+          ),
+          OrderedServerIdRow,
+          PrefetchHooks Function()
+        > {
+  $$OrderedServerIdsTableTableManager(
+    _$NeriDatabase db,
+    $OrderedServerIdsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$OrderedServerIdsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$OrderedServerIdsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$OrderedServerIdsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<int> position = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => OrderedServerIdsCompanion(
+                id: id,
+                position: position,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required int position,
+                Value<int> rowid = const Value.absent(),
+              }) => OrderedServerIdsCompanion.insert(
+                id: id,
+                position: position,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$OrderedServerIdsTable, OrderedServerIdRow>(
+                    table,
+                  ),
+                  BaseReferences<
+                    _$NeriDatabase,
+                    $OrderedServerIdsTable,
+                    OrderedServerIdRow
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$OrderedServerIdsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$NeriDatabase,
+      $OrderedServerIdsTable,
+      OrderedServerIdRow,
+      $$OrderedServerIdsTableFilterComposer,
+      $$OrderedServerIdsTableOrderingComposer,
+      $$OrderedServerIdsTableAnnotationComposer,
+      $$OrderedServerIdsTableCreateCompanionBuilder,
+      $$OrderedServerIdsTableUpdateCompanionBuilder,
+      (
+        OrderedServerIdRow,
+        BaseReferences<
+          _$NeriDatabase,
+          $OrderedServerIdsTable,
+          OrderedServerIdRow
+        >,
+      ),
+      OrderedServerIdRow,
       PrefetchHooks Function()
     >;
 typedef $$RecentEmojisTableCreateCompanionBuilder =
@@ -5902,6 +6281,8 @@ class $NeriDatabaseManager {
       $$FavoriteGifsTableTableManager(_db, _db.favoriteGifs);
   $$InboxesTableTableManager get inboxes =>
       $$InboxesTableTableManager(_db, _db.inboxes);
+  $$OrderedServerIdsTableTableManager get orderedServerIds =>
+      $$OrderedServerIdsTableTableManager(_db, _db.orderedServerIds);
   $$RecentEmojisTableTableManager get recentEmojis =>
       $$RecentEmojisTableTableManager(_db, _db.recentEmojis);
   $$ServerMembersTableTableManager get serverMembers =>

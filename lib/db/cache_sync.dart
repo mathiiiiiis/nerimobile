@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:nerimobile/db/daos/channel_dao.dart';
 import 'package:nerimobile/db/daos/inbox_dao.dart';
+import 'package:nerimobile/db/daos/ordered_server_id_dao.dart';
 import 'package:nerimobile/db/daos/server_dao.dart';
 import 'package:nerimobile/db/daos/server_member_dao.dart';
 import 'package:nerimobile/db/daos/server_role_dao.dart';
@@ -19,7 +20,15 @@ import 'package:nerimobile/stores/user/user_store.dart';
 
 const _writeDelay = Duration(seconds: 1);
 
-enum _Cached { channels, inboxes, memberships, roles, servers, users }
+enum _Cached {
+  channels,
+  inboxes,
+  memberships,
+  roles,
+  serverOrder,
+  servers,
+  users,
+}
 
 //batch write from busy channels
 class CacheSync {
@@ -27,6 +36,10 @@ class CacheSync {
     _ref.listen(channelsProvider, (_, _) => _schedule(_Cached.channels));
     _ref.listen(inboxProvider, (_, _) => _schedule(_Cached.inboxes));
     _ref.listen(serversProvider, (_, _) => _schedule(_Cached.servers));
+    _ref.listen(
+      orderedServerIdsProvider,
+      (_, _) => _schedule(_Cached.serverOrder),
+    );
     _ref.listen(serverRolesProvider, (_, _) => _schedule(_Cached.roles));
     _ref.listen(
       serverMembersProvider,
@@ -74,6 +87,10 @@ class CacheSync {
             for (final roles in _ref.read(serverRolesProvider).values)
               ...roles.values,
           ]);
+        case _Cached.serverOrder:
+          await OrderedServerIdDao(
+            db,
+          ).sync(_ref.read(orderedServerIdsProvider));
         case _Cached.servers:
           await ServerDao(db).sync(_ref.read(serversProvider).values);
         case _Cached.users:

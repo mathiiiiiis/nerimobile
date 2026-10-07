@@ -3,10 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:nerimobile/db/connection.dart';
 import 'package:nerimobile/db/migrations.dart';
+//tables
 import 'package:nerimobile/db/tables/announcements.dart';
 import 'package:nerimobile/db/tables/channels.dart';
 import 'package:nerimobile/db/tables/favorite_gifs.dart';
 import 'package:nerimobile/db/tables/inboxes.dart';
+import 'package:nerimobile/db/tables/ordered_server_ids.dart';
 import 'package:nerimobile/db/tables/recent_emojis.dart';
 import 'package:nerimobile/db/tables/server_members.dart';
 import 'package:nerimobile/db/tables/server_roles.dart';
@@ -22,6 +24,7 @@ part 'database.g.dart';
     DismissedAnnouncements,
     FavoriteGifs,
     Inboxes,
+    OrderedServerIds,
     RecentEmojis,
     ServerMembers,
     ServerRoles,
