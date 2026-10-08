@@ -6,17 +6,30 @@ import 'package:nerimobile/theme/core/theme_data.dart';
 import 'package:nerimobile/theme/core/token.dart';
 import 'package:nerimobile/theme/sizing/radius.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
+import 'package:nerimobile/utils/colors.dart';
 
 class MentionChip extends StatelessWidget {
-  const MentionChip({super.key, required this.label, this.leading, this.color});
+  const MentionChip({
+    super.key,
+    required this.label,
+    this.leading,
+    this.color,
+    this.gradient,
+  });
 
   final String label;
   final Widget? leading;
   final Color? color;
+  final Gradient? gradient;
 
   @override
   Widget build(BuildContext context) {
     final sizing = context.neriSize;
+    final gradient = this.gradient;
+    final text = Text(
+      label,
+      style: TextStyle(color: gradient == null ? color : Colors.white),
+    );
 
     return Container(
       padding: EdgeInsets.symmetric(
@@ -31,7 +44,7 @@ class MentionChip extends StatelessWidget {
         spacing: sizing.space(NeriSpacingRole.xs),
         children: [
           ?leading,
-          Text(label, style: TextStyle(color: color)),
+          gradient == null ? text : gradientMask(gradient, text),
         ],
       ),
     );

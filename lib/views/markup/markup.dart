@@ -463,7 +463,8 @@ TextSpan timestampChip(String label, MarkupRenderContext ctx) {
 
 TextSpan roleMention(ServerRole role, MarkupRenderContext ctx) {
   final label = '@${role.name}';
-  final color = role.hexColor;
+  final hexColor = role.hexColor;
+  final color = hexColor == null ? null : roleColor(hexColor);
 
   return TextSpan(
     children: [
@@ -471,7 +472,8 @@ TextSpan roleMention(ServerRole role, MarkupRenderContext ctx) {
         ctx.cover(
           MentionChip(
             label: label,
-            color: color == null ? null : ctx.hide(hexToColor(color)),
+            color: ctx.hide(color?.color),
+            gradient: ctx.hidden ? null : color?.gradient,
           ),
         ),
         size: ctx.chipSize(label, 0),

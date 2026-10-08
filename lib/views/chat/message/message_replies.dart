@@ -143,18 +143,18 @@ class ReplyPreview extends ConsumerWidget {
       children: [
         ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 200),
-          child: Text(
+          child: buildColoredName(
             reply.createdBy.username,
-            overflow: TextOverflow.ellipsis,
+            hexColor: hexColor,
             style: style.copyWith(color: colors[NeriToken.textSecondary]),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ),
         Expanded(
           child: DefaultTextStyle(
             style: style.copyWith(
-              color: hexColor == null
-                  ? colors[NeriToken.textPlaceholder]
-                  : hexToColor(hexColor),
+              color: colors[NeriToken.textPlaceholder],
               fontStyle: attachmentOnly ? FontStyle.italic : null,
             ),
             child: attachmentOnly

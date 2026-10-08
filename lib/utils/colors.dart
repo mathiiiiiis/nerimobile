@@ -6,6 +6,24 @@ Color hexToColor(String hex) {
   return Color(int.parse('FF$h', radix: 16));
 }
 
+//role colour can be hex or lg gradient
+({Color color, LinearGradient? gradient})? roleColor(String hexColor) {
+  if (!hexColor.startsWith('lg')) {
+    return (color: parseHexColor(hexColor), gradient: null);
+  }
+
+  final result = convertShorthandToLinearGradient(hexColor);
+  final gradient = result.gradient;
+  if (gradient == null) return null;
+  return (color: result.colors!.first, gradient: gradient);
+}
+
+Widget gradientMask(Gradient gradient, Widget child) => ShaderMask(
+  shaderCallback: gradient.createShader,
+  blendMode: BlendMode.srcIn,
+  child: child,
+);
+
 ({LinearGradient? gradient, List<Color>? colors, String? error})
 convertShorthandToLinearGradient(String shorthand) {
   final parts = shorthand.trim().split(RegExp(r'\s+'));
@@ -127,39 +145,21 @@ Widget buildColoredName(
   TextOverflow? overflow,
   int? maxLines,
 }) {
-  final effectiveStyle = (style ?? const TextStyle()).copyWith(
-    color: hexColor != null && !hexColor.startsWith('lg')
-        ? parseHexColor(hexColor)
-        : null,
-  );
-
-  if (hexColor != null && hexColor.startsWith('lg')) {
-    final result = convertShorthandToLinearGradient(hexColor);
-    if (result.gradient != null) {
-      return Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Flexible(
-            child: ShaderMask(
-              shaderCallback: (bounds) => result.gradient!.createShader(bounds),
-              blendMode: BlendMode.srcIn,
-              child: Text(
-                text,
-                style: effectiveStyle.copyWith(color: Colors.white),
-                overflow: overflow,
-                maxLines: maxLines,
-              ),
-            ),
-          ),
-        ],
-      );
-    }
-  }
-
-  return Text(
+  final role = hexColor == null ? null : roleColor(hexColor);
+  final gradient = role?.gradient;
+  final label = Text(
     text,
-    style: effectiveStyle,
+    style: (style ?? const TextStyle()).copyWith(
+      color: gradient == null ? role?.color : Colors.white,
+    ),
     overflow: overflow,
     maxLines: maxLines,
+  );
+
+  if (gradient == null) return label;
+
+  return Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [Flexible(child: gradientMask(gradient, label))],
   );
 }
