@@ -50,10 +50,10 @@
   - [ ] Add Polls Support
   - [ ] Post interactions (like, comment, repost, more)
 - [ ] Servers:
-  - [ ] Channel listing
+  - [x] Channel listing
   - [ ] Members list
-  - [ ] Writing
-  - [ ] `ChannelHeader` for not just DM
+  - [x] Writing
+  - [x] `ChannelHeader` for not just DM
 - [ ] YouTube Embed:
   - [ ] Hyperlink Title (stripped tracking)
   - [ ] Cover card: thumbnail, play button (`youtube_explode_dart` maybe?)
