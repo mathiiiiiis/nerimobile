@@ -1,3 +1,7 @@
+import 'package:nerimobile/models/channel.dart';
+import 'package:nerimobile/models/user.dart';
+import 'package:nerimobile/stores/channel/channel_store.dart';
+import 'package:nerimobile/stores/server/server_store.dart';
 import 'package:nerimobile/theme/sizing/border.dart';
 import 'dart:ui';
 
@@ -15,6 +19,7 @@ import 'package:nerimobile/theme/sizing/radius.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/theme/typography/text_styles.dart';
 import 'package:nerimobile/views/avatar.dart';
+import 'package:nerimobile/views/cdn_icon.dart';
 import 'package:nerimobile/views/presence/presence_line.dart';
 
 //mached composer inset on dual pane
@@ -44,6 +49,7 @@ class ChannelHeader extends ConsumerWidget {
     final colors = context.neri;
     final sizing = context.neriSize;
     final recipient = ref.watch(inboxProvider)[channelId]?.recipient;
+    final channel = ref.watch(channelsProvider.select((c) => c[channelId]));
     final radius = sizing.rounded(NeriRadiusRole.image);
 
     return Padding(
@@ -74,35 +80,110 @@ class ChannelHeader extends ConsumerWidget {
                     onTap: () =>
                         context.canPop() ? context.pop() : context.go('/app'),
                   ),
-                if (recipient != null) ...[
-                  PresenceAvatar(
-                    user: recipient,
-                    size: sizing.dimen(NeriDimen.controlSize),
-                    surface: colors[NeriToken.pane],
-                  ),
-                  SizedBox(width: sizing.space(NeriSpacingRole.md)),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          recipient.username,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: context.neriText[NeriTextRole.bodyLarge]
-                              .copyWith(color: colors[NeriToken.text]),
-                        ),
-                        PresenceLine(userId: recipient.id),
-                      ],
-                    ),
-                  ),
-                  ...actions,
-                ],
+                if (recipient != null)
+                  ..._recipient(context, recipient)
+                else if (channel?.serverId != null)
+                  ..._serverChannel(context, channel!),
+                ...actions,
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+List<Widget> _recipient(BuildContext context, User recipient) {
+  final colors = context.neri;
+  final sizing = context.neriSize;
+
+  return [
+    PresenceAvatar(
+      user: recipient,
+      size: sizing.dimen(NeriDimen.controlSize),
+      surface: colors[NeriToken.pane],
+    ),
+    SizedBox(width: sizing.space(NeriSpacingRole.md)),
+    Expanded(
+      child: _Titles(
+        title: recipient.username,
+        subtitle: PresenceLine(userId: recipient.id),
+      ),
+    ),
+  ];
+}
+
+List<Widget> _serverChannel(BuildContext context, Channel channel) {
+  final colors = context.neri;
+  final sizing = context.neriSize;
+  final size = sizing.dimen(NeriDimen.controlSize);
+
+  return [
+    SizedBox.square(
+      dimension: size,
+      child: Center(
+        child: IconTheme.merge(
+          data: IconThemeData(color: colors[NeriToken.textSecondary]),
+          child: CdnIcon(
+            channel: channel,
+            size: sizing.dimen(NeriDimen.iconSm),
+            fallbackIcon: Symbols.tag_rounded,
+          ),
+        ),
+      ),
+    ),
+    SizedBox(width: sizing.space(NeriSpacingRole.md)),
+    Expanded(
+      child: _Titles(
+        title: channel.name ?? '',
+        subtitle: _ServerName(serverId: channel.serverId!),
+      ),
+    ),
+  ];
+}
+
+class _Titles extends StatelessWidget {
+  const _Titles({required this.title, required this.subtitle});
+
+  final String title;
+  final Widget subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          title,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: context.neriText[NeriTextRole.bodyLarge].copyWith(
+            color: context.neri[NeriToken.text],
+          ),
+        ),
+        subtitle,
+      ],
+    );
+  }
+}
+
+class _ServerName extends ConsumerWidget {
+  const _ServerName({required this.serverId});
+
+  final String serverId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final name = ref.watch(serversProvider.select((s) => s[serverId]?.name));
+
+    return Text(
+      name ?? '',
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: context.neriText[NeriTextRole.bodySmall].copyWith(
+        color: context.neri[NeriToken.textPlaceholder],
       ),
     );
   }
