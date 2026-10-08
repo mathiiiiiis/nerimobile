@@ -8,6 +8,7 @@ import 'package:nerimobile/theme/sizing/breakpoints.dart';
 import 'package:nerimobile/views/auth/login_page.dart';
 import 'package:nerimobile/views/chat/channel/channel_pane.dart';
 import 'package:nerimobile/views/dashboard/dashboard_pane.dart';
+import 'package:nerimobile/views/server/channel_list.dart';
 import 'package:nerimobile/views/shell/app_scaffold.dart';
 import 'package:nerimobile/views/shell/destinations.dart';
 import 'package:nerimobile/views/shell/widgets/panes.dart';
@@ -71,17 +72,28 @@ final routerProvider = Provider<GoRouter>((ref) {
               ),
               GoRoute(
                 path: '/app/servers/:serverId',
-                builder: (_, _) => const AppScaffold(
-                  branch: NeriBranch.servers,
-                  listPane: PlaceholderPane(label: 'Channels'),
-                  content: PlaceholderPane(label: 'Server'),
-                ),
+                builder: (context, state) {
+                  final list = ChannelListPane(
+                    serverId: state.pathParameters['serverId']!,
+                  );
+                  return AppScaffold(
+                    branch: NeriBranch.servers,
+                    listPane: list,
+                    //the list is the page on mobile
+                    content: NeriWindow.of(context).isDualPane
+                        ? const PlaceholderPane(label: 'Server')
+                        : list,
+                  );
+                },
                 routes: [
                   GoRoute(
                     path: ':channelId',
                     builder: (_, state) => AppScaffold(
                       branch: NeriBranch.servers,
-                      listPane: const PlaceholderPane(label: 'Channels'),
+                      listPane: ChannelListPane(
+                        serverId: state.pathParameters['serverId']!,
+                        selectedChannelId: state.pathParameters['channelId'],
+                      ),
                       content: PlaceholderPane(
                         label: 'channel ${state.pathParameters['channelId']}',
                       ),

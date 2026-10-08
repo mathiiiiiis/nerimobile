@@ -1,8 +1,8 @@
-import 'package:nerimobile/db/cache_hydration.dart';
-import 'package:nerimobile/theme/sizing/border.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
+import 'package:nerimobile/db/cache_hydration.dart';
 
 import 'package:nerimobile/models/inbox.dart';
 import 'package:nerimobile/stores/inbox/inbox_store.dart';
@@ -10,13 +10,16 @@ import 'package:nerimobile/stores/message/message_mention_store.dart';
 
 import 'package:nerimobile/theme/core/theme_data.dart';
 import 'package:nerimobile/theme/core/token.dart';
+import 'package:nerimobile/theme/sizing/border.dart';
 import 'package:nerimobile/theme/sizing/breakpoints.dart';
 import 'package:nerimobile/theme/sizing/dimens.dart';
 import 'package:nerimobile/theme/sizing/radius.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/theme/typography/text_styles.dart';
+
 import 'package:nerimobile/views/avatar.dart';
 import 'package:nerimobile/views/dashboard/widget/dm_list_skeleton.dart';
+import 'package:nerimobile/views/mention_badge.dart';
 import 'package:nerimobile/views/presence/presence_line.dart';
 import 'package:nerimobile/views/shell/widgets/scroll_fade.dart';
 
@@ -131,37 +134,8 @@ class DmRow extends ConsumerWidget {
               ),
             ),
             if (mentions != null && mentions.count > 0)
-              _MentionBadge(count: mentions.count),
+              MentionBadge(count: mentions.count),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _MentionBadge extends StatelessWidget {
-  const _MentionBadge({required this.count});
-
-  final int count;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.neri;
-    final sizing = context.neriSize;
-
-    return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: sizing.space(NeriSpacingRole.sm),
-        vertical: sizing.space(NeriSpacingRole.xs) / 2,
-      ),
-      decoration: BoxDecoration(
-        color: colors[NeriToken.mentionBadge],
-        borderRadius: sizing.rounded(NeriRadiusRole.full),
-      ),
-      child: Text(
-        '$count',
-        style: context.neriText[NeriTextRole.labelSmall].copyWith(
-          color: colors[NeriToken.background],
         ),
       ),
     );

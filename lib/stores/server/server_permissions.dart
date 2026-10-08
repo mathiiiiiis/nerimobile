@@ -70,6 +70,16 @@ bool channelHasPermissions(
   ChannelPermissionFlag flag,
 ) => hasBit(channelPermissions(access, channel), flag.bit);
 
+bool isPrivateChannel(Server server, Channel channel) {
+  final everyone = channel.permissions?.where(
+    (p) => p.roleId == server.defaultRoleId,
+  );
+  return !hasBit(
+    everyone?.firstOrNull?.permissions,
+    ChannelPermissionFlag.publicChannel.bit,
+  );
+}
+
 bool canViewChannel(ServerAccess access, Channel channel) =>
     memberHasPermission(access, RolePermissionFlag.admin) ||
     channelHasPermissions(access, channel, ChannelPermissionFlag.publicChannel);
