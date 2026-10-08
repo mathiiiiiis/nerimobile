@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:nerimobile/models/message.dart';
+import 'package:nerimobile/stores/channel/channel_store.dart';
 import 'package:nerimobile/stores/server/server_store.dart';
 import 'package:nerimobile/theme/core/theme_data.dart';
 import 'package:nerimobile/theme/core/token.dart';
@@ -19,8 +20,13 @@ const _tickWidth = 16.0;
 const _contentLeft = 22.0;
 
 class MessageReplies extends StatelessWidget {
-  const MessageReplies({super.key, required this.replies});
+  const MessageReplies({
+    super.key,
+    required this.channelId,
+    required this.replies,
+  });
 
+  final String channelId;
   final List<ReplyMessage> replies;
 
   @override
@@ -71,7 +77,10 @@ class MessageReplies extends StatelessWidget {
                     message: reply.replyToMessage,
                     child: Padding(
                       padding: const EdgeInsets.only(left: _contentLeft),
-                      child: ReplyPreview(message: reply.replyToMessage),
+                      child: ReplyPreview(
+                        channelId: channelId,
+                        message: reply.replyToMessage,
+                      ),
                     ),
                   ),
                 ),
@@ -84,8 +93,13 @@ class MessageReplies extends StatelessWidget {
 }
 
 class ReplyPreview extends ConsumerWidget {
-  const ReplyPreview({super.key, required this.message});
+  const ReplyPreview({
+    super.key,
+    required this.channelId,
+    required this.message,
+  });
 
+  final String channelId;
   final PartialMessage? message;
 
   @override
@@ -111,11 +125,18 @@ class ReplyPreview extends ConsumerWidget {
     final attachmentOnly =
         reply.content.isEmpty && reply.attachments.isNotEmpty;
 
-    final hexColor = memberTopColor(
-      ref.watch(currentServerMembersProvider)?[reply.createdBy.id],
-      ref.watch(sortedRolesProvider),
-      ref.watch(currentServerDefaultRoleProvider),
+    final serverId = ref.watch(
+      channelsProvider.select((c) => c[channelId]?.serverId),
     );
+
+    final hexColor = serverId == null
+        ? null
+        : ref.watch(
+            memberColorProvider((
+              serverId: serverId,
+              userId: reply.createdBy.id,
+            )),
+          );
 
     return Row(
       spacing: sizing.space(NeriSpacingRole.xs),

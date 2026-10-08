@@ -140,7 +140,10 @@ class _ReplyBar extends ConsumerWidget {
               child: Row(
                 children: [
                   Expanded(
-                    child: ReplyPreview(message: PartialMessage.of(message)),
+                    child: ReplyPreview(
+                      channelId: message.channelId,
+                      message: PartialMessage.of(message),
+                    ),
                   ),
                   if (replyTo.length > 1)
                     _BarButton(

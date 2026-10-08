@@ -95,11 +95,33 @@ final currentServerRolesProvider = Provider<Map<String, ServerRole>?>((ref) {
   return id == null ? null : ref.watch(serverRolesProvider)[id];
 });
 
-final sortedRolesProvider = Provider<List<ServerRole>>((ref) {
-  final roles = ref.watch(currentServerRolesProvider)?.values.toList() ?? [];
+final serverSortedRolesProvider = Provider.family<List<ServerRole>, String>((
+  ref,
+  serverId,
+) {
+  final roles = ref.watch(serverRolesProvider)[serverId]?.values.toList() ?? [];
   roles.sort((a, b) => b.order.compareTo(a.order));
   return roles;
 });
+
+final sortedRolesProvider = Provider<List<ServerRole>>((ref) {
+  final id = ref.watch(currentServerIdProvider);
+  return id == null ? const [] : ref.watch(serverSortedRolesProvider(id));
+});
+
+final memberColorProvider =
+    Provider.family<String?, ({String serverId, String userId})>((ref, key) {
+      final defaultRoleId = ref.watch(
+        serversProvider.select((s) => s[key.serverId]?.defaultRoleId),
+      );
+      final roles = ref.watch(serverRolesProvider)[key.serverId];
+
+      return memberTopColor(
+        ref.watch(serverMembersProvider)[key.serverId]?[key.userId],
+        ref.watch(serverSortedRolesProvider(key.serverId)),
+        roles?[defaultRoleId],
+      );
+    });
 
 final currentServerDefaultRoleProvider = Provider<ServerRole?>((ref) {
   final defaultRoleId = ref.watch(currentServerProvider)?.defaultRoleId;

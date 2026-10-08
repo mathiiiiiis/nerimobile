@@ -2,6 +2,9 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:nerimobile/stores/channel/channel_store.dart';
+import 'package:nerimobile/stores/server/server_store.dart';
 
 import 'package:nerimobile/theme/core/theme_data.dart';
 import 'package:nerimobile/theme/core/token.dart';
@@ -14,7 +17,6 @@ import 'package:nerimobile/views/chat/composer/attachment_panel.dart';
 import 'package:nerimobile/views/chat/composer/composer.dart';
 import 'package:nerimobile/views/chat/composer/emoji_panel.dart';
 import 'package:nerimobile/views/chat/message/message_list.dart';
-import 'package:nerimobile/views/dashboard/dm_list.dart';
 import 'package:nerimobile/views/shell/app_scaffold.dart';
 import 'package:nerimobile/views/shell/destinations.dart';
 import 'package:nerimobile/views/size_reporter.dart';
@@ -35,13 +37,31 @@ double _snap(double value, double ratio) =>
 double _expansion(double visible, double collapsed, double expanded) =>
     ((visible - collapsed) / (expanded - collapsed)).clamp(0.0, 1.0);
 
-class ChannelPane extends StatelessWidget {
-  const ChannelPane({super.key, required this.channelId});
+class ChannelPane extends ConsumerWidget {
+  const ChannelPane({
+    super.key,
+    required this.channelId,
+    required this.branch,
+    required this.listPane,
+    this.serverId,
+  });
 
   final String channelId;
+  final NeriBranch branch;
+  final Widget listPane;
+  final String? serverId;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final shown = TickerMode.valuesOf(context).enabled;
+    ref.listen(channelsProvider.select((c) => c.containsKey(channelId)), (
+      had,
+      has,
+    ) {
+      if (!shown || had != true || has) return;
+      _leave(context, ref);
+    });
+
     final dualPane = NeriWindow.of(context).isDualPane;
     final chat = _Chat(channelId: channelId, showBack: !dualPane);
     final sizing = context.neriSize;
@@ -54,8 +74,8 @@ class ChannelPane extends StatelessWidget {
     }
 
     return AppScaffold(
-      branch: NeriBranch.dashboard,
-      listPane: const DmListPane(),
+      branch: branch,
+      listPane: listPane,
       content: Padding(
         padding: EdgeInsets.only(
           top: sizing.space(NeriSpacingRole.sm),
@@ -76,6 +96,14 @@ class ChannelPane extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  void _leave(BuildContext context, WidgetRef ref) {
+    final serverId = this.serverId;
+    if (serverId == null) return context.go('/app');
+
+    final serverGone = !ref.read(serversProvider).containsKey(serverId);
+    context.go(serverGone ? '/app/servers' : '/app/servers/$serverId');
   }
 }
 

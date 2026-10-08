@@ -8,6 +8,7 @@ import 'package:nerimobile/theme/sizing/breakpoints.dart';
 import 'package:nerimobile/views/auth/login_page.dart';
 import 'package:nerimobile/views/chat/channel/channel_pane.dart';
 import 'package:nerimobile/views/dashboard/dashboard_pane.dart';
+import 'package:nerimobile/views/dashboard/dm_list.dart';
 import 'package:nerimobile/views/server/channel_list.dart';
 import 'package:nerimobile/views/shell/app_scaffold.dart';
 import 'package:nerimobile/views/shell/destinations.dart';
@@ -50,6 +51,8 @@ final routerProvider = Provider<GoRouter>((ref) {
                     pageBuilder: (context, state) {
                       final pane = ChannelPane(
                         channelId: state.pathParameters['channelId']!,
+                        branch: NeriBranch.dashboard,
+                        listPane: const DmListPane(),
                       );
                       return NeriWindow.of(context).isDualPane
                           ? StaticPage(child: pane)
@@ -88,16 +91,22 @@ final routerProvider = Provider<GoRouter>((ref) {
                 routes: [
                   GoRoute(
                     path: ':channelId',
-                    builder: (_, state) => AppScaffold(
-                      branch: NeriBranch.servers,
-                      listPane: ChannelListPane(
-                        serverId: state.pathParameters['serverId']!,
-                        selectedChannelId: state.pathParameters['channelId'],
-                      ),
-                      content: PlaceholderPane(
-                        label: 'channel ${state.pathParameters['channelId']}',
-                      ),
-                    ),
+                    pageBuilder: (context, state) {
+                      final serverId = state.pathParameters['serverId']!;
+                      final channelId = state.pathParameters['channelId']!;
+                      final pane = ChannelPane(
+                        channelId: channelId,
+                        serverId: serverId,
+                        branch: NeriBranch.servers,
+                        listPane: ChannelListPane(
+                          serverId: serverId,
+                          selectedChannelId: channelId,
+                        ),
+                      );
+                      return NeriWindow.of(context).isDualPane
+                          ? StaticPage(child: pane)
+                          : SlideOverPage(child: pane);
+                    },
                   ),
                 ],
               ),

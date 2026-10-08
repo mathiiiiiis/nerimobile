@@ -219,7 +219,10 @@ class _FullMessage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (message.replyMessages.isNotEmpty)
-            MessageReplies(replies: message.replyMessages),
+            MessageReplies(
+              channelId: message.channelId,
+              replies: message.replyMessages,
+            ),
 
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
