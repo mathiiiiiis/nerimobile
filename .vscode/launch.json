@@ -8,19 +8,22 @@
     {
       "name": "nerimobile",
       "request": "launch",
-      "type": "dart"
+      "type": "dart",
+      "args": ["--flavor", "dev"]
     },
     {
       "name": "nerimobile (profile mode)",
       "request": "launch",
       "type": "dart",
-      "flutterMode": "profile"
+      "flutterMode": "profile",
+      "args": ["--flavor", "dev"]
     },
     {
       "name": "nerimobile (release mode)",
       "request": "launch",
       "type": "dart",
-      "flutterMode": "release"
+      "flutterMode": "release",
+      "args": ["--flavor", "prod"]
     }
   ]
 }
