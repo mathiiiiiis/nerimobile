@@ -63,6 +63,20 @@ void handleSocketEvent(Ref ref, String event, dynamic payload) {
       onServerChannelOrderUpdated(ref, payload);
     case 'server:channel_permissions_updated':
       onServerChannelPermissionUpdated(ref, payload);
+    case 'server:role_created':
+      onServerRoleCreated(ref, payload);
+    case 'server:role_updated':
+      onServerRoleUpdated(ref, payload);
+    case 'server:role_order_updated':
+      onServerRoleOrderUpdated(ref, payload);
+    case 'server:role_deleted':
+      onServerRoleDeleted(ref, payload);
+    case 'server:member_joined':
+      onServerMemberJoined(ref, payload);
+    case 'server:member_left':
+      onServerMemberLeft(ref, payload);
+    case 'server:member_updated':
+      onServerMemberUpdated(ref, payload);
     case 'server:emoji_add':
       onServerEmojiAdd(ref, payload);
     case 'server:emoji_remove':
@@ -244,6 +258,43 @@ void onServerChannelPermissionUpdated(Ref ref, dynamic payload) => ref
       payload['channelId'],
       ChannelPermission.fromJson(payload),
     );
+
+void onServerRoleCreated(Ref ref, dynamic payload) {
+  final role = ServerRole.fromJson(payload);
+  final defaultRoleId = ref.read(serversProvider)[role.serverId]?.defaultRoleId;
+  ref.read(serverRolesProvider.notifier).addCreatedRole(role, defaultRoleId);
+}
+
+void onServerRoleUpdated(Ref ref, dynamic payload) => ref
+    .read(serverRolesProvider.notifier)
+    .updateRole(payload['serverId'], payload['roleId'], payload['updated']);
+
+void onServerRoleOrderUpdated(Ref ref, dynamic payload) => ref
+    .read(serverRolesProvider.notifier)
+    .updateOrder(payload['serverId'], List<String>.from(payload['roleId']));
+
+void onServerRoleDeleted(Ref ref, dynamic payload) {
+  final serverId = payload['serverId'] as String;
+  final roleId = payload['roleId'] as String;
+
+  ref
+      .read(serverMembersProvider.notifier)
+      .removeRoleFromMembers(serverId, roleId);
+  ref.read(channelsProvider.notifier).removeRolePermissions(serverId, roleId);
+  ref.read(serverRolesProvider.notifier).removeRole(serverId, roleId);
+}
+
+void onServerMemberJoined(Ref ref, dynamic payload) => ref
+    .read(serverMembersProvider.notifier)
+    .addServerMembers([RawServerMember.fromJson(payload['member'])]);
+
+void onServerMemberLeft(Ref ref, dynamic payload) => ref
+    .read(serverMembersProvider.notifier)
+    .removeMember(payload['serverId'], payload['userId']);
+
+void onServerMemberUpdated(Ref ref, dynamic payload) => ref
+    .read(serverMembersProvider.notifier)
+    .updateMember(payload['serverId'], payload['userId'], payload['updated']);
 
 void onServerEmojiAdd(Ref ref, dynamic payload) {
   final serverId = payload['serverId'] as String;

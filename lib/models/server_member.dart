@@ -27,4 +27,20 @@ class ServerMember {
     nickname: json['nickname'] as String?,
     muteExpireAt: json['muteExpireAt'] as int?,
   );
+
+  //keep unchanged fields, allow nullables to be cleared
+  ServerMember merge(Map<String, dynamic> updated) => ServerMember(
+    id: id,
+    userId: userId,
+    serverId: serverId,
+    roleIds: updated['roleIds'] == null
+        ? roleIds
+        : Set<String>.from(updated['roleIds'] as List),
+    nickname: updated.containsKey('nickname')
+        ? updated['nickname'] as String?
+        : nickname,
+    muteExpireAt: updated.containsKey('muteExpireAt')
+        ? updated['muteExpireAt'] as int?
+        : muteExpireAt,
+  );
 }

@@ -34,4 +34,50 @@ class ServerRolesNotifier
   };
 
   void removeServer(String serverId) => state = {...state}..remove(serverId);
+
+  void addCreatedRole(ServerRole role, String? defaultRoleId) {
+    final shifted = [
+      for (final other in state[role.serverId]?.values ?? <ServerRole>[])
+        if (other.id != defaultRoleId) other,
+    ]..sort((a, b) => a.order.compareTo(b.order));
+
+    state = {
+      ...state,
+      role.serverId: {
+        ...?state[role.serverId],
+        for (final (index, other) in shifted.indexed)
+          other.id: other.merge({'order': index + 3}),
+        role.id: role,
+      },
+    };
+  }
+
+  void updateRole(
+    String serverId,
+    String roleId,
+    Map<String, dynamic> updated,
+  ) {
+    final role = state[serverId]?[roleId];
+    if (role == null) return;
+    addServerRole(serverId, role.merge(updated));
+  }
+
+  void updateOrder(String serverId, List<String> roleIds) {
+    final roles = state[serverId];
+    if (roles == null) return;
+
+    state = {
+      ...state,
+      serverId: {
+        ...roles,
+        for (final (index, id) in roleIds.indexed)
+          if (roles[id] case final role?) id: role.merge({'order': index + 1}),
+      },
+    };
+  }
+
+  void removeRole(String serverId, String roleId) => state = {
+    ...state,
+    serverId: {...?state[serverId]}..remove(roleId),
+  };
 }

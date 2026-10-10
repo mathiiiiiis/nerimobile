@@ -98,6 +98,21 @@ class ChannelsNotifier extends Notifier<Map<String, Channel>> {
     };
   }
 
+  void removeRolePermissions(String serverId, String roleId) {
+    final next = {...state};
+    for (final channel in state.values) {
+      if (channel.serverId != serverId) continue;
+      final permissions = channel.permissions;
+      if (permissions == null || !permissions.any((p) => p.roleId == roleId)) {
+        continue;
+      }
+      next[channel.id] = channel.copyWith(
+        permissions: [...permissions.where((p) => p.roleId != roleId)],
+      );
+    }
+    state = next;
+  }
+
   void updateLastMessagedAt(String channelId, int lastMessagedAt) {
     final channel = state[channelId];
     if (channel == null) return;

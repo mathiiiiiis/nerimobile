@@ -29,4 +29,15 @@ class ServerRole {
     hexColor: json['hexColor'] as String?,
     icon: json['icon'] as String?,
   );
+
+  ServerRole merge(Map<String, dynamic> updated) => ServerRole(
+    id: id,
+    serverId: serverId,
+    name: updated['name'] ?? name,
+    order: updated['order'] ?? order,
+    hideRole: updated['hideRole'] ?? hideRole,
+    permissions: updated['permissions'] ?? permissions,
+    hexColor: updated.containsKey('hexColor') ? updated['hexColor'] : hexColor,
+    icon: updated.containsKey('icon') ? updated['icon'] : icon,
+  );
 }

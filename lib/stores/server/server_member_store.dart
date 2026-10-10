@@ -49,4 +49,36 @@ class ServerMembersNotifier
   };
 
   void removeServer(String serverId) => state = {...state}..remove(serverId);
+
+  void updateMember(
+    String serverId,
+    String userId,
+    Map<String, dynamic> updated,
+  ) {
+    final member = state[serverId]?[userId];
+    if (member == null) return;
+    addServerMember(serverId, member.merge(updated));
+  }
+
+  void removeMember(String serverId, String userId) => state = {
+    ...state,
+    serverId: {...?state[serverId]}..remove(userId),
+  };
+
+  void removeRoleFromMembers(String serverId, String roleId) {
+    final members = state[serverId];
+    if (members == null) return;
+
+    state = {
+      ...state,
+      serverId: {
+        for (final MapEntry(key: userId, value: member) in members.entries)
+          userId: member.roleIds.contains(roleId)
+              ? member.merge({
+                  'roleIds': [...member.roleIds.where((id) => id != roleId)],
+                })
+              : member,
+      },
+    };
+  }
 }
