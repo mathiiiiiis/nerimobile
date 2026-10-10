@@ -11,7 +11,9 @@ import 'package:nerimobile/stores/server/server_store.dart';
 import 'package:nerimobile/stores/user/user_store.dart';
 import 'package:nerimobile/theme/core/theme_data.dart';
 import 'package:nerimobile/theme/core/token.dart';
+import 'package:nerimobile/theme/sizing/border.dart';
 import 'package:nerimobile/theme/sizing/dimens.dart';
+import 'package:nerimobile/theme/sizing/radius.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/theme/typography/text_styles.dart';
 import 'package:nerimobile/utils/colors.dart';
@@ -23,6 +25,17 @@ import 'package:nerimobile/views/presence/presence_line.dart';
 import 'package:nerimobile/views/shell/widgets/scroll_fade.dart';
 
 const _offlineOpacity = 0.5;
+
+final membersPaneOpenProvider = NotifierProvider<MembersPaneOpen, bool>(
+  MembersPaneOpen.new,
+);
+
+class MembersPaneOpen extends Notifier<bool> {
+  @override
+  bool build() => true;
+
+  void toggle() => state = !state;
+}
 
 class MembersPage extends StatelessWidget {
   const MembersPage({
@@ -63,6 +76,63 @@ class MembersPage extends StatelessWidget {
                         .copyWith(color: colors[NeriToken.text]),
                   ),
                 ],
+              ),
+            ),
+            Expanded(
+              child: MemberList(
+                serverId: serverId,
+                channelId: channelId,
+                surface: colors[NeriToken.background],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class MembersPane extends StatelessWidget {
+  const MembersPane({
+    super.key,
+    required this.serverId,
+    required this.channelId,
+  });
+
+  final String serverId;
+  final String channelId;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.neri;
+    final sizing = context.neriSize;
+
+    return Padding(
+      padding: EdgeInsets.only(
+        top: sizing.space(NeriSpacingRole.sm),
+        right: sizing.space(NeriSpacingRole.sm),
+        bottom: sizing.space(NeriSpacingRole.sm),
+      ),
+      child: Container(
+        clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(
+          color: colors[NeriToken.background],
+          borderRadius: sizing.rounded(NeriRadiusRole.md),
+          border: Border.all(
+            color: colors[NeriToken.border],
+            width: sizing.border(NeriBorderRole.hairline),
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: EdgeInsets.all(sizing.space(NeriSpacingRole.md)),
+              child: Text(
+                'Members', //TODO: add l10n
+                style: context.neriText[NeriTextRole.headlineSmall].copyWith(
+                  color: colors[NeriToken.text],
+                ),
               ),
             ),
             Expanded(
