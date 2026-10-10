@@ -147,4 +147,4 @@ jobs:
           fi
 
           jq -n --arg c "$content" '{content: $c}' \
-            | curl -sS -X POST "$WEBHOOK_URL" -H 'Content-Type: application/json' -d @-s
+            | curl -sS -X POST "$WEBHOOK_URL" -H 'Content-Type: application/json' -d @-
