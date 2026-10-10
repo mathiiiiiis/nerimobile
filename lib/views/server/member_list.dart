@@ -171,7 +171,7 @@ class _GroupHeader extends StatelessWidget {
               style: style,
             ),
           ),
-          Text('– ${group.members.length}', style: style),
+          Text('— ${group.members.length}', style: style),
         ],
       ),
     );
