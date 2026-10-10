@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:nerimobile/stores/channel/channel_store.dart';
 import 'package:nerimobile/stores/server/server_store.dart';
 
@@ -63,7 +64,19 @@ class ChannelPane extends ConsumerWidget {
     });
 
     final dualPane = NeriWindow.of(context).isDualPane;
-    final chat = _Chat(channelId: channelId, showBack: !dualPane);
+    final serverId = this.serverId;
+    final chat = _Chat(
+      channelId: channelId,
+      showBack: !dualPane,
+      headerActions: [
+        if (serverId != null && !dualPane)
+          HeaderIconButton(
+            icon: Symbols.group_rounded,
+            onTap: () =>
+                context.go('/app/servers/$serverId/$channelId/members'),
+          ),
+      ],
+    );
     final sizing = context.neriSize;
 
     if (!dualPane) {
@@ -108,10 +121,15 @@ class ChannelPane extends ConsumerWidget {
 }
 
 class _Chat extends ConsumerStatefulWidget {
-  const _Chat({required this.channelId, required this.showBack});
+  const _Chat({
+    required this.channelId,
+    required this.showBack,
+    this.headerActions = const [],
+  });
 
   final String channelId;
   final bool showBack;
+  final List<Widget> headerActions;
 
   @override
   ConsumerState<_Chat> createState() => _ChatState();
@@ -260,6 +278,7 @@ class _ChatState extends ConsumerState<_Chat> with WidgetsBindingObserver {
               child: ChannelHeader(
                 channelId: widget.channelId,
                 showBack: widget.showBack,
+                actions: widget.headerActions,
               ),
             ),
             //collapsed panel lifts the composer, expanded one covers it

@@ -10,6 +10,7 @@ import 'package:nerimobile/views/chat/channel/channel_pane.dart';
 import 'package:nerimobile/views/dashboard/dashboard_pane.dart';
 import 'package:nerimobile/views/dashboard/dm_list.dart';
 import 'package:nerimobile/views/server/channel_list.dart';
+import 'package:nerimobile/views/server/member_list.dart';
 import 'package:nerimobile/views/shell/app_scaffold.dart';
 import 'package:nerimobile/views/shell/destinations.dart';
 import 'package:nerimobile/views/shell/widgets/panes.dart';
@@ -107,6 +108,17 @@ final routerProvider = Provider<GoRouter>((ref) {
                           ? StaticPage(child: pane)
                           : SlideOverPage(child: pane);
                     },
+                    routes: [
+                      GoRoute(
+                        path: 'members',
+                        pageBuilder: (_, state) => SlideOverPage(
+                          child: MembersPage(
+                            serverId: state.pathParameters['serverId']!,
+                            channelId: state.pathParameters['channelId']!,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
