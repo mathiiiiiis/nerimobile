@@ -221,7 +221,7 @@ Rect _mentionRect(BuildContext context, String label, double size) {
   final height = painter.height;
   final width = max(
     height,
-    painter.width + context.neriSize.space(NeriSpacingRole.xs) * 2,
+    painter.width + context.neriSize.space(NeriSpacingRole.xs) * 3,
   );
   painter.dispose();
 
@@ -255,6 +255,7 @@ class _MentionCount extends StatelessWidget {
 
     return DecoratedBox(
       decoration: BoxDecoration(
+        color: colors[NeriToken.alert],
         borderRadius: context.neriSize.rounded(NeriRadiusRole.full),
       ),
       child: Center(
