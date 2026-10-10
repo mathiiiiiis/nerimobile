@@ -21,6 +21,7 @@ import 'package:nerimobile/views/avatar.dart';
 import 'package:nerimobile/views/cdn_icon.dart';
 import 'package:nerimobile/views/chat/channel/channel_header.dart';
 import 'package:nerimobile/views/dashboard/widget/dm_list_skeleton.dart';
+import 'package:nerimobile/views/empty_state.dart';
 import 'package:nerimobile/views/presence/presence_line.dart';
 import 'package:nerimobile/views/shell/widgets/scroll_fade.dart';
 
@@ -50,42 +51,21 @@ class MembersPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.neri;
-    final sizing = context.neriSize;
 
     return ColoredBox(
       color: colors[NeriToken.background],
       child: SafeArea(
         bottom: false,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Padding(
-              padding: EdgeInsets.all(sizing.space(NeriSpacingRole.md)),
-              child: Row(
-                spacing: sizing.space(NeriSpacingRole.sm),
-                children: [
-                  HeaderIconButton(
-                    icon: Symbols.arrow_back_rounded,
-                    onTap: () => context.canPop()
-                        ? context.pop()
-                        : context.go('/app/servers/$serverId/$channelId'),
-                  ),
-                  Text(
-                    'Members', //TODO: add l10n
-                    style: context.neriText[NeriTextRole.headlineSmall]
-                        .copyWith(color: colors[NeriToken.text]),
-                  ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: MemberList(
-                serverId: serverId,
-                channelId: channelId,
-                surface: colors[NeriToken.background],
-              ),
-            ),
-          ],
+        child: ChannelInfo(
+          serverId: serverId,
+          channelId: channelId,
+          surface: colors[NeriToken.background],
+          leading: HeaderIconButton(
+            icon: Symbols.arrow_back_rounded,
+            onTap: () => context.canPop()
+                ? context.pop()
+                : context.go('/app/servers/$serverId/$channelId'),
+          ),
         ),
       ),
     );
@@ -123,27 +103,162 @@ class MembersPane extends StatelessWidget {
             width: sizing.border(NeriBorderRole.hairline),
           ),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Padding(
-              padding: EdgeInsets.all(sizing.space(NeriSpacingRole.md)),
-              child: Text(
-                'Members', //TODO: add l10n
-                style: context.neriText[NeriTextRole.headlineSmall].copyWith(
-                  color: colors[NeriToken.text],
+        child: ChannelInfo(
+          serverId: serverId,
+          channelId: channelId,
+          surface: colors[NeriToken.background],
+        ),
+      ),
+    );
+  }
+}
+
+enum _InfoTab {
+  //TODO: add l10n
+  info('Info', Symbols.info_rounded),
+  files('Files', Symbols.folder_rounded),
+  search('Search', Symbols.search_rounded);
+
+  const _InfoTab(this.label, this.icon);
+
+  final String label;
+  final IconData icon;
+}
+
+class ChannelInfo extends StatefulWidget {
+  const ChannelInfo({
+    super.key,
+    required this.serverId,
+    required this.channelId,
+    required this.surface,
+    this.leading,
+  });
+
+  final String serverId;
+  final String channelId;
+  final Color surface;
+  final Widget? leading;
+
+  @override
+  State<ChannelInfo> createState() => _ChannelInfoState();
+}
+
+class _ChannelInfoState extends State<ChannelInfo> {
+  var _tab = _InfoTab.info;
+
+  @override
+  Widget build(BuildContext context) {
+    final sizing = context.neriSize;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: EdgeInsets.all(sizing.space(NeriSpacingRole.md)),
+          child: Row(
+            spacing: sizing.space(NeriSpacingRole.sm),
+            children: [
+              ?widget.leading,
+              for (final tab in _InfoTab.values)
+                Expanded(
+                  child: _TabButton(
+                    tab: tab,
+                    selected: tab == _tab,
+                    onTap: () => setState(() => _tab = tab),
+                  ),
+                ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: switch (_tab) {
+            _InfoTab.info => MemberList(
+              serverId: widget.serverId,
+              channelId: widget.channelId,
+              surface: widget.surface,
+            ),
+            _InfoTab.files => const _NotAvailable(
+              message: 'Files are not available yet', //TODO: add l10n
+              icon: Symbols.folder_rounded,
+            ),
+            _InfoTab.search => const _NotAvailable(
+              message: 'Search is not available yet', //TODO: add l10n
+              icon: Symbols.search_rounded,
+            ),
+          },
+        ),
+      ],
+    );
+  }
+}
+
+class _TabButton extends StatelessWidget {
+  const _TabButton({
+    required this.tab,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final _InfoTab tab;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.neri;
+    final sizing = context.neriSize;
+    final color = colors[selected ? NeriToken.text : NeriToken.textSecondary];
+
+    return Material(
+      color: selected ? colors[NeriToken.navIndicator] : Colors.transparent,
+      borderRadius: sizing.rounded(NeriRadiusRole.md),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: EdgeInsets.symmetric(
+            vertical: sizing.space(NeriSpacingRole.sm),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            spacing: sizing.space(NeriSpacingRole.xs),
+            children: [
+              Icon(
+                tab.icon,
+                size: sizing.dimen(NeriDimen.iconSm),
+                color: color,
+              ),
+              Flexible(
+                child: Text(
+                  tab.label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: context.neriText[NeriTextRole.labelLarge].copyWith(
+                    color: color,
+                  ),
                 ),
               ),
-            ),
-            Expanded(
-              child: MemberList(
-                serverId: serverId,
-                channelId: channelId,
-                surface: colors[NeriToken.background],
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
+      ),
+    );
+  }
+}
+
+class _NotAvailable extends StatelessWidget {
+  const _NotAvailable({required this.message, required this.icon});
+
+  final String message;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.all(context.neriSize.space(NeriSpacingRole.md)),
+      child: Align(
+        alignment: Alignment.topCenter,
+        child: EmptyState(message: message, icon: icon),
       ),
     );
   }
@@ -170,6 +285,7 @@ class MemberList extends ConsumerWidget {
     final unknown =
         ref.watch(connectionProvider) is! Authenticated &&
         (ref.watch(serverMembersProvider)[serverId]?.length ?? 0) <= 1;
+    final total = groups.fold(0, (sum, group) => sum + group.members.length);
     final entries = [
       for (final group in groups) ...[
         (group: group, member: null),
@@ -185,9 +301,11 @@ class MemberList extends ConsumerWidget {
               padding: EdgeInsets.only(
                 bottom: sizing.dimen(NeriDimen.fadeHeight),
               ),
-              itemCount: entries.length,
+              itemCount: entries.length + 1,
               itemBuilder: (context, index) {
-                final (:group, :member) = entries[index];
+                if (index == 0) return _MemberCount(total);
+
+                final (:group, :member) = entries[index - 1];
                 return member == null
                     ? _GroupHeader(group)
                     : _MemberRow(
@@ -198,6 +316,38 @@ class MemberList extends ConsumerWidget {
                       );
               },
             ),
+    );
+  }
+}
+
+class _MemberCount extends StatelessWidget {
+  const _MemberCount(this.count);
+
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.neri;
+    final sizing = context.neriSize;
+    final style = context.neriText[NeriTextRole.headlineSmall];
+
+    return Padding(
+      padding: EdgeInsets.symmetric(
+        horizontal: sizing.space(NeriSpacingRole.md),
+      ),
+      child: Row(
+        spacing: sizing.space(NeriSpacingRole.xs),
+        children: [
+          Text(
+            'Members', //TODO: add l10n
+            style: style.copyWith(color: colors[NeriToken.text]),
+          ),
+          Text(
+            '($count)',
+            style: style.copyWith(color: colors[NeriToken.textTertiary]),
+          ),
+        ],
+      ),
     );
   }
 }
