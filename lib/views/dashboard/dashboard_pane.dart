@@ -30,13 +30,12 @@ class DashboardPane extends StatelessWidget {
   const DashboardPane({super.key});
 
   @override
-  Widget build(BuildContext context) => AppScaffold(
-    branch: NeriBranch.dashboard,
-    listPane: const DmListPane(),
-    content: NeriWindow.of(context).isDualPane
-        ? const DashboardContent()
-        : const _DashboardPager(),
-  );
+  Widget build(BuildContext context) => NeriWindow.of(context).isDualPane
+      ? const DashboardContent()
+      : const AppScaffold(
+          branch: NeriBranch.dashboard,
+          content: _DashboardPager(),
+        );
 }
 
 class DashboardContent extends ConsumerStatefulWidget {

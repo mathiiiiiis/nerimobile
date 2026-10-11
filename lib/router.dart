@@ -43,22 +43,25 @@ final routerProvider = Provider<GoRouter>((ref) {
         branches: [
           StatefulShellBranch(
             routes: [
-              GoRoute(
-                path: '/app',
-                pageBuilder: (_, _) => const StaticPage(child: DashboardPane()),
+              _dualPaneShell(
+                branch: NeriBranch.dashboard,
+                listPane: (_) => const DmListPane(),
                 routes: [
                   GoRoute(
-                    path: 'inbox/:channelId',
-                    pageBuilder: (context, state) {
-                      final pane = ChannelPane(
-                        channelId: state.pathParameters['channelId']!,
-                        branch: NeriBranch.dashboard,
-                        listPane: const DmListPane(),
-                      );
-                      return NeriWindow.of(context).isDualPane
-                          ? StaticPage(child: pane)
-                          : SlideOverPage(child: pane);
-                    },
+                    path: '/app',
+                    pageBuilder: (_, _) =>
+                        const StaticPage(child: DashboardPane()),
+                    routes: [
+                      GoRoute(
+                        path: 'inbox/:channelId',
+                        pageBuilder: (context, state) => _channelPage(
+                          context,
+                          ChannelPane(
+                            channelId: state.pathParameters['channelId']!,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -66,57 +69,62 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           StatefulShellBranch(
             routes: [
-              GoRoute(
-                path: '/app/servers',
-                builder: (_, _) => const AppScaffold(
-                  branch: NeriBranch.servers,
-                  listPane: PlaceholderPane(label: 'Channels'),
-                  content: PlaceholderPane(label: 'No server'),
-                ),
-              ),
-              GoRoute(
-                path: '/app/servers/:serverId',
-                builder: (context, state) {
-                  final list = ChannelListPane(
-                    serverId: state.pathParameters['serverId']!,
-                  );
-                  return AppScaffold(
-                    branch: NeriBranch.servers,
-                    listPane: list,
-                    //the list is the page on mobile
-                    content: NeriWindow.of(context).isDualPane
-                        ? const PlaceholderPane(label: 'Server')
-                        : list,
-                  );
+              _dualPaneShell(
+                branch: NeriBranch.servers,
+                listPane: (state) => switch (state.pathParameters['serverId']) {
+                  final serverId? => ChannelListPane(
+                    key: ValueKey(serverId),
+                    serverId: serverId,
+                    selectedChannelId: state.pathParameters['channelId'],
+                  ),
+                  null => const PlaceholderPane(label: 'Channels'),
                 },
                 routes: [
                   GoRoute(
-                    path: ':channelId',
-                    pageBuilder: (context, state) {
+                    path: '/app/servers',
+                    builder: (context, state) => _branchPage(
+                      context,
+                      NeriBranch.servers,
+                      const PlaceholderPane(label: 'No server'),
+                    ),
+                  ),
+                  GoRoute(
+                    path: '/app/servers/:serverId',
+                    builder: (context, state) {
                       final serverId = state.pathParameters['serverId']!;
-                      final channelId = state.pathParameters['channelId']!;
-                      final pane = ChannelPane(
-                        channelId: channelId,
-                        serverId: serverId,
-                        branch: NeriBranch.servers,
-                        listPane: ChannelListPane(
-                          serverId: serverId,
-                          selectedChannelId: channelId,
-                        ),
+                      return _branchPage(
+                        context,
+                        NeriBranch.servers,
+                        //the list is the page on mobile
+                        NeriWindow.of(context).isDualPane
+                            ? const PlaceholderPane(label: 'Server')
+                            : ChannelListPane(
+                                key: ValueKey(serverId),
+                                serverId: serverId,
+                              ),
                       );
-                      return NeriWindow.of(context).isDualPane
-                          ? StaticPage(child: pane)
-                          : SlideOverPage(child: pane);
                     },
                     routes: [
                       GoRoute(
-                        path: 'members',
-                        pageBuilder: (_, state) => SlideOverPage(
-                          child: MembersPage(
-                            serverId: state.pathParameters['serverId']!,
+                        path: ':channelId',
+                        pageBuilder: (context, state) => _channelPage(
+                          context,
+                          ChannelPane(
                             channelId: state.pathParameters['channelId']!,
+                            serverId: state.pathParameters['serverId']!,
                           ),
                         ),
+                        routes: [
+                          GoRoute(
+                            path: 'members',
+                            pageBuilder: (_, state) => SlideOverPage(
+                              child: MembersPage(
+                                serverId: state.pathParameters['serverId']!,
+                                channelId: state.pathParameters['channelId']!,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -147,6 +155,27 @@ final routerProvider = Provider<GoRouter>((ref) {
     ],
   );
 });
+
+ShellRoute _dualPaneShell({
+  required NeriBranch branch,
+  required Widget Function(GoRouterState state) listPane,
+  required List<RouteBase> routes,
+}) => ShellRoute(
+  builder: (context, state, child) => NeriWindow.of(context).isDualPane
+      ? AppScaffold(branch: branch, listPane: listPane(state), content: child)
+      : child,
+  routes: routes,
+);
+
+Widget _branchPage(BuildContext context, NeriBranch branch, Widget content) =>
+    NeriWindow.of(context).isDualPane
+    ? content
+    : AppScaffold(branch: branch, content: content);
+
+Page<void> _channelPage(BuildContext context, Widget pane) =>
+    NeriWindow.of(context).isDualPane
+    ? StaticPage(child: pane)
+    : SlideOverPage(child: pane);
 
 String? _redirect(Ref ref, String location) {
   final auth = ref.read(authProvider);

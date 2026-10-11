@@ -20,8 +20,6 @@ import 'package:nerimobile/views/chat/composer/composer.dart';
 import 'package:nerimobile/views/chat/composer/emoji_panel.dart';
 import 'package:nerimobile/views/chat/message/message_list.dart';
 import 'package:nerimobile/views/server/member_list.dart';
-import 'package:nerimobile/views/shell/app_scaffold.dart';
-import 'package:nerimobile/views/shell/destinations.dart';
 import 'package:nerimobile/views/size_reporter.dart';
 
 const _panelMotion = Duration(milliseconds: 300);
@@ -41,17 +39,9 @@ double _expansion(double visible, double collapsed, double expanded) =>
     ((visible - collapsed) / (expanded - collapsed)).clamp(0.0, 1.0);
 
 class ChannelPane extends ConsumerWidget {
-  const ChannelPane({
-    super.key,
-    required this.channelId,
-    required this.branch,
-    required this.listPane,
-    this.serverId,
-  });
+  const ChannelPane({super.key, required this.channelId, this.serverId});
 
   final String channelId;
-  final NeriBranch branch;
-  final Widget listPane;
   final String? serverId;
 
   @override
@@ -90,40 +80,36 @@ class ChannelPane extends ConsumerWidget {
       );
     }
 
-    return AppScaffold(
-      branch: branch,
-      listPane: listPane,
-      content: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(
-            child: Padding(
-              padding: EdgeInsets.only(
-                top: sizing.space(NeriSpacingRole.sm),
-                right: sizing.space(NeriSpacingRole.sm),
-                bottom: sizing.space(NeriSpacingRole.sm),
-              ),
-              child: Container(
-                clipBehavior: Clip.antiAlias,
-                decoration: BoxDecoration(
-                  color: context.neri[NeriToken.background],
-                  borderRadius: sizing.rounded(NeriRadiusRole.md),
-                  border: Border.all(
-                    color: context.neri[NeriToken.border],
-                    width: sizing.border(NeriBorderRole.hairline),
-                  ),
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Expanded(
+          child: Padding(
+            padding: EdgeInsets.only(
+              top: sizing.space(NeriSpacingRole.sm),
+              right: sizing.space(NeriSpacingRole.sm),
+              bottom: sizing.space(NeriSpacingRole.sm),
+            ),
+            child: Container(
+              clipBehavior: Clip.antiAlias,
+              decoration: BoxDecoration(
+                color: context.neri[NeriToken.background],
+                borderRadius: sizing.rounded(NeriRadiusRole.md),
+                border: Border.all(
+                  color: context.neri[NeriToken.border],
+                  width: sizing.border(NeriBorderRole.hairline),
                 ),
-                child: chat,
               ),
+              child: chat,
             ),
           ),
-          if (serverId != null && membersOpen)
-            SizedBox(
-              width: sizing.dimen(NeriDimen.listPaneWidth),
-              child: MembersPane(serverId: serverId, channelId: channelId),
-            ),
-        ],
-      ),
+        ),
+        if (serverId != null && membersOpen)
+          SizedBox(
+            width: sizing.dimen(NeriDimen.listPaneWidth),
+            child: MembersPane(serverId: serverId, channelId: channelId),
+          ),
+      ],
     );
   }
 
