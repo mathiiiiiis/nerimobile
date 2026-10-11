@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nerimobile/db/cache_hydration.dart';
 import 'package:nerimobile/models/server.dart';
+import 'package:nerimobile/stores/connection/connection_store.dart';
 import 'package:nerimobile/stores/server/server_store.dart';
 import 'package:nerimobile/theme/sizing/border.dart';
 import 'package:flutter/material.dart';
@@ -133,7 +134,9 @@ class _ServerListState extends ConsumerState<_ServerList> {
     final sizing = context.neriSize;
     final servers = ref.watch(sortedServersProvider);
     final unknown =
-        servers.isEmpty && ref.watch(cacheHydrationProvider).isLoading;
+        servers.isEmpty &&
+        (ref.watch(cacheHydrationProvider).isLoading ||
+            ref.watch(connectionProvider) is! Authenticated);
     final padding = EdgeInsets.only(
       top: sizing.space(NeriSpacingRole.sm),
       bottom: sizing.dimen(NeriDimen.fadeHeight),
