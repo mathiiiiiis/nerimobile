@@ -15,29 +15,35 @@ final serverChannelGroupsProvider = Provider.family<List<ChannelGroup>, String>(
       for (final channel in ref.watch(channelsProvider).values)
         if (channel.serverId == serverId) channel,
     ]..sort(_byOrder);
-    final categories = [
+    final categoryIds = [
       for (final channel in channels)
-        if (channel.type == ChannelType.category.value) channel,
+        if (channel.type == ChannelType.category.value) channel.id,
     ];
-    final categoryIds = {for (final category in categories) category.id};
 
-    final grouped = <String?, List<Channel>>{};
+    final children = <String?, List<Channel>>{};
+    final roots = <Channel>[];
     for (final channel in channels) {
-      if (channel.type == ChannelType.category.value) continue;
-      if (!canViewChannel(access, channel)) continue;
+      final isCategory = channel.type == ChannelType.category.value;
+      if (!isCategory && !canViewChannel(access, channel)) continue;
 
-      final categoryId = categoryIds.contains(channel.categoryId)
-          ? channel.categoryId
-          : null;
-      (grouped[categoryId] ??= []).add(channel);
+      if (!isCategory && categoryIds.contains(channel.categoryId)) {
+        (children[channel.categoryId!] ??= []).add(channel);
+      } else {
+        roots.add(channel);
+      }
     }
 
-    return [
-      if (grouped[null] case final uncategorised?)
-        (category: null, channels: uncategorised),
-      for (final category in categories)
-        (category: category, channels: grouped[category.id] ?? const []),
-    ];
+    final groups = <ChannelGroup>[];
+    for (final root in roots) {
+      if (root.type == ChannelType.category.value) {
+        groups.add((category: root, channels: children[root.id] ?? const []));
+      } else if (groups.lastOrNull case (category: null, :final channels)) {
+        channels.add(root);
+      } else {
+        groups.add((category: null, channels: [root]));
+      }
+    }
+    return groups;
   },
 );
 

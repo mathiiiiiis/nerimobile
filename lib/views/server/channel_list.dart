@@ -69,13 +69,20 @@ class ChannelListPane extends ConsumerWidget {
                       bottom: sizing.dimen(NeriDimen.fadeHeight),
                     ),
                     children: [
-                      for (final (:category, :channels) in groups) ...[
-                        if (category != null) _CategoryHeader(category),
+                      for (final (index, (:category, :channels))
+                          in groups.indexed) ...[
+                        if (category != null) ...[
+                          if (index > 0)
+                            SizedBox(height: sizing.space(NeriSpacingRole.sm)),
+                          _CategoryHeader(category),
+                        ],
                         for (final channel in channels)
                           _ChannelRow(
                             channel: channel,
                             selected: channel.id == selectedChannelId,
                           ),
+                        if (category != null)
+                          SizedBox(height: sizing.space(NeriSpacingRole.sm)),
                       ],
                     ],
                   ),
@@ -116,7 +123,7 @@ class _CategoryHeader extends ConsumerWidget {
     return Padding(
       padding: EdgeInsets.fromLTRB(
         sizing.space(NeriSpacingRole.md),
-        sizing.space(NeriSpacingRole.md),
+        sizing.space(NeriSpacingRole.sm),
         sizing.space(NeriSpacingRole.md),
         sizing.space(NeriSpacingRole.xs),
       ),
