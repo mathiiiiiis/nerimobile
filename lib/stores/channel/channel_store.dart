@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nerimobile/stores/message/message_mention_store.dart';
 import 'package:nerimobile/models/channel.dart';
+import 'package:nerimobile/stores/server/server_permissions.dart';
 
 final currentChannelIdProvider =
     NotifierProvider<CurrentChannelIdNotifier, String?>(
@@ -152,6 +153,11 @@ final channelNotificationsProvider = Provider<Map<String, int>>((ref) {
   final notifications = <String, int>{};
 
   for (final channel in channels.values) {
+    if (channel.serverId case final serverId?) {
+      final access = ref.watch(serverAccessProvider(serverId));
+      if (access != null && !canViewChannel(access, channel)) continue;
+    }
+
     final mentionCount = mentions[channel.id]?.count;
 
     if (mentionCount != null && mentionCount > 0) {

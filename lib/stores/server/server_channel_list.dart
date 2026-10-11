@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nerimobile/models/channel.dart';
 import 'package:nerimobile/stores/channel/channel_store.dart';
 import 'package:nerimobile/stores/server/server_permissions.dart';
+import 'package:nerimobile/utils/role_permission_flag.dart';
 
 typedef ChannelGroup = ({Channel? category, List<Channel> channels});
 
@@ -33,10 +34,21 @@ final serverChannelGroupsProvider = Provider.family<List<ChannelGroup>, String>(
       }
     }
 
+    final manager = memberHasPermission(
+      access,
+      RolePermissionFlag.manageChannels,
+    );
+
     final groups = <ChannelGroup>[];
     for (final root in roots) {
       if (root.type == ChannelType.category.value) {
-        groups.add((category: root, channels: children[root.id] ?? const []));
+        final visible = children[root.id] ?? const [];
+        if (visible.isEmpty &&
+            !manager &&
+            isPrivateChannel(access.server, root)) {
+          continue;
+        }
+        groups.add((category: root, channels: visible));
       } else if (groups.lastOrNull case (category: null, :final channels)) {
         channels.add(root);
       } else {
