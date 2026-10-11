@@ -510,7 +510,7 @@ class _ChannelNotice extends ConsumerWidget {
         sizing.space(NeriSpacingRole.md),
       ),
       child: Container(
-        padding: EdgeInsets.all(sizing.space(NeriSpacingRole.sm)),
+        padding: EdgeInsets.all(sizing.space(NeriSpacingRole.md)),
         decoration: BoxDecoration(
           color: colors[NeriToken.card],
           borderRadius: sizing.rounded(NeriRadiusRole.md),
@@ -521,7 +521,7 @@ class _ChannelNotice extends ConsumerWidget {
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          spacing: sizing.space(NeriSpacingRole.xs),
+          spacing: sizing.space(NeriSpacingRole.sm),
           children: [
             Row(
               spacing: sizing.space(NeriSpacingRole.xs),
@@ -535,6 +535,7 @@ class _ChannelNotice extends ConsumerWidget {
                   'Channel Notice', //TODO: add l10n
                   style: text[NeriTextRole.labelLarge].copyWith(
                     color: colors[NeriToken.text],
+                    fontWeight: FontWeight.w900,
                   ),
                 ),
               ],
