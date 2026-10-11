@@ -6,6 +6,7 @@ import 'package:nerimobile/db/cache_hydration.dart';
 
 import 'package:nerimobile/models/channel.dart';
 import 'package:nerimobile/stores/channel/channel_store.dart';
+import 'package:nerimobile/stores/connection/connection_store.dart';
 import 'package:nerimobile/stores/server/server_channel_list.dart';
 import 'package:nerimobile/stores/server/server_permissions.dart';
 import 'package:nerimobile/stores/server/server_store.dart';
@@ -67,7 +68,9 @@ class _ChannelListPaneState extends ConsumerState<ChannelListPane>
     final name = ref.watch(serversProvider.select((s) => s[serverId]?.name));
     final groups = ref.watch(serverChannelGroupsProvider(serverId));
     final unknown =
-        groups.isEmpty && ref.watch(cacheHydrationProvider).isLoading;
+        groups.isEmpty &&
+        (ref.watch(cacheHydrationProvider).isLoading ||
+            ref.watch(connectionProvider) is! Authenticated);
     final collapsed = ref.watch(collapsedCategoriesProvider);
     final notifications = ref.watch(channelNotificationsProvider);
     final framed = NeriWindow.of(context).isDualPane;
