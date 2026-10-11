@@ -203,10 +203,12 @@ class _ChannelRow extends ConsumerWidget {
                             ? NeriToken.text
                             : NeriToken.textTertiary],
                   ),
-                  child: CdnIcon(
-                    channel: channel,
-                    size: sizing.dimen(NeriDimen.emojiSm),
-                    fallbackIcon: Symbols.tag_rounded,
+                  child: _IconBox(
+                    child: CdnIcon(
+                      channel: channel,
+                      size: sizing.dimen(NeriDimen.emojiSm),
+                      fallbackIcon: Symbols.tag_rounded,
+                    ),
                   ),
                 ),
                 Expanded(
@@ -236,6 +238,28 @@ class _ChannelRow extends ConsumerWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _IconBox extends StatelessWidget {
+  const _IconBox({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final sizing = context.neriSize;
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: context.neri[NeriToken.surfaceHover],
+        borderRadius: sizing.rounded(NeriRadiusRole.sm),
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(sizing.space(NeriSpacingRole.xs)),
+        child: child,
       ),
     );
   }
