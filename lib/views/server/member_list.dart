@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -32,6 +34,7 @@ import 'package:nerimobile/views/shell/widgets/scroll_fade.dart';
 
 const _offlineOpacity = 0.5;
 const _bannerAspectRatio = 30 / 12;
+const _collapseMotion = Duration(milliseconds: 200);
 
 final membersPaneOpenProvider = NotifierProvider<MembersPaneOpen, bool>(
   MembersPaneOpen.new,
@@ -42,6 +45,30 @@ class MembersPaneOpen extends Notifier<bool> {
   bool build() => true;
 
   void toggle() => state = !state;
+}
+
+final collapsedMemberGroupsProvider =
+    NotifierProvider<CollapsedMemberGroups, Map<String, Set<String>>>(
+      CollapsedMemberGroups.new,
+    );
+
+class CollapsedMemberGroups extends Notifier<Map<String, Set<String>>> {
+  @override
+  Map<String, Set<String>> build() => const {};
+
+  void toggle(String serverId, String groupKey) {
+    final current = state[serverId] ?? const {};
+    state = {
+      ...state,
+      serverId: current.contains(groupKey)
+          ? current.difference({groupKey})
+          : {...current, groupKey},
+    };
+  }
+}
+
+extension on MemberGroup {
+  String get key => role?.id ?? (online ? 'online' : 'offline');
 }
 
 class MembersPage extends StatelessWidget {
@@ -270,7 +297,7 @@ class _NotAvailable extends StatelessWidget {
   }
 }
 
-class MemberList extends ConsumerWidget {
+class MemberList extends ConsumerStatefulWidget {
   const MemberList({
     super.key,
     required this.serverId,
@@ -283,7 +310,39 @@ class MemberList extends ConsumerWidget {
   final Color surface;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<MemberList> createState() => _MemberListState();
+}
+
+class _MemberListState extends ConsumerState<MemberList> {
+  //true during open, false while close
+  final _settling = <String, bool>{};
+  final _settleTimers = <String, Timer>{};
+
+  @override
+  void dispose() {
+    for (final timer in _settleTimers.values) {
+      timer.cancel();
+    }
+    super.dispose();
+  }
+
+  void _toggle(String groupKey, {required bool opening}) {
+    ref
+        .read(collapsedMemberGroupsProvider.notifier)
+        .toggle(widget.serverId, groupKey);
+
+    _settleTimers[groupKey]?.cancel();
+    _settleTimers[groupKey] = Timer(_collapseMotion, () {
+      if (mounted) setState(() => _settling.remove(groupKey));
+    });
+    setState(() => _settling[groupKey] = opening);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final serverId = widget.serverId;
+    final channelId = widget.channelId;
+    final surface = widget.surface;
     final sizing = context.neriSize;
     final groups = ref.watch(
       memberGroupsProvider((serverId: serverId, channelId: channelId)),
@@ -291,11 +350,15 @@ class MemberList extends ConsumerWidget {
     final unknown =
         ref.watch(connectionProvider) is! Authenticated &&
         (ref.watch(serverMembersProvider)[serverId]?.length ?? 0) <= 1;
+    final collapsed = ref.watch(
+      collapsedMemberGroupsProvider.select((c) => c[serverId] ?? const {}),
+    );
     final total = groups.fold(0, (sum, group) => sum + group.members.length);
     final entries = [
       for (final group in groups) ...[
         (group: group, member: null),
-        for (final member in group.members) (group: group, member: member),
+        if (!collapsed.contains(group.key) || _settling[group.key] == false)
+          for (final member in group.members) (group: group, member: member),
       ],
     ];
 
@@ -319,13 +382,23 @@ class MemberList extends ConsumerWidget {
                 }
 
                 final (:group, :member) = entries[index - _headerCount];
+                final open = !collapsed.contains(group.key);
                 return member == null
-                    ? _GroupHeader(group)
-                    : _MemberRow(
-                        serverId: serverId,
-                        member: member,
-                        online: group.online,
-                        surface: surface,
+                    ? _GroupHeader(
+                        group,
+                        collapsed: !open,
+                        onTap: () => _toggle(group.key, opening: !open),
+                      )
+                    : _Reveal(
+                        key: ValueKey((group.key, member.userId)),
+                        open: open,
+                        appear: _settling[group.key] == true,
+                        child: _MemberRow(
+                          serverId: serverId,
+                          member: member,
+                          online: group.online,
+                          surface: surface,
+                        ),
                       );
               },
             ),
@@ -334,6 +407,36 @@ class MemberList extends ConsumerWidget {
 }
 
 const _headerCount = 3;
+
+class _Reveal extends StatelessWidget {
+  const _Reveal({
+    super.key,
+    required this.open,
+    required this.appear,
+    required this.child,
+  });
+
+  final bool open;
+  final bool appear;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: appear ? 0 : 1, end: open ? 1 : 0),
+      duration: _collapseMotion,
+      curve: Curves.easeOutCubic,
+      builder: (context, value, child) => ClipRect(
+        child: Align(
+          alignment: Alignment.topCenter,
+          heightFactor: value,
+          child: Opacity(opacity: value, child: child),
+        ),
+      ),
+      child: child,
+    );
+  }
+}
 
 class _ServerBanner extends ConsumerWidget {
   const _ServerBanner(this.serverId);
@@ -482,9 +585,15 @@ class _MemberCount extends StatelessWidget {
 }
 
 class _GroupHeader extends StatelessWidget {
-  const _GroupHeader(this.group);
+  const _GroupHeader(
+    this.group, {
+    required this.collapsed,
+    required this.onTap,
+  });
 
   final MemberGroup group;
+  final bool collapsed;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -497,31 +606,51 @@ class _GroupHeader extends StatelessWidget {
         group.role?.name ??
         (group.online ? 'Online' : 'Offline'); //TODO: add l10n
 
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-        sizing.space(NeriSpacingRole.md),
-        sizing.space(NeriSpacingRole.md),
-        sizing.space(NeriSpacingRole.md),
-        sizing.space(NeriSpacingRole.xs),
-      ),
-      child: Row(
-        spacing: sizing.space(NeriSpacingRole.xs),
-        children: [
-          if (group.role?.icon != null)
-            CdnIcon(
-              serverRole: group.role,
-              size: sizing.dimen(NeriDimen.mentionIcon),
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(
+          sizing.space(NeriSpacingRole.md),
+          sizing.space(NeriSpacingRole.md),
+          sizing.space(NeriSpacingRole.md),
+          sizing.space(NeriSpacingRole.xs),
+        ),
+        child: Row(
+          spacing: sizing.space(NeriSpacingRole.xs),
+          children: [
+            Expanded(
+              child: Row(
+                spacing: sizing.space(NeriSpacingRole.xs),
+                children: [
+                  if (group.role?.icon != null)
+                    CdnIcon(
+                      serverRole: group.role,
+                      size: sizing.dimen(NeriDimen.mentionIcon),
+                    ),
+                  Flexible(
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: style,
+                    ),
+                  ),
+                  Text('— ${group.members.length}', style: style),
+                ],
+              ),
             ),
-          Flexible(
-            child: Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: style,
+            AnimatedRotation(
+              turns: collapsed ? -0.25 : 0,
+              duration: _collapseMotion,
+              child: Icon(
+                Symbols.keyboard_arrow_down_rounded,
+                size: sizing.dimen(NeriDimen.iconSm),
+                color: style.color,
+              ),
             ),
-          ),
-          Text('— ${group.members.length}', style: style),
-        ],
+          ],
+        ),
       ),
     );
   }
