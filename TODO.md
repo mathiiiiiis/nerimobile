@@ -17,6 +17,7 @@
 - [x] Heading in a custom status keeps its block spacer and font size
 - [ ] Swiping a message to reply or edit closes the keyboard, the
       message field*s `onTapOutside` unfocus should go
+- [ ] Resolve mentions in Channel Notice
 
 ## Features
 
@@ -51,9 +52,11 @@
   - [ ] Post interactions (like, comment, repost, more)
 - [ ] Servers:
   - [x] Channel listing
-  - [ ] Members list
+  - [x] Members list
   - [x] Writing
   - [x] `ChannelHeader` for not just DM
+  - [ ] Files tab in the members pane
+  - [ ] Search tab in the members pane
 - [ ] YouTube Embed:
   - [ ] Hyperlink Title (stripped tracking)
   - [ ] Cover card: thumbnail, play button (`youtube_explode_dart` maybe?)
@@ -67,9 +70,12 @@
   - [x] any kind of timestamp
   - [x] `ruby`
   - [x] `vertical`
+  - [ ] `@:s` someone ping
+  - [ ] `@:e` everyone ping
 - [x] No `codeblock` or `blockquote` handling in `inline`
 - [x] Make links clickable
 - [x] Migrate everything to use App Tokens
+- [ ] Allow Channel Mentions to be clicked
 - [ ] Render attachments inside a quote
 - [ ] Offer a reminder when tapping a future timestamp
 - [ ] Toggle checkboxes in own messages
