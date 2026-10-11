@@ -3182,6 +3182,15 @@ class $ServersTable extends Servers with TableInfo<$ServersTable, ServerRow> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _bannerMeta = const VerificationMeta('banner');
+  @override
+  late final GeneratedColumn<String> banner = GeneratedColumn<String>(
+    'banner',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _hexColorMeta = const VerificationMeta(
     'hexColor',
   );
@@ -3231,6 +3240,7 @@ class $ServersTable extends Servers with TableInfo<$ServersTable, ServerRow> {
     id,
     name,
     avatar,
+    banner,
     hexColor,
     defaultChannelId,
     defaultRoleId,
@@ -3265,6 +3275,12 @@ class $ServersTable extends Servers with TableInfo<$ServersTable, ServerRow> {
       context.handle(
         _avatarMeta,
         avatar.isAcceptableOrUnknown(data['avatar']!, _avatarMeta),
+      );
+    }
+    if (data.containsKey('banner')) {
+      context.handle(
+        _bannerMeta,
+        banner.isAcceptableOrUnknown(data['banner']!, _bannerMeta),
       );
     }
     if (data.containsKey('hex_color')) {
@@ -3329,6 +3345,10 @@ class $ServersTable extends Servers with TableInfo<$ServersTable, ServerRow> {
         DriftSqlType.string,
         data['${effectivePrefix}avatar'],
       ),
+      banner: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}banner'],
+      ),
       hexColor: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}hex_color'],
@@ -3358,6 +3378,7 @@ class ServerRow extends DataClass implements Insertable<ServerRow> {
   final String id;
   final String name;
   final String? avatar;
+  final String? banner;
   final String hexColor;
   final String defaultChannelId;
   final String defaultRoleId;
@@ -3366,6 +3387,7 @@ class ServerRow extends DataClass implements Insertable<ServerRow> {
     required this.id,
     required this.name,
     this.avatar,
+    this.banner,
     required this.hexColor,
     required this.defaultChannelId,
     required this.defaultRoleId,
@@ -3378,6 +3400,9 @@ class ServerRow extends DataClass implements Insertable<ServerRow> {
     map['name'] = Variable<String>(name);
     if (!nullToAbsent || avatar != null) {
       map['avatar'] = Variable<String>(avatar);
+    }
+    if (!nullToAbsent || banner != null) {
+      map['banner'] = Variable<String>(banner);
     }
     map['hex_color'] = Variable<String>(hexColor);
     map['default_channel_id'] = Variable<String>(defaultChannelId);
@@ -3393,6 +3418,9 @@ class ServerRow extends DataClass implements Insertable<ServerRow> {
       avatar: avatar == null && nullToAbsent
           ? const Value.absent()
           : Value(avatar),
+      banner: banner == null && nullToAbsent
+          ? const Value.absent()
+          : Value(banner),
       hexColor: Value(hexColor),
       defaultChannelId: Value(defaultChannelId),
       defaultRoleId: Value(defaultRoleId),
@@ -3409,6 +3437,7 @@ class ServerRow extends DataClass implements Insertable<ServerRow> {
       id: serializer.fromJson<String>(json['id']),
       name: serializer.fromJson<String>(json['name']),
       avatar: serializer.fromJson<String?>(json['avatar']),
+      banner: serializer.fromJson<String?>(json['banner']),
       hexColor: serializer.fromJson<String>(json['hexColor']),
       defaultChannelId: serializer.fromJson<String>(json['defaultChannelId']),
       defaultRoleId: serializer.fromJson<String>(json['defaultRoleId']),
@@ -3422,6 +3451,7 @@ class ServerRow extends DataClass implements Insertable<ServerRow> {
       'id': serializer.toJson<String>(id),
       'name': serializer.toJson<String>(name),
       'avatar': serializer.toJson<String?>(avatar),
+      'banner': serializer.toJson<String?>(banner),
       'hexColor': serializer.toJson<String>(hexColor),
       'defaultChannelId': serializer.toJson<String>(defaultChannelId),
       'defaultRoleId': serializer.toJson<String>(defaultRoleId),
@@ -3433,6 +3463,7 @@ class ServerRow extends DataClass implements Insertable<ServerRow> {
     String? id,
     String? name,
     Value<String?> avatar = const Value.absent(),
+    Value<String?> banner = const Value.absent(),
     String? hexColor,
     String? defaultChannelId,
     String? defaultRoleId,
@@ -3441,6 +3472,7 @@ class ServerRow extends DataClass implements Insertable<ServerRow> {
     id: id ?? this.id,
     name: name ?? this.name,
     avatar: avatar.present ? avatar.value : this.avatar,
+    banner: banner.present ? banner.value : this.banner,
     hexColor: hexColor ?? this.hexColor,
     defaultChannelId: defaultChannelId ?? this.defaultChannelId,
     defaultRoleId: defaultRoleId ?? this.defaultRoleId,
@@ -3451,6 +3483,7 @@ class ServerRow extends DataClass implements Insertable<ServerRow> {
       id: data.id.present ? data.id.value : this.id,
       name: data.name.present ? data.name.value : this.name,
       avatar: data.avatar.present ? data.avatar.value : this.avatar,
+      banner: data.banner.present ? data.banner.value : this.banner,
       hexColor: data.hexColor.present ? data.hexColor.value : this.hexColor,
       defaultChannelId: data.defaultChannelId.present
           ? data.defaultChannelId.value
@@ -3470,6 +3503,7 @@ class ServerRow extends DataClass implements Insertable<ServerRow> {
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('avatar: $avatar, ')
+          ..write('banner: $banner, ')
           ..write('hexColor: $hexColor, ')
           ..write('defaultChannelId: $defaultChannelId, ')
           ..write('defaultRoleId: $defaultRoleId, ')
@@ -3483,6 +3517,7 @@ class ServerRow extends DataClass implements Insertable<ServerRow> {
     id,
     name,
     avatar,
+    banner,
     hexColor,
     defaultChannelId,
     defaultRoleId,
@@ -3495,6 +3530,7 @@ class ServerRow extends DataClass implements Insertable<ServerRow> {
           other.id == this.id &&
           other.name == this.name &&
           other.avatar == this.avatar &&
+          other.banner == this.banner &&
           other.hexColor == this.hexColor &&
           other.defaultChannelId == this.defaultChannelId &&
           other.defaultRoleId == this.defaultRoleId &&
@@ -3505,6 +3541,7 @@ class ServersCompanion extends UpdateCompanion<ServerRow> {
   final Value<String> id;
   final Value<String> name;
   final Value<String?> avatar;
+  final Value<String?> banner;
   final Value<String> hexColor;
   final Value<String> defaultChannelId;
   final Value<String> defaultRoleId;
@@ -3514,6 +3551,7 @@ class ServersCompanion extends UpdateCompanion<ServerRow> {
     this.id = const Value.absent(),
     this.name = const Value.absent(),
     this.avatar = const Value.absent(),
+    this.banner = const Value.absent(),
     this.hexColor = const Value.absent(),
     this.defaultChannelId = const Value.absent(),
     this.defaultRoleId = const Value.absent(),
@@ -3524,6 +3562,7 @@ class ServersCompanion extends UpdateCompanion<ServerRow> {
     required String id,
     required String name,
     this.avatar = const Value.absent(),
+    this.banner = const Value.absent(),
     required String hexColor,
     required String defaultChannelId,
     required String defaultRoleId,
@@ -3539,6 +3578,7 @@ class ServersCompanion extends UpdateCompanion<ServerRow> {
     Expression<String>? id,
     Expression<String>? name,
     Expression<String>? avatar,
+    Expression<String>? banner,
     Expression<String>? hexColor,
     Expression<String>? defaultChannelId,
     Expression<String>? defaultRoleId,
@@ -3549,6 +3589,7 @@ class ServersCompanion extends UpdateCompanion<ServerRow> {
       if (id != null) 'id': id,
       if (name != null) 'name': name,
       if (avatar != null) 'avatar': avatar,
+      if (banner != null) 'banner': banner,
       if (hexColor != null) 'hex_color': hexColor,
       if (defaultChannelId != null) 'default_channel_id': defaultChannelId,
       if (defaultRoleId != null) 'default_role_id': defaultRoleId,
@@ -3561,6 +3602,7 @@ class ServersCompanion extends UpdateCompanion<ServerRow> {
     Value<String>? id,
     Value<String>? name,
     Value<String?>? avatar,
+    Value<String?>? banner,
     Value<String>? hexColor,
     Value<String>? defaultChannelId,
     Value<String>? defaultRoleId,
@@ -3571,6 +3613,7 @@ class ServersCompanion extends UpdateCompanion<ServerRow> {
       id: id ?? this.id,
       name: name ?? this.name,
       avatar: avatar ?? this.avatar,
+      banner: banner ?? this.banner,
       hexColor: hexColor ?? this.hexColor,
       defaultChannelId: defaultChannelId ?? this.defaultChannelId,
       defaultRoleId: defaultRoleId ?? this.defaultRoleId,
@@ -3590,6 +3633,9 @@ class ServersCompanion extends UpdateCompanion<ServerRow> {
     }
     if (avatar.present) {
       map['avatar'] = Variable<String>(avatar.value);
+    }
+    if (banner.present) {
+      map['banner'] = Variable<String>(banner.value);
     }
     if (hexColor.present) {
       map['hex_color'] = Variable<String>(hexColor.value);
@@ -3615,6 +3661,7 @@ class ServersCompanion extends UpdateCompanion<ServerRow> {
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('avatar: $avatar, ')
+          ..write('banner: $banner, ')
           ..write('hexColor: $hexColor, ')
           ..write('defaultChannelId: $defaultChannelId, ')
           ..write('defaultRoleId: $defaultRoleId, ')
@@ -5839,6 +5886,7 @@ typedef $$ServersTableCreateCompanionBuilder =
       required String id,
       required String name,
       Value<String?> avatar,
+      Value<String?> banner,
       required String hexColor,
       required String defaultChannelId,
       required String defaultRoleId,
@@ -5850,6 +5898,7 @@ typedef $$ServersTableUpdateCompanionBuilder =
       Value<String> id,
       Value<String> name,
       Value<String?> avatar,
+      Value<String?> banner,
       Value<String> hexColor,
       Value<String> defaultChannelId,
       Value<String> defaultRoleId,
@@ -5878,6 +5927,11 @@ class $$ServersTableFilterComposer
 
   ColumnFilters<String> get avatar => $composableBuilder(
     column: $table.avatar,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get banner => $composableBuilder(
+    column: $table.banner,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -5926,6 +5980,11 @@ class $$ServersTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get banner => $composableBuilder(
+    column: $table.banner,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get hexColor => $composableBuilder(
     column: $table.hexColor,
     builder: (column) => ColumnOrderings(column),
@@ -5964,6 +6023,9 @@ class $$ServersTableAnnotationComposer
 
   GeneratedColumn<String> get avatar =>
       $composableBuilder(column: $table.avatar, builder: (column) => column);
+
+  GeneratedColumn<String> get banner =>
+      $composableBuilder(column: $table.banner, builder: (column) => column);
 
   GeneratedColumn<String> get hexColor =>
       $composableBuilder(column: $table.hexColor, builder: (column) => column);
@@ -6015,6 +6077,7 @@ class $$ServersTableTableManager
                 Value<String> id = const Value.absent(),
                 Value<String> name = const Value.absent(),
                 Value<String?> avatar = const Value.absent(),
+                Value<String?> banner = const Value.absent(),
                 Value<String> hexColor = const Value.absent(),
                 Value<String> defaultChannelId = const Value.absent(),
                 Value<String> defaultRoleId = const Value.absent(),
@@ -6024,6 +6087,7 @@ class $$ServersTableTableManager
                 id: id,
                 name: name,
                 avatar: avatar,
+                banner: banner,
                 hexColor: hexColor,
                 defaultChannelId: defaultChannelId,
                 defaultRoleId: defaultRoleId,
@@ -6035,6 +6099,7 @@ class $$ServersTableTableManager
                 required String id,
                 required String name,
                 Value<String?> avatar = const Value.absent(),
+                Value<String?> banner = const Value.absent(),
                 required String hexColor,
                 required String defaultChannelId,
                 required String defaultRoleId,
@@ -6044,6 +6109,7 @@ class $$ServersTableTableManager
                 id: id,
                 name: name,
                 avatar: avatar,
+                banner: banner,
                 hexColor: hexColor,
                 defaultChannelId: defaultChannelId,
                 defaultRoleId: defaultRoleId,

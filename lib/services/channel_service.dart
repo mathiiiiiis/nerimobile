@@ -58,3 +58,13 @@ Future<Map<String, dynamic>> patchMessage(
 
 Future<void> deleteMessage(Dio dio, String channelId, String messageId) =>
     dio.delete('/channels/$channelId/messages/$messageId');
+
+Future<String?> fetchChannelNotice(Dio dio, String channelId) async {
+  try {
+    final response = await dio.get('/channels/$channelId/notice');
+    return response.data['notice']?['content'] as String?;
+  } on DioException catch (e) {
+    if (e.response?.statusCode == 400) return null;
+    rethrow;
+  }
+}

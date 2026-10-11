@@ -5,6 +5,7 @@ class Servers extends Table {
   TextColumn get id => text()();
   TextColumn get name => text()();
   TextColumn get avatar => text().nullable()();
+  TextColumn get banner => text().nullable()();
   TextColumn get hexColor => text()();
   TextColumn get defaultChannelId => text()();
   TextColumn get defaultRoleId => text()();

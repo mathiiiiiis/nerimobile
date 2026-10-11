@@ -2,6 +2,7 @@ class Server {
   final String id;
   final String name;
   final String? avatar;
+  final String? banner;
   final String defaultChannelId;
   final String defaultRoleId;
   final String hexColor;
@@ -15,6 +16,7 @@ class Server {
     required this.defaultRoleId,
     required this.createdById,
     this.avatar,
+    this.banner,
   });
 
   factory Server.fromJson(Map<String, dynamic> json) => Server(
@@ -22,17 +24,19 @@ class Server {
     name: json['name'],
     hexColor: json['hexColor'],
     avatar: json['avatar'],
+    banner: json['banner'],
     defaultChannelId: json['defaultChannelId'],
     defaultRoleId: json['defaultRoleId'],
     createdById: json['createdById'],
   );
 
-  //avatar can be cleared to null
+  //avatar and banner can be cleared to null
   Server merge(Map<String, dynamic> updated) => Server(
     id: id,
     name: updated['name'] ?? name,
     hexColor: hexColor,
     avatar: updated.containsKey('avatar') ? updated['avatar'] : avatar,
+    banner: updated.containsKey('banner') ? updated['banner'] : banner,
     defaultChannelId: updated['defaultChannelId'] ?? defaultChannelId,
     defaultRoleId: defaultRoleId,
     createdById: updated['createdById'] ?? createdById,

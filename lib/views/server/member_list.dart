@@ -1,9 +1,11 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 import 'package:nerimobile/models/server_member.dart';
+import 'package:nerimobile/stores/channel/channel_notice_store.dart';
 import 'package:nerimobile/stores/connection/connection_store.dart';
 import 'package:nerimobile/stores/server/server_member_list.dart';
 import 'package:nerimobile/stores/server/server_member_store.dart';
@@ -16,16 +18,20 @@ import 'package:nerimobile/theme/sizing/dimens.dart';
 import 'package:nerimobile/theme/sizing/radius.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/theme/typography/text_styles.dart';
+import 'package:nerimobile/utils/caches.dart';
 import 'package:nerimobile/utils/colors.dart';
+import 'package:nerimobile/utils/image.dart';
 import 'package:nerimobile/views/avatar.dart';
 import 'package:nerimobile/views/cdn_icon.dart';
 import 'package:nerimobile/views/chat/channel/channel_header.dart';
 import 'package:nerimobile/views/dashboard/widget/dm_list_skeleton.dart';
 import 'package:nerimobile/views/empty_state.dart';
+import 'package:nerimobile/views/markup/markup.dart';
 import 'package:nerimobile/views/presence/presence_line.dart';
 import 'package:nerimobile/views/shell/widgets/scroll_fade.dart';
 
 const _offlineOpacity = 0.5;
+const _bannerAspectRatio = 30 / 12;
 
 final membersPaneOpenProvider = NotifierProvider<MembersPaneOpen, bool>(
   MembersPaneOpen.new,
@@ -301,11 +307,18 @@ class MemberList extends ConsumerWidget {
               padding: EdgeInsets.only(
                 bottom: sizing.dimen(NeriDimen.fadeHeight),
               ),
-              itemCount: entries.length + 1,
+              itemCount: entries.length + _headerCount,
               itemBuilder: (context, index) {
-                if (index == 0) return _MemberCount(total);
+                switch (index) {
+                  case 0:
+                    return _ServerBanner(serverId);
+                  case 1:
+                    return _ChannelNotice(channelId);
+                  case 2:
+                    return _MemberCount(total);
+                }
 
-                final (:group, :member) = entries[index - 1];
+                final (:group, :member) = entries[index - _headerCount];
                 return member == null
                     ? _GroupHeader(group)
                     : _MemberRow(
@@ -316,6 +329,122 @@ class MemberList extends ConsumerWidget {
                       );
               },
             ),
+    );
+  }
+}
+
+const _headerCount = 3;
+
+class _ServerBanner extends ConsumerWidget {
+  const _ServerBanner(this.serverId);
+
+  final String serverId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final server = ref.watch(serversProvider.select((s) => s[serverId]));
+    final banner = server?.banner;
+    if (server == null || banner == null || banner.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final sizing = context.neriSize;
+    final placeholder = ColoredBox(color: hexToColor(server.hexColor));
+
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        sizing.space(NeriSpacingRole.md),
+        0,
+        sizing.space(NeriSpacingRole.md),
+        sizing.space(NeriSpacingRole.md),
+      ),
+      child: ClipRRect(
+        borderRadius: sizing.rounded(NeriRadiusRole.md),
+        child: AspectRatio(
+          aspectRatio: _bannerAspectRatio,
+          child: LayoutBuilder(
+            builder: (context, constraints) => CachedNetworkImage(
+              imageUrl: buildImageUrl(
+                banner,
+                size:
+                    (constraints.maxWidth *
+                            MediaQuery.devicePixelRatioOf(context))
+                        .round(),
+              ),
+              cacheManager: mediaCache,
+              fit: BoxFit.cover,
+              fadeInDuration: Duration.zero,
+              fadeOutDuration: Duration.zero,
+              placeholder: (_, _) => placeholder,
+              errorWidget: (_, _, _) => placeholder,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ChannelNotice extends ConsumerWidget {
+  const _ChannelNotice(this.channelId);
+
+  final String channelId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final notice = ref.watch(channelNoticeProvider(channelId)).value;
+    if (notice == null || notice.isEmpty) return const SizedBox.shrink();
+
+    final colors = context.neri;
+    final sizing = context.neriSize;
+    final text = context.neriText;
+
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        sizing.space(NeriSpacingRole.md),
+        0,
+        sizing.space(NeriSpacingRole.md),
+        sizing.space(NeriSpacingRole.md),
+      ),
+      child: Container(
+        padding: EdgeInsets.all(sizing.space(NeriSpacingRole.sm)),
+        decoration: BoxDecoration(
+          color: colors[NeriToken.card],
+          borderRadius: sizing.rounded(NeriRadiusRole.md),
+          border: Border.all(
+            color: colors[NeriToken.border],
+            width: sizing.border(NeriBorderRole.hairline),
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          spacing: sizing.space(NeriSpacingRole.xs),
+          children: [
+            Row(
+              spacing: sizing.space(NeriSpacingRole.xs),
+              children: [
+                Icon(
+                  Symbols.info_rounded,
+                  size: sizing.dimen(NeriDimen.iconSm),
+                  color: colors[NeriToken.primary],
+                ),
+                Text(
+                  'Channel Notice', //TODO: add l10n
+                  style: text[NeriTextRole.labelLarge].copyWith(
+                    color: colors[NeriToken.text],
+                  ),
+                ),
+              ],
+            ),
+            DefaultTextStyle(
+              style: text[NeriTextRole.labelLarge].copyWith(
+                color: colors[NeriToken.text],
+              ),
+              child: MarkupView(rawText: notice, inline: true),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

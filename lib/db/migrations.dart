@@ -1,7 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:nerimobile/db/database.dart';
 
-const cacheSchemaVersion = 8;
+const cacheSchemaVersion = 9;
 
 MigrationStrategy migrations(NeriDatabase db) => MigrationStrategy(
   onCreate: (m) => m.createAll(),
@@ -20,6 +20,8 @@ MigrationStrategy migrations(NeriDatabase db) => MigrationStrategy(
     }
     if (from < 6) {
       await m.createTable(db.servers);
+    } else if (from < 9) {
+      await m.addColumn(db.servers, db.servers.banner);
     }
     if (from < 7) {
       await m.addColumn(db.channels, db.channels.permissions);
