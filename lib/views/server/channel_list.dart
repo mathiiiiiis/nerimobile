@@ -18,13 +18,26 @@ import 'package:nerimobile/theme/sizing/radius.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/theme/typography/text_styles.dart';
 import 'package:nerimobile/views/cdn_icon.dart';
+import 'package:nerimobile/views/collapse.dart';
 import 'package:nerimobile/views/mention_badge.dart';
 import 'package:nerimobile/views/server/channel_list_skeleton.dart';
 import 'package:nerimobile/views/shell/widgets/scroll_fade.dart';
 
 const _unreadMotion = Duration(milliseconds: 200);
 
-class ChannelListPane extends ConsumerWidget {
+final collapsedCategoriesProvider =
+    NotifierProvider<CollapsedCategories, Set<String>>(CollapsedCategories.new);
+
+class CollapsedCategories extends Notifier<Set<String>> {
+  @override
+  Set<String> build() => const {};
+
+  void toggle(String categoryId) => state = state.contains(categoryId)
+      ? state.difference({categoryId})
+      : {...state, categoryId};
+}
+
+class ChannelListPane extends ConsumerStatefulWidget {
   const ChannelListPane({
     super.key,
     required this.serverId,
@@ -35,13 +48,28 @@ class ChannelListPane extends ConsumerWidget {
   final String? selectedChannelId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ChannelListPane> createState() => _ChannelListPaneState();
+}
+
+class _ChannelListPaneState extends ConsumerState<ChannelListPane>
+    with CollapseSettling<ChannelListPane> {
+  void _toggle(String categoryId, {required bool opening}) {
+    ref.read(collapsedCategoriesProvider.notifier).toggle(categoryId);
+    settle(categoryId, opening: opening);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final serverId = widget.serverId;
+    final selectedChannelId = widget.selectedChannelId;
     final colors = context.neri;
     final sizing = context.neriSize;
     final name = ref.watch(serversProvider.select((s) => s[serverId]?.name));
     final groups = ref.watch(serverChannelGroupsProvider(serverId));
     final unknown =
         groups.isEmpty && ref.watch(cacheHydrationProvider).isLoading;
+    final collapsed = ref.watch(collapsedCategoriesProvider);
+    final notifications = ref.watch(channelNotificationsProvider);
     final framed = NeriWindow.of(context).isDualPane;
     final surface = framed
         ? colors[NeriToken.background]
@@ -72,20 +100,24 @@ class ChannelListPane extends ConsumerWidget {
                     ),
                     children: [
                       for (final (index, (:category, :channels))
-                          in groups.indexed) ...[
-                        if (category != null) ...[
+                          in groups.indexed)
+                        if (category == null)
+                          for (final channel in channels)
+                            _ChannelRow(
+                              channel: channel,
+                              selected: channel.id == selectedChannelId,
+                            )
+                        else ...[
                           if (index > 0)
                             SizedBox(height: sizing.space(NeriSpacingRole.sm)),
-                          _CategoryHeader(category),
-                        ],
-                        for (final channel in channels)
-                          _ChannelRow(
-                            channel: channel,
-                            selected: channel.id == selectedChannelId,
+                          ..._category(
+                            category,
+                            channels,
+                            folded: collapsed.contains(category.id),
+                            notifications: notifications,
                           ),
-                        if (category != null)
                           SizedBox(height: sizing.space(NeriSpacingRole.sm)),
-                      ],
+                        ],
                     ],
                   ),
           ),
@@ -110,46 +142,87 @@ class ChannelListPane extends ConsumerWidget {
       ),
     );
   }
+
+  Iterable<Widget> _category(
+    Channel category,
+    List<Channel> channels, {
+    required bool folded,
+    required Map<String, int> notifications,
+  }) sync* {
+    yield _CategoryHeader(
+      category,
+      collapsed: folded,
+      onTap: () => _toggle(category.id, opening: folded),
+    );
+
+    for (final channel in channels) {
+      final selected = channel.id == widget.selectedChannelId;
+      //folded keep unread channels in sight
+      final open = !folded || selected || notifications.containsKey(channel.id);
+      if (!open && settling(category.id) != false) continue;
+
+      yield CollapseReveal(
+        key: ValueKey(channel.id),
+        open: open,
+        appear: settling(category.id) == true,
+        child: _ChannelRow(channel: channel, selected: selected),
+      );
+    }
+  }
 }
 
-class _CategoryHeader extends ConsumerWidget {
-  const _CategoryHeader(this.category);
+class _CategoryHeader extends StatelessWidget {
+  const _CategoryHeader(
+    this.category, {
+    required this.collapsed,
+    required this.onTap,
+  });
 
   final Channel category;
+  final bool collapsed;
+  final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final colors = context.neri;
     final sizing = context.neriSize;
 
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-        sizing.space(NeriSpacingRole.md),
-        sizing.space(NeriSpacingRole.sm),
-        sizing.space(NeriSpacingRole.md),
-        sizing.space(NeriSpacingRole.xs),
-      ),
-      child: IconTheme.merge(
-        data: IconThemeData(color: colors[NeriToken.textTertiary]),
-        child: Row(
-          spacing: sizing.space(NeriSpacingRole.xs),
-          children: [
-            CdnIcon(
-              channel: category,
-              size: sizing.dimen(NeriDimen.mentionIcon),
-              fallbackIcon: Symbols.segment_rounded,
-            ),
-            Expanded(
-              child: Text(
-                category.name ?? '',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: context.neriText[NeriTextRole.labelSmall].copyWith(
-                  color: context.neri[NeriToken.textTertiary],
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(
+          sizing.space(NeriSpacingRole.md),
+          sizing.space(NeriSpacingRole.sm),
+          sizing.space(NeriSpacingRole.md),
+          sizing.space(NeriSpacingRole.xs),
+        ),
+        child: IconTheme.merge(
+          data: IconThemeData(color: colors[NeriToken.textTertiary]),
+          child: Row(
+            spacing: sizing.space(NeriSpacingRole.xs),
+            children: [
+              CdnIcon(
+                channel: category,
+                size: sizing.dimen(NeriDimen.mentionIcon),
+                fallbackIcon: Symbols.segment_rounded,
+              ),
+              Expanded(
+                child: Text(
+                  category.name ?? '',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: context.neriText[NeriTextRole.labelSmall].copyWith(
+                    color: context.neri[NeriToken.textTertiary],
+                  ),
                 ),
               ),
-            ),
-          ],
+              CollapseChevron(
+                collapsed: collapsed,
+                size: sizing.dimen(NeriDimen.iconSm),
+              ),
+            ],
+          ),
         ),
       ),
     );

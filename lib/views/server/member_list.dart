@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -26,6 +24,7 @@ import 'package:nerimobile/utils/image.dart';
 import 'package:nerimobile/views/avatar.dart';
 import 'package:nerimobile/views/cdn_icon.dart';
 import 'package:nerimobile/views/chat/channel/channel_header.dart';
+import 'package:nerimobile/views/collapse.dart';
 import 'package:nerimobile/views/dashboard/widget/dm_list_skeleton.dart';
 import 'package:nerimobile/views/empty_state.dart';
 import 'package:nerimobile/views/markup/markup.dart';
@@ -34,7 +33,6 @@ import 'package:nerimobile/views/shell/widgets/scroll_fade.dart';
 
 const _offlineOpacity = 0.5;
 const _bannerAspectRatio = 30 / 12;
-const _collapseMotion = Duration(milliseconds: 200);
 
 final membersPaneOpenProvider = NotifierProvider<MembersPaneOpen, bool>(
   MembersPaneOpen.new,
@@ -313,29 +311,14 @@ class MemberList extends ConsumerStatefulWidget {
   ConsumerState<MemberList> createState() => _MemberListState();
 }
 
-class _MemberListState extends ConsumerState<MemberList> {
-  //true during open, false while close
-  final _settling = <String, bool>{};
-  final _settleTimers = <String, Timer>{};
-
-  @override
-  void dispose() {
-    for (final timer in _settleTimers.values) {
-      timer.cancel();
-    }
-    super.dispose();
-  }
-
+class _MemberListState extends ConsumerState<MemberList>
+    with CollapseSettling<MemberList> {
   void _toggle(String groupKey, {required bool opening}) {
     ref
         .read(collapsedMemberGroupsProvider.notifier)
         .toggle(widget.serverId, groupKey);
 
-    _settleTimers[groupKey]?.cancel();
-    _settleTimers[groupKey] = Timer(_collapseMotion, () {
-      if (mounted) setState(() => _settling.remove(groupKey));
-    });
-    setState(() => _settling[groupKey] = opening);
+    settle(groupKey, opening: opening);
   }
 
   @override
@@ -354,11 +337,14 @@ class _MemberListState extends ConsumerState<MemberList> {
       collapsedMemberGroupsProvider.select((c) => c[serverId] ?? const {}),
     );
     final total = groups.fold(0, (sum, group) => sum + group.members.length);
+    final limit = revealLimit(context, sizing.dimen(NeriDimen.avatarMd));
     final entries = [
       for (final group in groups) ...[
-        (group: group, member: null),
-        if (!collapsed.contains(group.key) || _settling[group.key] == false)
-          for (final member in group.members) (group: group, member: member),
+        (group: group, member: null, animated: false),
+        if (!collapsed.contains(group.key) || settling(group.key) == false)
+          for (final (index, member) in group.members.indexed)
+            if (!collapsed.contains(group.key) || index < limit)
+              (group: group, member: member, animated: index < limit),
       ],
     ];
 
@@ -381,7 +367,8 @@ class _MemberListState extends ConsumerState<MemberList> {
                     return _MemberCount(total);
                 }
 
-                final (:group, :member) = entries[index - _headerCount];
+                final (:group, :member, :animated) =
+                    entries[index - _headerCount];
                 final open = !collapsed.contains(group.key);
                 return member == null
                     ? _GroupHeader(
@@ -389,10 +376,10 @@ class _MemberListState extends ConsumerState<MemberList> {
                         collapsed: !open,
                         onTap: () => _toggle(group.key, opening: !open),
                       )
-                    : _Reveal(
+                    : CollapseReveal(
                         key: ValueKey((group.key, member.userId)),
                         open: open,
-                        appear: _settling[group.key] == true,
+                        appear: animated && settling(group.key) == true,
                         child: _MemberRow(
                           serverId: serverId,
                           member: member,
@@ -407,36 +394,6 @@ class _MemberListState extends ConsumerState<MemberList> {
 }
 
 const _headerCount = 3;
-
-class _Reveal extends StatelessWidget {
-  const _Reveal({
-    super.key,
-    required this.open,
-    required this.appear,
-    required this.child,
-  });
-
-  final bool open;
-  final bool appear;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: appear ? 0 : 1, end: open ? 1 : 0),
-      duration: _collapseMotion,
-      curve: Curves.easeOutCubic,
-      builder: (context, value, child) => ClipRect(
-        child: Align(
-          alignment: Alignment.topCenter,
-          heightFactor: value,
-          child: Opacity(opacity: value, child: child),
-        ),
-      ),
-      child: child,
-    );
-  }
-}
 
 class _ServerBanner extends ConsumerWidget {
   const _ServerBanner(this.serverId);
@@ -641,14 +598,10 @@ class _GroupHeader extends StatelessWidget {
                 ],
               ),
             ),
-            AnimatedRotation(
-              turns: collapsed ? -0.25 : 0,
-              duration: _collapseMotion,
-              child: Icon(
-                Symbols.keyboard_arrow_down_rounded,
-                size: sizing.dimen(NeriDimen.iconSm),
-                color: style.color,
-              ),
+            CollapseChevron(
+              collapsed: collapsed,
+              size: sizing.dimen(NeriDimen.iconSm),
+              color: style.color,
             ),
           ],
         ),
