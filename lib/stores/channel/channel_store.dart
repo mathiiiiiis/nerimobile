@@ -14,7 +14,7 @@ final channelsProvider =
     );
 
 final lastSeenServerChannelIdsProvider =
-    NotifierProvider<LastSeenServerChannelIdsNotifier, Map<String, int>>(
+    NotifierProvider<LastSeenServerChannelIdsNotifier, Map<String, int>?>(
       LastSeenServerChannelIdsNotifier.new,
     );
 
@@ -124,14 +124,17 @@ class ChannelsNotifier extends Notifier<Map<String, Channel>> {
   }
 }
 
-class LastSeenServerChannelIdsNotifier extends Notifier<Map<String, int>> {
+class LastSeenServerChannelIdsNotifier extends Notifier<Map<String, int>?> {
   @override
-  Map<String, int> build() => const {};
+  Map<String, int>? build() => null;
 
   void setLastSeenServerChannelIds(Map<String, int> ids) => state = {...ids};
 
-  void updateLastSeenServerChannel(String channelId) =>
-      state = {...state, channelId: DateTime.now().millisecondsSinceEpoch + 10};
+  void updateLastSeenServerChannel(String channelId) {
+    final seen = state;
+    if (seen == null) return;
+    state = {...seen, channelId: DateTime.now().millisecondsSinceEpoch + 10};
+  }
 }
 
 final currentChannelProvider = Provider<Channel?>((ref) {
@@ -164,7 +167,7 @@ final channelNotificationsProvider = Provider<Map<String, int>>((ref) {
       notifications[channel.id] = mentionCount;
       continue;
     }
-    if (channel.serverId == null) continue;
+    if (channel.serverId == null || lastSeen == null) continue;
 
     final lastSeenAt = lastSeen[channel.id];
     final hasNotSeen =

@@ -79,7 +79,7 @@ class MessageListState extends ConsumerState<MessageList> {
   int? _readLastSeen() {
     final inbox = ref.read(inboxProvider)[widget.channelId];
     if (inbox != null) return inbox.lastSeen;
-    return ref.read(lastSeenServerChannelIdsProvider)[widget.channelId];
+    return ref.read(lastSeenServerChannelIdsProvider)?[widget.channelId];
   }
 
   void _clearUnread() {
