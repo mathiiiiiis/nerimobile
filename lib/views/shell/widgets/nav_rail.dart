@@ -26,6 +26,17 @@ const _unreadBlobRatio = 0.35;
 const _selectedBlobRatio = 0.55;
 const _morph = Duration(milliseconds: 200);
 
+final _railOffsetProvider = NotifierProvider<_RailOffset, double>(
+  _RailOffset.new,
+);
+
+class _RailOffset extends Notifier<double> {
+  @override
+  double build() => 0;
+
+  void set(double offset) => state = offset;
+}
+
 class NavRail extends StatelessWidget {
   const NavRail({super.key, required this.branch, required this.onSelect});
 
@@ -76,13 +87,49 @@ class NavRail extends StatelessWidget {
   }
 }
 
-class _ServerList extends ConsumerWidget {
+class _ServerList extends ConsumerStatefulWidget {
   const _ServerList({required this.selectedId});
 
   final String? selectedId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_ServerList> createState() => _ServerListState();
+}
+
+class _ServerListState extends ConsumerState<_ServerList> {
+  late final _scroll = ScrollController(
+    initialScrollOffset: ref.read(_railOffsetProvider),
+  )..addListener(_remember);
+
+  void _remember() {
+    if (TickerMode.valuesOf(context).enabled) {
+      ref.read(_railOffsetProvider.notifier).set(_scroll.offset);
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!TickerMode.valuesOf(context).enabled || !_scroll.hasClients) return;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final offset = ref.read(_railOffsetProvider);
+      if (!mounted || !_scroll.hasClients || _scroll.offset == offset) return;
+      _scroll.jumpTo(
+        offset.clamp(0, _scroll.position.maxScrollExtent).toDouble(),
+      );
+    });
+  }
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final selectedId = widget.selectedId;
     final sizing = context.neriSize;
     final servers = ref.watch(sortedServersProvider);
     final unknown =
@@ -104,6 +151,7 @@ class _ServerList extends ConsumerWidget {
     }
 
     return ListView.builder(
+      controller: _scroll,
       padding: padding,
       itemCount: servers.length,
       itemBuilder: (context, index) {
