@@ -22,6 +22,8 @@ import 'package:nerimobile/views/mention_badge.dart';
 import 'package:nerimobile/views/server/channel_list_skeleton.dart';
 import 'package:nerimobile/views/shell/widgets/scroll_fade.dart';
 
+const _unreadMotion = Duration(milliseconds: 200);
+
 class ChannelListPane extends ConsumerWidget {
   const ChannelListPane({
     super.key,
@@ -175,7 +177,7 @@ class _ChannelRow extends ConsumerWidget {
       }),
     );
 
-    return Padding(
+    final row = Padding(
       padding: EdgeInsets.symmetric(
         horizontal: sizing.space(NeriSpacingRole.sm),
       ),
@@ -238,6 +240,43 @@ class _ChannelRow extends ConsumerWidget {
             ),
           ),
         ),
+      ),
+    );
+
+    return Stack(
+      children: [
+        row,
+        Positioned(
+          left: 0,
+          top: 0,
+          bottom: 0,
+          child: Center(
+            child: _UnreadDot(visible: notification != null && !selected),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _UnreadDot extends StatelessWidget {
+  const _UnreadDot({required this.visible});
+
+  final bool visible;
+
+  @override
+  Widget build(BuildContext context) {
+    final sizing = context.neriSize;
+    final radius = Radius.circular(sizing.radius(NeriRadiusRole.full));
+
+    return AnimatedContainer(
+      duration: _unreadMotion,
+      curve: Curves.easeOut,
+      width: sizing.space(NeriSpacingRole.xs),
+      height: visible ? sizing.space(NeriSpacingRole.sm) : 0,
+      decoration: BoxDecoration(
+        color: context.neri[NeriToken.unreadDot],
+        borderRadius: BorderRadius.only(topRight: radius, bottomRight: radius),
       ),
     );
   }
