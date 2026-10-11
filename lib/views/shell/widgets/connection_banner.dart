@@ -25,7 +25,7 @@ class ConnectionBanner extends ConsumerStatefulWidget {
 
 class _ConnectionBannerState extends ConsumerState<ConnectionBanner> {
   Timer? _hide;
-  bool _hidden = false;
+  late bool _hidden = ref.read(connectionProvider) is Authenticated;
 
   @override
   void dispose() {
