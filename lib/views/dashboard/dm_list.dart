@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:nerimobile/db/cache_hydration.dart';
 
 import 'package:nerimobile/models/inbox.dart';
+import 'package:nerimobile/stores/channel/last_opened_store.dart';
 import 'package:nerimobile/stores/inbox/inbox_store.dart';
 import 'package:nerimobile/stores/message/message_mention_store.dart';
 
@@ -31,6 +32,9 @@ class DmListPane extends ConsumerWidget {
     final colors = context.neri;
     final sizing = context.neriSize;
     final inbox = ref.watch(sortedInboxProvider);
+    final selectedChannelId =
+        GoRouterState.of(context).pathParameters['channelId'] ??
+        ref.watch(lastOpenedInboxProvider);
     final unknown =
         inbox.isEmpty && ref.watch(cacheHydrationProvider).isLoading;
     final framed = NeriWindow.of(context).isDualPane;
@@ -61,7 +65,10 @@ class DmListPane extends ConsumerWidget {
                       bottom: sizing.dimen(NeriDimen.fadeHeight),
                     ),
                     itemCount: inbox.length,
-                    itemBuilder: (context, index) => DmRow(inbox: inbox[index]),
+                    itemBuilder: (context, index) => DmRow(
+                      inbox: inbox[index],
+                      selected: inbox[index].channelId == selectedChannelId,
+                    ),
                   ),
           ),
         ),
@@ -88,9 +95,10 @@ class DmListPane extends ConsumerWidget {
 }
 
 class DmRow extends ConsumerWidget {
-  const DmRow({super.key, required this.inbox});
+  const DmRow({super.key, required this.inbox, this.selected = false});
 
   final Inbox inbox;
+  final bool selected;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -99,43 +107,51 @@ class DmRow extends ConsumerWidget {
     final size = sizing.dimen(NeriDimen.avatarMd);
     final mentions = ref.watch(messageMentionsProvider)[inbox.channelId];
 
-    return InkWell(
-      onTap: () => context.go('/app/inbox/${inbox.channelId}'),
-      child: Padding(
-        padding: EdgeInsets.symmetric(
-          horizontal: sizing.space(NeriSpacingRole.sm),
-          vertical: sizing.space(NeriSpacingRole.xs),
-        ),
-        child: Row(
-          spacing: sizing.space(NeriSpacingRole.md),
-          children: [
-            PresenceAvatar(
-              user: inbox.recipient,
-              size: size,
-              surface: NeriWindow.of(context).isDualPane
-                  ? colors[NeriToken.background]
-                  : colors[NeriToken.pane],
-            ),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    inbox.recipient.username,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: context.neriText[NeriTextRole.bodyLarge].copyWith(
-                      color: colors[NeriToken.textSecondary],
-                    ),
+    return Padding(
+      padding: EdgeInsets.symmetric(
+        horizontal: sizing.space(NeriSpacingRole.xs),
+      ),
+      child: Material(
+        color: selected
+            ? colors[NeriToken.drawerItemHoverBackground]
+            : Colors.transparent,
+        borderRadius: sizing.rounded(NeriRadiusRole.md),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () => context.go('/app/inbox/${inbox.channelId}'),
+          child: Padding(
+            padding: EdgeInsets.all(sizing.space(NeriSpacingRole.xs)),
+            child: Row(
+              spacing: sizing.space(NeriSpacingRole.md),
+              children: [
+                PresenceAvatar(
+                  user: inbox.recipient,
+                  size: size,
+                  surface: NeriWindow.of(context).isDualPane
+                      ? colors[NeriToken.background]
+                      : colors[NeriToken.pane],
+                ),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        inbox.recipient.username,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: context.neriText[NeriTextRole.bodyLarge]
+                            .copyWith(color: colors[NeriToken.textSecondary]),
+                      ),
+                      PresenceLine(userId: inbox.recipientId),
+                    ],
                   ),
-                  PresenceLine(userId: inbox.recipientId),
-                ],
-              ),
+                ),
+                if (mentions != null && mentions.count > 0)
+                  MentionBadge(count: mentions.count),
+              ],
             ),
-            if (mentions != null && mentions.count > 0)
-              MentionBadge(count: mentions.count),
-          ],
+          ),
         ),
       ),
     );

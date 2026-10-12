@@ -5,6 +5,7 @@ import 'package:nerimobile/db/daos/server_dao.dart';
 import 'package:nerimobile/db/database.dart';
 import 'package:nerimobile/stores/channel/channel_store.dart';
 import 'package:nerimobile/stores/connection/connection_store.dart';
+import 'package:nerimobile/stores/inbox/inbox_store.dart';
 import 'package:nerimobile/stores/server/server_member_store.dart';
 import 'package:nerimobile/stores/server/server_permissions.dart';
 import 'package:nerimobile/stores/server/server_roles_store.dart';
@@ -88,3 +89,39 @@ class LastOpenedNotifier extends Notifier<LastOpened> {
     }
   }
 }
+
+final serverChannelToOpenProvider = Provider.family<String?, String>((
+  ref,
+  serverId,
+) {
+  final access = ref.watch(serverAccessProvider(serverId));
+  if (access == null) return null;
+
+  final channels = ref.watch(channelsProvider);
+  final saved = ref.watch(
+    lastOpenedProvider.select((l) => l.servers[serverId]?.channelId),
+  );
+  for (final id in [saved, access.server.defaultChannelId]) {
+    final channel = channels[id];
+    if (channel != null &&
+        channel.serverId == serverId &&
+        canViewChannel(access, channel)) {
+      return channel.id;
+    }
+  }
+  return null;
+});
+
+final lastOpenedInboxProvider = Provider<String?>((ref) {
+  final inboxes = ref.watch(inboxProvider);
+  String? latest;
+  var latestAt = 0;
+  for (final MapEntry(key: channelId, value: at)
+      in ref.watch(lastOpenedProvider).inboxes.entries) {
+    if (at > latestAt && inboxes.containsKey(channelId)) {
+      latest = channelId;
+      latestAt = at;
+    }
+  }
+  return latest;
+});

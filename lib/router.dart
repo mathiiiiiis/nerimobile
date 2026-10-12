@@ -12,6 +12,7 @@ import 'package:nerimobile/views/dashboard/dashboard_pane.dart';
 import 'package:nerimobile/views/dashboard/dm_list.dart';
 import 'package:nerimobile/views/server/channel_list.dart';
 import 'package:nerimobile/views/server/member_list.dart';
+import 'package:nerimobile/views/server/server_landing.dart';
 import 'package:nerimobile/views/shell/app_scaffold.dart';
 import 'package:nerimobile/views/shell/destinations.dart';
 import 'package:nerimobile/views/shell/widgets/panes.dart';
@@ -98,7 +99,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                         NeriBranch.servers,
                         //the list is the page on mobile
                         NeriWindow.of(context).isDualPane
-                            ? const PlaceholderPane(label: 'Server')
+                            ? ServerLanding(serverId: serverId)
                             : ChannelListPane(
                                 key: ValueKey(serverId),
                                 serverId: serverId,

@@ -6,6 +6,7 @@ import 'package:nerimobile/db/cache_hydration.dart';
 
 import 'package:nerimobile/models/channel.dart';
 import 'package:nerimobile/stores/channel/channel_store.dart';
+import 'package:nerimobile/stores/channel/last_opened_store.dart';
 import 'package:nerimobile/stores/connection/connection_store.dart';
 import 'package:nerimobile/stores/server/server_channel_list.dart';
 import 'package:nerimobile/stores/server/server_permissions.dart';
@@ -62,7 +63,9 @@ class _ChannelListPaneState extends ConsumerState<ChannelListPane>
   @override
   Widget build(BuildContext context) {
     final serverId = widget.serverId;
-    final selectedChannelId = widget.selectedChannelId;
+    final selectedChannelId =
+        widget.selectedChannelId ??
+        ref.watch(serverChannelToOpenProvider(serverId));
     final colors = context.neri;
     final sizing = context.neriSize;
     final name = ref.watch(serversProvider.select((s) => s[serverId]?.name));
@@ -117,6 +120,7 @@ class _ChannelListPaneState extends ConsumerState<ChannelListPane>
                             category,
                             channels,
                             folded: collapsed.contains(category.id),
+                            selectedChannelId: selectedChannelId,
                             notifications: notifications,
                           ),
                           SizedBox(height: sizing.space(NeriSpacingRole.sm)),
@@ -150,6 +154,7 @@ class _ChannelListPaneState extends ConsumerState<ChannelListPane>
     Channel category,
     List<Channel> channels, {
     required bool folded,
+    required String? selectedChannelId,
     required Map<String, int> notifications,
   }) sync* {
     yield _CategoryHeader(
@@ -159,7 +164,7 @@ class _ChannelListPaneState extends ConsumerState<ChannelListPane>
     );
 
     for (final channel in channels) {
-      final selected = channel.id == widget.selectedChannelId;
+      final selected = channel.id == selectedChannelId;
       //folded keep unread channels in sight
       final open = !folded || selected || notifications.containsKey(channel.id);
       if (!open && settling(category.id) != false) continue;
