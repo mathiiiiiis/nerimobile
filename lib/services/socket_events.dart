@@ -179,12 +179,10 @@ Future<void> onUserAuthenticated(Ref ref, dynamic payload) async {
   ref.read(inboxProvider.notifier).setInbox(data.inbox);
   ref.read(friendsProvider.notifier).setFriends(data.friends);
   ref.read(typingProvider.notifier).clear();
-  for (final item in data.inbox) {
-    ref.read(usersProvider.notifier).addUser(item.recipient);
-  }
-  for (final friend in data.friends) {
-    ref.read(usersProvider.notifier).addUser(friend.recipient);
-  }
+  ref.read(usersProvider.notifier).setUsers([
+    for (final item in data.inbox) item.recipient,
+    for (final friend in data.friends) friend.recipient,
+  ]);
 }
 
 void onServerJoined(Ref ref, dynamic payload) {

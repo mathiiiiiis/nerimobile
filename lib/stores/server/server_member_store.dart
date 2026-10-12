@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nerimobile/models/raw_server_member.dart';
 import 'package:nerimobile/models/server_member.dart';
+import 'package:nerimobile/models/user.dart';
 import 'package:nerimobile/stores/user/user_store.dart';
 
 final serverMembersProvider =
@@ -27,10 +28,10 @@ class ServerMembersNotifier
     final next = {
       for (final entry in base.entries) entry.key: {...entry.value},
     };
-    final users = ref.read(usersProvider.notifier);
+    final users = <User>[];
 
     for (final raw in list) {
-      users.addUser(raw.user);
+      users.add(raw.user);
       (next[raw.serverId] ??= {})[raw.userId] = ServerMember(
         id: raw.id,
         userId: raw.userId,
@@ -40,6 +41,7 @@ class ServerMembersNotifier
         muteExpireAt: raw.muteExpireAt,
       );
     }
+    ref.read(usersProvider.notifier).setUsers(users);
     return next;
   }
 
