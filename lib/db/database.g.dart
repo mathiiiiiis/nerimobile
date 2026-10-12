@@ -1493,6 +1493,17 @@ class $InboxesTable extends Inboxes with TableInfo<$InboxesTable, InboxRow> {
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _lastOpenedAtMeta = const VerificationMeta(
+    'lastOpenedAt',
+  );
+  @override
+  late final GeneratedColumn<int> lastOpenedAt = GeneratedColumn<int>(
+    'last_opened_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1500,6 +1511,7 @@ class $InboxesTable extends Inboxes with TableInfo<$InboxesTable, InboxRow> {
     recipientId,
     lastSeen,
     createdAt,
+    lastOpenedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1551,6 +1563,15 @@ class $InboxesTable extends Inboxes with TableInfo<$InboxesTable, InboxRow> {
     } else if (isInserting) {
       context.missing(_createdAtMeta);
     }
+    if (data.containsKey('last_opened_at')) {
+      context.handle(
+        _lastOpenedAtMeta,
+        lastOpenedAt.isAcceptableOrUnknown(
+          data['last_opened_at']!,
+          _lastOpenedAtMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -1580,6 +1601,10 @@ class $InboxesTable extends Inboxes with TableInfo<$InboxesTable, InboxRow> {
         DriftSqlType.int,
         data['${effectivePrefix}created_at'],
       )!,
+      lastOpenedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}last_opened_at'],
+      ),
     );
   }
 
@@ -1595,12 +1620,14 @@ class InboxRow extends DataClass implements Insertable<InboxRow> {
   final String recipientId;
   final int? lastSeen;
   final int createdAt;
+  final int? lastOpenedAt;
   const InboxRow({
     required this.id,
     required this.channelId,
     required this.recipientId,
     this.lastSeen,
     required this.createdAt,
+    this.lastOpenedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1612,6 +1639,9 @@ class InboxRow extends DataClass implements Insertable<InboxRow> {
       map['last_seen'] = Variable<int>(lastSeen);
     }
     map['created_at'] = Variable<int>(createdAt);
+    if (!nullToAbsent || lastOpenedAt != null) {
+      map['last_opened_at'] = Variable<int>(lastOpenedAt);
+    }
     return map;
   }
 
@@ -1624,6 +1654,9 @@ class InboxRow extends DataClass implements Insertable<InboxRow> {
           ? const Value.absent()
           : Value(lastSeen),
       createdAt: Value(createdAt),
+      lastOpenedAt: lastOpenedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastOpenedAt),
     );
   }
 
@@ -1638,6 +1671,7 @@ class InboxRow extends DataClass implements Insertable<InboxRow> {
       recipientId: serializer.fromJson<String>(json['recipientId']),
       lastSeen: serializer.fromJson<int?>(json['lastSeen']),
       createdAt: serializer.fromJson<int>(json['createdAt']),
+      lastOpenedAt: serializer.fromJson<int?>(json['lastOpenedAt']),
     );
   }
   @override
@@ -1649,6 +1683,7 @@ class InboxRow extends DataClass implements Insertable<InboxRow> {
       'recipientId': serializer.toJson<String>(recipientId),
       'lastSeen': serializer.toJson<int?>(lastSeen),
       'createdAt': serializer.toJson<int>(createdAt),
+      'lastOpenedAt': serializer.toJson<int?>(lastOpenedAt),
     };
   }
 
@@ -1658,12 +1693,14 @@ class InboxRow extends DataClass implements Insertable<InboxRow> {
     String? recipientId,
     Value<int?> lastSeen = const Value.absent(),
     int? createdAt,
+    Value<int?> lastOpenedAt = const Value.absent(),
   }) => InboxRow(
     id: id ?? this.id,
     channelId: channelId ?? this.channelId,
     recipientId: recipientId ?? this.recipientId,
     lastSeen: lastSeen.present ? lastSeen.value : this.lastSeen,
     createdAt: createdAt ?? this.createdAt,
+    lastOpenedAt: lastOpenedAt.present ? lastOpenedAt.value : this.lastOpenedAt,
   );
   InboxRow copyWithCompanion(InboxesCompanion data) {
     return InboxRow(
@@ -1674,6 +1711,9 @@ class InboxRow extends DataClass implements Insertable<InboxRow> {
           : this.recipientId,
       lastSeen: data.lastSeen.present ? data.lastSeen.value : this.lastSeen,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      lastOpenedAt: data.lastOpenedAt.present
+          ? data.lastOpenedAt.value
+          : this.lastOpenedAt,
     );
   }
 
@@ -1684,14 +1724,21 @@ class InboxRow extends DataClass implements Insertable<InboxRow> {
           ..write('channelId: $channelId, ')
           ..write('recipientId: $recipientId, ')
           ..write('lastSeen: $lastSeen, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('lastOpenedAt: $lastOpenedAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, channelId, recipientId, lastSeen, createdAt);
+  int get hashCode => Object.hash(
+    id,
+    channelId,
+    recipientId,
+    lastSeen,
+    createdAt,
+    lastOpenedAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1700,7 +1747,8 @@ class InboxRow extends DataClass implements Insertable<InboxRow> {
           other.channelId == this.channelId &&
           other.recipientId == this.recipientId &&
           other.lastSeen == this.lastSeen &&
-          other.createdAt == this.createdAt);
+          other.createdAt == this.createdAt &&
+          other.lastOpenedAt == this.lastOpenedAt);
 }
 
 class InboxesCompanion extends UpdateCompanion<InboxRow> {
@@ -1709,6 +1757,7 @@ class InboxesCompanion extends UpdateCompanion<InboxRow> {
   final Value<String> recipientId;
   final Value<int?> lastSeen;
   final Value<int> createdAt;
+  final Value<int?> lastOpenedAt;
   final Value<int> rowid;
   const InboxesCompanion({
     this.id = const Value.absent(),
@@ -1716,6 +1765,7 @@ class InboxesCompanion extends UpdateCompanion<InboxRow> {
     this.recipientId = const Value.absent(),
     this.lastSeen = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.lastOpenedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   InboxesCompanion.insert({
@@ -1724,6 +1774,7 @@ class InboxesCompanion extends UpdateCompanion<InboxRow> {
     required String recipientId,
     this.lastSeen = const Value.absent(),
     required int createdAt,
+    this.lastOpenedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        channelId = Value(channelId),
@@ -1735,6 +1786,7 @@ class InboxesCompanion extends UpdateCompanion<InboxRow> {
     Expression<String>? recipientId,
     Expression<int>? lastSeen,
     Expression<int>? createdAt,
+    Expression<int>? lastOpenedAt,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -1743,6 +1795,7 @@ class InboxesCompanion extends UpdateCompanion<InboxRow> {
       if (recipientId != null) 'recipient_id': recipientId,
       if (lastSeen != null) 'last_seen': lastSeen,
       if (createdAt != null) 'created_at': createdAt,
+      if (lastOpenedAt != null) 'last_opened_at': lastOpenedAt,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -1753,6 +1806,7 @@ class InboxesCompanion extends UpdateCompanion<InboxRow> {
     Value<String>? recipientId,
     Value<int?>? lastSeen,
     Value<int>? createdAt,
+    Value<int?>? lastOpenedAt,
     Value<int>? rowid,
   }) {
     return InboxesCompanion(
@@ -1761,6 +1815,7 @@ class InboxesCompanion extends UpdateCompanion<InboxRow> {
       recipientId: recipientId ?? this.recipientId,
       lastSeen: lastSeen ?? this.lastSeen,
       createdAt: createdAt ?? this.createdAt,
+      lastOpenedAt: lastOpenedAt ?? this.lastOpenedAt,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -1783,6 +1838,9 @@ class InboxesCompanion extends UpdateCompanion<InboxRow> {
     if (createdAt.present) {
       map['created_at'] = Variable<int>(createdAt.value);
     }
+    if (lastOpenedAt.present) {
+      map['last_opened_at'] = Variable<int>(lastOpenedAt.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -1797,6 +1855,7 @@ class InboxesCompanion extends UpdateCompanion<InboxRow> {
           ..write('recipientId: $recipientId, ')
           ..write('lastSeen: $lastSeen, ')
           ..write('createdAt: $createdAt, ')
+          ..write('lastOpenedAt: $lastOpenedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -3235,6 +3294,28 @@ class $ServersTable extends Servers with TableInfo<$ServersTable, ServerRow> {
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _lastOpenedChannelIdMeta =
+      const VerificationMeta('lastOpenedChannelId');
+  @override
+  late final GeneratedColumn<String> lastOpenedChannelId =
+      GeneratedColumn<String>(
+        'last_opened_channel_id',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _lastOpenedAtMeta = const VerificationMeta(
+    'lastOpenedAt',
+  );
+  @override
+  late final GeneratedColumn<int> lastOpenedAt = GeneratedColumn<int>(
+    'last_opened_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -3245,6 +3326,8 @@ class $ServersTable extends Servers with TableInfo<$ServersTable, ServerRow> {
     defaultChannelId,
     defaultRoleId,
     createdById,
+    lastOpenedChannelId,
+    lastOpenedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -3324,6 +3407,24 @@ class $ServersTable extends Servers with TableInfo<$ServersTable, ServerRow> {
     } else if (isInserting) {
       context.missing(_createdByIdMeta);
     }
+    if (data.containsKey('last_opened_channel_id')) {
+      context.handle(
+        _lastOpenedChannelIdMeta,
+        lastOpenedChannelId.isAcceptableOrUnknown(
+          data['last_opened_channel_id']!,
+          _lastOpenedChannelIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('last_opened_at')) {
+      context.handle(
+        _lastOpenedAtMeta,
+        lastOpenedAt.isAcceptableOrUnknown(
+          data['last_opened_at']!,
+          _lastOpenedAtMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -3365,6 +3466,14 @@ class $ServersTable extends Servers with TableInfo<$ServersTable, ServerRow> {
         DriftSqlType.string,
         data['${effectivePrefix}created_by_id'],
       )!,
+      lastOpenedChannelId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}last_opened_channel_id'],
+      ),
+      lastOpenedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}last_opened_at'],
+      ),
     );
   }
 
@@ -3383,6 +3492,8 @@ class ServerRow extends DataClass implements Insertable<ServerRow> {
   final String defaultChannelId;
   final String defaultRoleId;
   final String createdById;
+  final String? lastOpenedChannelId;
+  final int? lastOpenedAt;
   const ServerRow({
     required this.id,
     required this.name,
@@ -3392,6 +3503,8 @@ class ServerRow extends DataClass implements Insertable<ServerRow> {
     required this.defaultChannelId,
     required this.defaultRoleId,
     required this.createdById,
+    this.lastOpenedChannelId,
+    this.lastOpenedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -3408,6 +3521,12 @@ class ServerRow extends DataClass implements Insertable<ServerRow> {
     map['default_channel_id'] = Variable<String>(defaultChannelId);
     map['default_role_id'] = Variable<String>(defaultRoleId);
     map['created_by_id'] = Variable<String>(createdById);
+    if (!nullToAbsent || lastOpenedChannelId != null) {
+      map['last_opened_channel_id'] = Variable<String>(lastOpenedChannelId);
+    }
+    if (!nullToAbsent || lastOpenedAt != null) {
+      map['last_opened_at'] = Variable<int>(lastOpenedAt);
+    }
     return map;
   }
 
@@ -3425,6 +3544,12 @@ class ServerRow extends DataClass implements Insertable<ServerRow> {
       defaultChannelId: Value(defaultChannelId),
       defaultRoleId: Value(defaultRoleId),
       createdById: Value(createdById),
+      lastOpenedChannelId: lastOpenedChannelId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastOpenedChannelId),
+      lastOpenedAt: lastOpenedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastOpenedAt),
     );
   }
 
@@ -3442,6 +3567,10 @@ class ServerRow extends DataClass implements Insertable<ServerRow> {
       defaultChannelId: serializer.fromJson<String>(json['defaultChannelId']),
       defaultRoleId: serializer.fromJson<String>(json['defaultRoleId']),
       createdById: serializer.fromJson<String>(json['createdById']),
+      lastOpenedChannelId: serializer.fromJson<String?>(
+        json['lastOpenedChannelId'],
+      ),
+      lastOpenedAt: serializer.fromJson<int?>(json['lastOpenedAt']),
     );
   }
   @override
@@ -3456,6 +3585,8 @@ class ServerRow extends DataClass implements Insertable<ServerRow> {
       'defaultChannelId': serializer.toJson<String>(defaultChannelId),
       'defaultRoleId': serializer.toJson<String>(defaultRoleId),
       'createdById': serializer.toJson<String>(createdById),
+      'lastOpenedChannelId': serializer.toJson<String?>(lastOpenedChannelId),
+      'lastOpenedAt': serializer.toJson<int?>(lastOpenedAt),
     };
   }
 
@@ -3468,6 +3599,8 @@ class ServerRow extends DataClass implements Insertable<ServerRow> {
     String? defaultChannelId,
     String? defaultRoleId,
     String? createdById,
+    Value<String?> lastOpenedChannelId = const Value.absent(),
+    Value<int?> lastOpenedAt = const Value.absent(),
   }) => ServerRow(
     id: id ?? this.id,
     name: name ?? this.name,
@@ -3477,6 +3610,10 @@ class ServerRow extends DataClass implements Insertable<ServerRow> {
     defaultChannelId: defaultChannelId ?? this.defaultChannelId,
     defaultRoleId: defaultRoleId ?? this.defaultRoleId,
     createdById: createdById ?? this.createdById,
+    lastOpenedChannelId: lastOpenedChannelId.present
+        ? lastOpenedChannelId.value
+        : this.lastOpenedChannelId,
+    lastOpenedAt: lastOpenedAt.present ? lastOpenedAt.value : this.lastOpenedAt,
   );
   ServerRow copyWithCompanion(ServersCompanion data) {
     return ServerRow(
@@ -3494,6 +3631,12 @@ class ServerRow extends DataClass implements Insertable<ServerRow> {
       createdById: data.createdById.present
           ? data.createdById.value
           : this.createdById,
+      lastOpenedChannelId: data.lastOpenedChannelId.present
+          ? data.lastOpenedChannelId.value
+          : this.lastOpenedChannelId,
+      lastOpenedAt: data.lastOpenedAt.present
+          ? data.lastOpenedAt.value
+          : this.lastOpenedAt,
     );
   }
 
@@ -3507,7 +3650,9 @@ class ServerRow extends DataClass implements Insertable<ServerRow> {
           ..write('hexColor: $hexColor, ')
           ..write('defaultChannelId: $defaultChannelId, ')
           ..write('defaultRoleId: $defaultRoleId, ')
-          ..write('createdById: $createdById')
+          ..write('createdById: $createdById, ')
+          ..write('lastOpenedChannelId: $lastOpenedChannelId, ')
+          ..write('lastOpenedAt: $lastOpenedAt')
           ..write(')'))
         .toString();
   }
@@ -3522,6 +3667,8 @@ class ServerRow extends DataClass implements Insertable<ServerRow> {
     defaultChannelId,
     defaultRoleId,
     createdById,
+    lastOpenedChannelId,
+    lastOpenedAt,
   );
   @override
   bool operator ==(Object other) =>
@@ -3534,7 +3681,9 @@ class ServerRow extends DataClass implements Insertable<ServerRow> {
           other.hexColor == this.hexColor &&
           other.defaultChannelId == this.defaultChannelId &&
           other.defaultRoleId == this.defaultRoleId &&
-          other.createdById == this.createdById);
+          other.createdById == this.createdById &&
+          other.lastOpenedChannelId == this.lastOpenedChannelId &&
+          other.lastOpenedAt == this.lastOpenedAt);
 }
 
 class ServersCompanion extends UpdateCompanion<ServerRow> {
@@ -3546,6 +3695,8 @@ class ServersCompanion extends UpdateCompanion<ServerRow> {
   final Value<String> defaultChannelId;
   final Value<String> defaultRoleId;
   final Value<String> createdById;
+  final Value<String?> lastOpenedChannelId;
+  final Value<int?> lastOpenedAt;
   final Value<int> rowid;
   const ServersCompanion({
     this.id = const Value.absent(),
@@ -3556,6 +3707,8 @@ class ServersCompanion extends UpdateCompanion<ServerRow> {
     this.defaultChannelId = const Value.absent(),
     this.defaultRoleId = const Value.absent(),
     this.createdById = const Value.absent(),
+    this.lastOpenedChannelId = const Value.absent(),
+    this.lastOpenedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   ServersCompanion.insert({
@@ -3567,6 +3720,8 @@ class ServersCompanion extends UpdateCompanion<ServerRow> {
     required String defaultChannelId,
     required String defaultRoleId,
     required String createdById,
+    this.lastOpenedChannelId = const Value.absent(),
+    this.lastOpenedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        name = Value(name),
@@ -3583,6 +3738,8 @@ class ServersCompanion extends UpdateCompanion<ServerRow> {
     Expression<String>? defaultChannelId,
     Expression<String>? defaultRoleId,
     Expression<String>? createdById,
+    Expression<String>? lastOpenedChannelId,
+    Expression<int>? lastOpenedAt,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -3594,6 +3751,9 @@ class ServersCompanion extends UpdateCompanion<ServerRow> {
       if (defaultChannelId != null) 'default_channel_id': defaultChannelId,
       if (defaultRoleId != null) 'default_role_id': defaultRoleId,
       if (createdById != null) 'created_by_id': createdById,
+      if (lastOpenedChannelId != null)
+        'last_opened_channel_id': lastOpenedChannelId,
+      if (lastOpenedAt != null) 'last_opened_at': lastOpenedAt,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -3607,6 +3767,8 @@ class ServersCompanion extends UpdateCompanion<ServerRow> {
     Value<String>? defaultChannelId,
     Value<String>? defaultRoleId,
     Value<String>? createdById,
+    Value<String?>? lastOpenedChannelId,
+    Value<int?>? lastOpenedAt,
     Value<int>? rowid,
   }) {
     return ServersCompanion(
@@ -3618,6 +3780,8 @@ class ServersCompanion extends UpdateCompanion<ServerRow> {
       defaultChannelId: defaultChannelId ?? this.defaultChannelId,
       defaultRoleId: defaultRoleId ?? this.defaultRoleId,
       createdById: createdById ?? this.createdById,
+      lastOpenedChannelId: lastOpenedChannelId ?? this.lastOpenedChannelId,
+      lastOpenedAt: lastOpenedAt ?? this.lastOpenedAt,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -3649,6 +3813,14 @@ class ServersCompanion extends UpdateCompanion<ServerRow> {
     if (createdById.present) {
       map['created_by_id'] = Variable<String>(createdById.value);
     }
+    if (lastOpenedChannelId.present) {
+      map['last_opened_channel_id'] = Variable<String>(
+        lastOpenedChannelId.value,
+      );
+    }
+    if (lastOpenedAt.present) {
+      map['last_opened_at'] = Variable<int>(lastOpenedAt.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -3666,6 +3838,8 @@ class ServersCompanion extends UpdateCompanion<ServerRow> {
           ..write('defaultChannelId: $defaultChannelId, ')
           ..write('defaultRoleId: $defaultRoleId, ')
           ..write('createdById: $createdById, ')
+          ..write('lastOpenedChannelId: $lastOpenedChannelId, ')
+          ..write('lastOpenedAt: $lastOpenedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -4867,6 +5041,7 @@ typedef $$InboxesTableCreateCompanionBuilder =
       required String recipientId,
       Value<int?> lastSeen,
       required int createdAt,
+      Value<int?> lastOpenedAt,
       Value<int> rowid,
     });
 typedef $$InboxesTableUpdateCompanionBuilder =
@@ -4876,6 +5051,7 @@ typedef $$InboxesTableUpdateCompanionBuilder =
       Value<String> recipientId,
       Value<int?> lastSeen,
       Value<int> createdAt,
+      Value<int?> lastOpenedAt,
       Value<int> rowid,
     });
 
@@ -4910,6 +5086,11 @@ class $$InboxesTableFilterComposer
 
   ColumnFilters<int> get createdAt => $composableBuilder(
     column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get lastOpenedAt => $composableBuilder(
+    column: $table.lastOpenedAt,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -4947,6 +5128,11 @@ class $$InboxesTableOrderingComposer
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<int> get lastOpenedAt => $composableBuilder(
+    column: $table.lastOpenedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$InboxesTableAnnotationComposer
@@ -4974,6 +5160,11 @@ class $$InboxesTableAnnotationComposer
 
   GeneratedColumn<int> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<int> get lastOpenedAt => $composableBuilder(
+    column: $table.lastOpenedAt,
+    builder: (column) => column,
+  );
 }
 
 class $$InboxesTableTableManager
@@ -5009,6 +5200,7 @@ class $$InboxesTableTableManager
                 Value<String> recipientId = const Value.absent(),
                 Value<int?> lastSeen = const Value.absent(),
                 Value<int> createdAt = const Value.absent(),
+                Value<int?> lastOpenedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => InboxesCompanion(
                 id: id,
@@ -5016,6 +5208,7 @@ class $$InboxesTableTableManager
                 recipientId: recipientId,
                 lastSeen: lastSeen,
                 createdAt: createdAt,
+                lastOpenedAt: lastOpenedAt,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -5025,6 +5218,7 @@ class $$InboxesTableTableManager
                 required String recipientId,
                 Value<int?> lastSeen = const Value.absent(),
                 required int createdAt,
+                Value<int?> lastOpenedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => InboxesCompanion.insert(
                 id: id,
@@ -5032,6 +5226,7 @@ class $$InboxesTableTableManager
                 recipientId: recipientId,
                 lastSeen: lastSeen,
                 createdAt: createdAt,
+                lastOpenedAt: lastOpenedAt,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -5891,6 +6086,8 @@ typedef $$ServersTableCreateCompanionBuilder =
       required String defaultChannelId,
       required String defaultRoleId,
       required String createdById,
+      Value<String?> lastOpenedChannelId,
+      Value<int?> lastOpenedAt,
       Value<int> rowid,
     });
 typedef $$ServersTableUpdateCompanionBuilder =
@@ -5903,6 +6100,8 @@ typedef $$ServersTableUpdateCompanionBuilder =
       Value<String> defaultChannelId,
       Value<String> defaultRoleId,
       Value<String> createdById,
+      Value<String?> lastOpenedChannelId,
+      Value<int?> lastOpenedAt,
       Value<int> rowid,
     });
 
@@ -5952,6 +6151,16 @@ class $$ServersTableFilterComposer
 
   ColumnFilters<String> get createdById => $composableBuilder(
     column: $table.createdById,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get lastOpenedChannelId => $composableBuilder(
+    column: $table.lastOpenedChannelId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get lastOpenedAt => $composableBuilder(
+    column: $table.lastOpenedAt,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -6004,6 +6213,16 @@ class $$ServersTableOrderingComposer
     column: $table.createdById,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get lastOpenedChannelId => $composableBuilder(
+    column: $table.lastOpenedChannelId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get lastOpenedAt => $composableBuilder(
+    column: $table.lastOpenedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$ServersTableAnnotationComposer
@@ -6044,6 +6263,16 @@ class $$ServersTableAnnotationComposer
     column: $table.createdById,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get lastOpenedChannelId => $composableBuilder(
+    column: $table.lastOpenedChannelId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get lastOpenedAt => $composableBuilder(
+    column: $table.lastOpenedAt,
+    builder: (column) => column,
+  );
 }
 
 class $$ServersTableTableManager
@@ -6082,6 +6311,8 @@ class $$ServersTableTableManager
                 Value<String> defaultChannelId = const Value.absent(),
                 Value<String> defaultRoleId = const Value.absent(),
                 Value<String> createdById = const Value.absent(),
+                Value<String?> lastOpenedChannelId = const Value.absent(),
+                Value<int?> lastOpenedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ServersCompanion(
                 id: id,
@@ -6092,6 +6323,8 @@ class $$ServersTableTableManager
                 defaultChannelId: defaultChannelId,
                 defaultRoleId: defaultRoleId,
                 createdById: createdById,
+                lastOpenedChannelId: lastOpenedChannelId,
+                lastOpenedAt: lastOpenedAt,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -6104,6 +6337,8 @@ class $$ServersTableTableManager
                 required String defaultChannelId,
                 required String defaultRoleId,
                 required String createdById,
+                Value<String?> lastOpenedChannelId = const Value.absent(),
+                Value<int?> lastOpenedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ServersCompanion.insert(
                 id: id,
@@ -6114,6 +6349,8 @@ class $$ServersTableTableManager
                 defaultChannelId: defaultChannelId,
                 defaultRoleId: defaultRoleId,
                 createdById: createdById,
+                lastOpenedChannelId: lastOpenedChannelId,
+                lastOpenedAt: lastOpenedAt,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

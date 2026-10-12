@@ -22,6 +22,18 @@ class InboxDao extends DatabaseAccessor<NeriDatabase> with _$InboxDaoMixin {
     ];
   }
 
+  Future<Map<String, int>> lastOpened() async {
+    final rows = await (select(
+      inboxes,
+    )..where((t) => t.lastOpenedAt.isNotNull())).get();
+    return {for (final row in rows) row.channelId: row.lastOpenedAt!};
+  }
+
+  Future<void> setLastOpened(String channelId, int at) =>
+      (update(inboxes)..where((t) => t.channelId.equals(channelId))).write(
+        InboxesCompanion(lastOpenedAt: Value(at)),
+      );
+
   Future<void> sync(Iterable<Inbox> list) async {
     final channelsId = list.map((inbox) => inbox.channelId).toList();
 

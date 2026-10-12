@@ -10,6 +10,8 @@ class Servers extends Table {
   TextColumn get defaultChannelId => text()();
   TextColumn get defaultRoleId => text()();
   TextColumn get createdById => text()();
+  TextColumn get lastOpenedChannelId => text().nullable()();
+  IntColumn get lastOpenedAt => integer().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};

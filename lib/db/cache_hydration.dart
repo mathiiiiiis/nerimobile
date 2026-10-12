@@ -10,6 +10,7 @@ import 'package:nerimobile/db/daos/user_dao.dart';
 import 'package:nerimobile/db/database.dart';
 import 'package:nerimobile/stores/auth/auth_store.dart';
 import 'package:nerimobile/stores/channel/channel_store.dart';
+import 'package:nerimobile/stores/channel/last_opened_store.dart';
 import 'package:nerimobile/stores/inbox/inbox_store.dart';
 import 'package:nerimobile/stores/server/server_member_store.dart';
 import 'package:nerimobile/stores/server/server_roles_store.dart';
@@ -31,6 +32,10 @@ final cacheHydrationProvider = FutureProvider<void>((ref) async {
   final inboxes = await InboxDao(
     db,
   ).all({for (final user in users) user.id: user});
+  final lastOpened = (
+    servers: await ServerDao(db).lastOpened(),
+    inboxes: await InboxDao(db).lastOpened(),
+  );
 
   //socket may have newer data
   if (ref.read(usersProvider).isEmpty) {
@@ -61,4 +66,5 @@ final cacheHydrationProvider = FutureProvider<void>((ref) async {
   if (ref.read(inboxProvider).isEmpty) {
     ref.read(inboxProvider.notifier).setInbox(inboxes);
   }
+  ref.read(lastOpenedProvider.notifier).hydrate(lastOpened);
 });

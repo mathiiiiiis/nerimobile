@@ -3,6 +3,7 @@ import 'package:drift/drift.dart';
 import 'package:nerimobile/db/database.dart';
 import 'package:nerimobile/db/tables/servers.dart';
 import 'package:nerimobile/models/server.dart';
+import 'package:nerimobile/stores/channel/last_opened_store.dart';
 
 part 'server_dao.g.dart';
 
@@ -12,6 +13,24 @@ class ServerDao extends DatabaseAccessor<NeriDatabase> with _$ServerDaoMixin {
 
   Future<List<Server>> all() async =>
       (await attachedDatabase.managers.servers.get()).map(_model).toList();
+
+  Future<Map<String, OpenedServer>> lastOpened() async {
+    final rows = await (select(
+      servers,
+    )..where((t) => t.lastOpenedAt.isNotNull())).get();
+    return {
+      for (final row in rows)
+        row.id: (channelId: row.lastOpenedChannelId, at: row.lastOpenedAt!),
+    };
+  }
+
+  Future<void> setLastOpened(String serverId, OpenedServer opened) =>
+      (update(servers)..where((t) => t.id.equals(serverId))).write(
+        ServersCompanion(
+          lastOpenedChannelId: Value(opened.channelId),
+          lastOpenedAt: Value(opened.at),
+        ),
+      );
 
   //left servers drop out of socket payload
   Future<void> sync(Iterable<Server> list) async {

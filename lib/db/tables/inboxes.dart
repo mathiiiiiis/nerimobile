@@ -7,6 +7,7 @@ class Inboxes extends Table {
   TextColumn get recipientId => text()();
   IntColumn get lastSeen => integer().nullable()();
   IntColumn get createdAt => integer()();
+  IntColumn get lastOpenedAt => integer().nullable()();
 
   @override
   Set<Column> get primaryKey => {channelId};
