@@ -11,13 +11,14 @@ import 'package:nerimobile/services/server_service.dart';
 import 'package:nerimobile/services/socket_events.dart';
 import 'package:nerimobile/stores/channel/channel_store.dart';
 import 'package:nerimobile/stores/connection/connection_store.dart';
+import 'package:nerimobile/stores/server/server_member_store.dart';
 import 'package:nerimobile/stores/user/user_store.dart';
 import 'package:nerimobile/theme/core/theme_data.dart';
-import 'package:nerimobile/theme/core/token.dart';
 import 'package:nerimobile/theme/sizing/dimens.dart';
-import 'package:nerimobile/theme/sizing/spacing.dart';
-import 'package:nerimobile/theme/typography/text_styles.dart';
+import 'package:nerimobile/theme/sizing/radius.dart';
+import 'package:nerimobile/utils/colors.dart';
 import 'package:nerimobile/views/avatar.dart';
+import 'package:nerimobile/views/banner_image.dart';
 import 'package:nerimobile/views/modal/bottom_sheet.dart';
 import 'package:nerimobile/views/modal/confirm_dialog.dart';
 
@@ -32,15 +33,32 @@ Future<void> showServerContextMenu(
       if (channels[channelId]?.serverId == server.id) channelId,
   ];
   final owner = server.createdById == ref.read(currentUserIdProvider);
+  final members = ref.read(serverMembersProvider)[server.id]?.length ?? 0;
 
   return showActionSheet(
     context,
-    header: _ServerHeader(server),
-    actions: [
-      if (unread.isNotEmpty)
+    header: SheetHeader(
+      title: server.name,
+      subtitle: '$members members', //TODO: add l10n
+      leading: Avatar(
+        server: server,
+        size: context.neriSize.dimen(NeriDimen.avatarMd),
+        borderRadius: context.neriSize.rounded(NeriRadiusRole.md),
+      ),
+      leadingRadius: context.neriSize.rounded(NeriRadiusRole.md),
+      background: BannerImage(
+        path: server.banner,
+        fallback: idColor(server.id),
+      ),
+    ),
+    groups: [
+      SheetGroup([
         SheetAction(
           icon: Symbols.mark_chat_read_rounded,
-          label: 'Mark as read', //TODO: add l10n
+          label: unread.isEmpty
+              ? 'Nothing unread'
+              : 'Mark as read', //TODO: add l10n
+          enabled: unread.isNotEmpty,
           onTap: () {
             final connection = ref.read(connectionProvider.notifier);
             for (final channelId in unread) {
@@ -50,18 +68,23 @@ Future<void> showServerContextMenu(
             }
           },
         ),
-      SheetAction(
-        icon: Symbols.id_card_rounded,
-        label: 'Copy ID', //TODO: add l10n
-        onTap: () => Clipboard.setData(ClipboardData(text: server.id)),
-      ),
-      if (!owner) //owners need to delete the server
+      ]),
+      SheetGroup([
         SheetAction(
-          icon: Symbols.logout_rounded,
-          label: 'Leave server', //TODO: add l10n
-          destructive: true,
-          onTap: () => _leave(context, ref, server),
+          icon: Symbols.id_card_rounded,
+          label: 'Copy ID', //TODO: add l10n
+          onTap: () => Clipboard.setData(ClipboardData(text: server.id)),
         ),
+      ]),
+      SheetGroup([
+        if (!owner) //owners need to delete the server
+          SheetAction(
+            icon: Symbols.logout_rounded,
+            label: 'Leave server', //TODO: add l10n
+            destructive: true,
+            onTap: () => _leave(context, ref, server),
+          ),
+      ]),
     ],
   );
 }
@@ -88,32 +111,4 @@ Future<void> _leave(BuildContext context, WidgetRef ref, Server server) async {
 
   final path = router.routerDelegate.currentConfiguration.uri.path;
   if (path.startsWith('/app/servers/${server.id}')) router.go('/app/servers');
-}
-
-class _ServerHeader extends StatelessWidget {
-  const _ServerHeader(this.server);
-
-  final Server server;
-
-  @override
-  Widget build(BuildContext context) {
-    final sizing = context.neriSize;
-
-    return Row(
-      spacing: sizing.space(NeriSpacingRole.md),
-      children: [
-        Avatar(server: server, size: sizing.dimen(NeriDimen.avatarMd)),
-        Expanded(
-          child: Text(
-            server.name,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: context.neriText[NeriTextRole.titleMedium].copyWith(
-              color: context.neri[NeriToken.text],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
 }

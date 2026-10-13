@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -18,10 +17,9 @@ import 'package:nerimobile/theme/sizing/dimens.dart';
 import 'package:nerimobile/theme/sizing/radius.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/theme/typography/text_styles.dart';
-import 'package:nerimobile/utils/caches.dart';
 import 'package:nerimobile/utils/colors.dart';
-import 'package:nerimobile/utils/image.dart';
 import 'package:nerimobile/views/avatar.dart';
+import 'package:nerimobile/views/banner_image.dart';
 import 'package:nerimobile/views/cdn_icon.dart';
 import 'package:nerimobile/views/chat/channel/channel_header.dart';
 import 'package:nerimobile/views/collapse.dart';
@@ -409,7 +407,6 @@ class _ServerBanner extends ConsumerWidget {
     }
 
     final sizing = context.neriSize;
-    final placeholder = ColoredBox(color: hexToColor(server.hexColor));
 
     return Padding(
       padding: EdgeInsets.fromLTRB(
@@ -422,22 +419,9 @@ class _ServerBanner extends ConsumerWidget {
         borderRadius: sizing.rounded(NeriRadiusRole.md),
         child: AspectRatio(
           aspectRatio: _bannerAspectRatio,
-          child: LayoutBuilder(
-            builder: (context, constraints) => CachedNetworkImage(
-              imageUrl: buildImageUrl(
-                banner,
-                size:
-                    (constraints.maxWidth *
-                            MediaQuery.devicePixelRatioOf(context))
-                        .round(),
-              ),
-              cacheManager: mediaCache,
-              fit: BoxFit.cover,
-              fadeInDuration: Duration.zero,
-              fadeOutDuration: Duration.zero,
-              placeholder: (_, _) => placeholder,
-              errorWidget: (_, _, _) => placeholder,
-            ),
+          child: BannerImage(
+            path: banner,
+            fallback: hexToColor(server.hexColor),
           ),
         ),
       ),

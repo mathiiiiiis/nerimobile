@@ -1,6 +1,14 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
 
+Color idColor(String id) {
+  var hash = 0;
+  for (final unit in id.codeUnits) {
+    hash = (hash * 31 + unit) & 0xFFFFFFFF;
+  }
+  return HSLColor.fromAHSL(1, (hash % 360).toDouble(), 0.7, 0.65).toColor();
+}
+
 Color hexToColor(String hex) {
   final h = hex.replaceAll('#', '');
   return Color(int.parse('FF$h', radix: 16));

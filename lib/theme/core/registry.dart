@@ -19,6 +19,7 @@ final Map<NeriToken, TokenDerivation> _derivations = {
   NeriToken.background: (_) => _black,
   NeriToken.pane: (resolve) => resolve(NeriToken.background),
   NeriToken.card: (resolve) => resolve(NeriToken.pane),
+  NeriToken.cardBright: (resolve) => lift(resolve(NeriToken.pane), 0.05),
   NeriToken.sidePane: (resolve) => lift(resolve(NeriToken.background), 0.04),
   NeriToken.rail: (resolve) => resolve(NeriToken.sidePane),
 

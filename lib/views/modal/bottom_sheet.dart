@@ -9,6 +9,13 @@ import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/theme/typography/text_styles.dart';
 
 const _disabledOpacity = 0.4;
+const _bannerSpace = 56.0;
+const _handleWidth = 32.0;
+const _handleHeight = 4.0;
+const _onBanner = Colors.white;
+const _onBannerSecondary = Color(0xCCFFFFFF);
+const _dimTop = Color(0x26000000);
+const _dimBottom = Color(0x99000000);
 
 class SheetAction {
   const SheetAction({
@@ -41,6 +48,7 @@ class SheetGroup {
 Future<T?> showSheet<T>(
   BuildContext context, {
   required WidgetBuilder builder,
+  bool dragHandle = true,
 }) async {
   final colors = context.neri;
   final radius = Radius.circular(context.neriSize.radius(NeriRadiusRole.xl));
@@ -48,7 +56,7 @@ Future<T?> showSheet<T>(
   return showModalBottomSheet<T>(
     context: context,
     useSafeArea: true,
-    showDragHandle: true,
+    showDragHandle: dragHandle,
     isScrollControlled: true,
     backgroundColor: colors[NeriToken.pane],
     barrierColor: colors[NeriToken.scrim],
@@ -67,6 +75,7 @@ Future<void> showActionSheet(
 }) async {
   final picked = await showSheet<SheetAction>(
     context,
+    dragHandle: header is! SheetHeader || header.background == null,
     builder: (context) =>
         SheetActions(header: header, actions: actions, groups: groups),
   );
@@ -97,17 +106,25 @@ class SheetActions extends StatelessWidget {
     return SafeArea(
       top: false,
       child: SingleChildScrollView(
-        padding: EdgeInsets.fromLTRB(
-          sizing.space(NeriSpacingRole.md),
-          0,
-          sizing.space(NeriSpacingRole.md),
-          sizing.space(NeriSpacingRole.md),
-        ),
+        padding: EdgeInsets.only(bottom: sizing.space(NeriSpacingRole.md)),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           spacing: sizing.space(NeriSpacingRole.sm),
-          children: [?header, for (final group in cards) _GroupCard(group)],
+          children: [
+            ?header,
+            Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: sizing.space(NeriSpacingRole.md),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                spacing: sizing.space(NeriSpacingRole.sm),
+                children: [for (final group in cards) _GroupCard(group)],
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -120,17 +137,88 @@ class SheetHeader extends StatelessWidget {
     required this.title,
     this.leading,
     this.subtitle,
+    this.leadingRadius,
+    this.background,
   });
 
   final String title;
   final Widget? leading;
   final String? subtitle;
+  final BorderRadius? leadingRadius;
+  final Widget? background;
 
   @override
   Widget build(BuildContext context) {
+    final sizing = context.neriSize;
+    final background = this.background;
+    if (background == null) {
+      return Padding(
+        padding: EdgeInsets.symmetric(
+          horizontal: sizing.space(NeriSpacingRole.md),
+        ),
+        child: _content(context, onBanner: false),
+      );
+    }
+
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        sizing.space(NeriSpacingRole.md),
+        sizing.space(NeriSpacingRole.md),
+        sizing.space(NeriSpacingRole.md),
+        0,
+      ),
+      child: ClipRRect(
+        borderRadius: sizing.rounded(NeriRadiusRole.lg),
+        child: Stack(
+          children: [
+            Positioned.fill(child: background),
+            const Positioned.fill(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [_dimTop, _dimBottom],
+                  ),
+                ),
+              ),
+            ),
+            Column(
+              children: [
+                Padding(
+                  padding: EdgeInsets.only(
+                    top: sizing.space(NeriSpacingRole.sm),
+                  ),
+                  child: Container(
+                    width: _handleWidth,
+                    height: _handleHeight,
+                    decoration: BoxDecoration(
+                      color: _onBannerSecondary,
+                      borderRadius: sizing.rounded(NeriRadiusRole.full),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: _bannerSpace),
+                Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: sizing.space(NeriSpacingRole.md),
+                  ),
+                  child: _content(context, onBanner: true),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _content(BuildContext context, {required bool onBanner}) {
     final colors = context.neri;
     final sizing = context.neriSize;
     final text = context.neriText;
+    final leading = this.leading;
+    final ring = sizing.border(NeriBorderRole.medium);
 
     return Padding(
       padding: EdgeInsets.symmetric(
@@ -140,7 +228,20 @@ class SheetHeader extends StatelessWidget {
       child: Row(
         spacing: sizing.space(NeriSpacingRole.md),
         children: [
-          ?leading,
+          if (leading != null)
+            onBanner
+                ? Container(
+                    padding: EdgeInsets.all(ring),
+                    decoration: BoxDecoration(
+                      borderRadius:
+                          (leadingRadius ??
+                              sizing.rounded(NeriRadiusRole.full)) +
+                          BorderRadius.circular(ring),
+                      color: colors[NeriToken.border],
+                    ),
+                    child: leading,
+                  )
+                : leading,
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -151,7 +252,7 @@ class SheetHeader extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: text[NeriTextRole.headlineSmall].copyWith(
-                    color: colors[NeriToken.text],
+                    color: onBanner ? _onBanner : colors[NeriToken.text],
                   ),
                 ),
                 if (subtitle case final subtitle?)
@@ -160,7 +261,9 @@ class SheetHeader extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: text[NeriTextRole.bodySmall].copyWith(
-                      color: colors[NeriToken.textSecondary],
+                      color: onBanner
+                          ? _onBannerSecondary
+                          : colors[NeriToken.textSecondary],
                     ),
                   ),
               ],
@@ -181,18 +284,13 @@ class _GroupCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.neri;
     final sizing = context.neriSize;
-    final hairline = sizing.border(NeriBorderRole.hairline);
-    final dividerIndent =
-        sizing.space(NeriSpacingRole.md) +
-        sizing.dimen(NeriDimen.iconSm) +
-        sizing.space(NeriSpacingRole.md);
+    final dWidth = sizing.border(NeriBorderRole.thin);
 
     return Material(
-      color: colors[NeriToken.card],
+      color: colors[NeriToken.cardBright],
       clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(
         borderRadius: sizing.rounded(NeriRadiusRole.lg),
-        side: BorderSide(color: colors[NeriToken.border], width: hairline),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -201,10 +299,9 @@ class _GroupCard extends StatelessWidget {
           for (final (index, action) in group.actions.indexed) ...[
             if (index > 0)
               Divider(
-                height: hairline,
-                thickness: hairline,
-                indent: dividerIndent,
-                color: colors[NeriToken.border],
+                height: dWidth,
+                thickness: dWidth,
+                color: colors[NeriToken.pane],
               ),
             _ActionRow(action: action),
           ],

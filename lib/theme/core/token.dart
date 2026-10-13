@@ -19,6 +19,7 @@ enum NeriToken {
   background(ThemeCategory.surface),
   pane(ThemeCategory.surface),
   card(ThemeCategory.surface),
+  cardBright(ThemeCategory.surface),
   sidePane(ThemeCategory.surface),
   rail(ThemeCategory.surface),
 
