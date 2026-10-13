@@ -10,7 +10,8 @@ and iOS.
 
 It is still in an early stage. Check `TODO.md` for open tasks.
 
-If you run into any issues, contact me on Nerimity: `mathis:0000`.
+If you run into any issues, contact me on Nerimity: `mathis:0000`
+or open a GitHub issue.
 
 ## Handled Events
 
