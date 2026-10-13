@@ -2,16 +2,21 @@ import 'package:flutter/material.dart';
 
 import 'package:nerimobile/theme/core/theme_data.dart';
 import 'package:nerimobile/theme/core/token.dart';
+import 'package:nerimobile/theme/sizing/border.dart';
 import 'package:nerimobile/theme/sizing/dimens.dart';
 import 'package:nerimobile/theme/sizing/radius.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/theme/typography/text_styles.dart';
+
+const _disabledOpacity = 0.4;
 
 class SheetAction {
   const SheetAction({
     required this.icon,
     required this.label,
     required this.onTap,
+    this.hint,
+    this.enabled = true,
     this.destructive = false,
     this.filled = false,
     this.dismiss = true,
@@ -20,9 +25,17 @@ class SheetAction {
   final IconData icon;
   final String label;
   final VoidCallback onTap;
+  final String? hint;
+  final bool enabled;
   final bool destructive;
   final bool filled;
   final bool dismiss;
+}
+
+class SheetGroup {
+  const SheetGroup(this.actions);
+
+  final List<SheetAction> actions;
 }
 
 Future<T?> showSheet<T>(
@@ -48,47 +61,154 @@ Future<T?> showSheet<T>(
 
 Future<void> showActionSheet(
   BuildContext context, {
-  required List<SheetAction> actions,
+  List<SheetAction> actions = const [],
+  List<SheetGroup> groups = const [],
   Widget? header,
 }) async {
   final picked = await showSheet<SheetAction>(
     context,
-    builder: (context) => SheetActions(header: header, actions: actions),
+    builder: (context) =>
+        SheetActions(header: header, actions: actions, groups: groups),
   );
   picked?.onTap();
 }
 
 class SheetActions extends StatelessWidget {
-  const SheetActions({super.key, required this.actions, this.header});
+  const SheetActions({
+    super.key,
+    this.actions = const [],
+    this.groups = const [],
+    this.header,
+  });
 
   final List<SheetAction> actions;
+  final List<SheetGroup> groups;
   final Widget? header;
 
   @override
   Widget build(BuildContext context) {
     final sizing = context.neriSize;
+    final cards = [
+      if (actions.isNotEmpty) SheetGroup(actions),
+      for (final group in groups)
+        if (group.actions.isNotEmpty) group,
+    ];
 
     return SafeArea(
       top: false,
       child: SingleChildScrollView(
-        padding: EdgeInsets.only(bottom: sizing.space(NeriSpacingRole.sm)),
+        padding: EdgeInsets.fromLTRB(
+          sizing.space(NeriSpacingRole.md),
+          0,
+          sizing.space(NeriSpacingRole.md),
+          sizing.space(NeriSpacingRole.md),
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (header case final header?)
-              Padding(
-                padding: EdgeInsets.fromLTRB(
-                  sizing.space(NeriSpacingRole.lg),
-                  0,
-                  sizing.space(NeriSpacingRole.lg),
-                  sizing.space(NeriSpacingRole.sm),
-                ),
-                child: header,
-              ),
-            for (final action in actions) _ActionRow(action: action),
-          ],
+          spacing: sizing.space(NeriSpacingRole.sm),
+          children: [?header, for (final group in cards) _GroupCard(group)],
         ),
+      ),
+    );
+  }
+}
+
+class SheetHeader extends StatelessWidget {
+  const SheetHeader({
+    super.key,
+    required this.title,
+    this.leading,
+    this.subtitle,
+  });
+
+  final String title;
+  final Widget? leading;
+  final String? subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.neri;
+    final sizing = context.neriSize;
+    final text = context.neriText;
+
+    return Padding(
+      padding: EdgeInsets.symmetric(
+        horizontal: sizing.space(NeriSpacingRole.xs),
+        vertical: sizing.space(NeriSpacingRole.sm),
+      ),
+      child: Row(
+        spacing: sizing.space(NeriSpacingRole.md),
+        children: [
+          ?leading,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: text[NeriTextRole.headlineSmall].copyWith(
+                    color: colors[NeriToken.text],
+                  ),
+                ),
+                if (subtitle case final subtitle?)
+                  Text(
+                    subtitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: text[NeriTextRole.bodySmall].copyWith(
+                      color: colors[NeriToken.textSecondary],
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _GroupCard extends StatelessWidget {
+  const _GroupCard(this.group);
+
+  final SheetGroup group;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.neri;
+    final sizing = context.neriSize;
+    final hairline = sizing.border(NeriBorderRole.hairline);
+    final dividerIndent =
+        sizing.space(NeriSpacingRole.md) +
+        sizing.dimen(NeriDimen.iconSm) +
+        sizing.space(NeriSpacingRole.md);
+
+    return Material(
+      color: colors[NeriToken.card],
+      clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(
+        borderRadius: sizing.rounded(NeriRadiusRole.lg),
+        side: BorderSide(color: colors[NeriToken.border], width: hairline),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (final (index, action) in group.actions.indexed) ...[
+            if (index > 0)
+              Divider(
+                height: hairline,
+                thickness: hairline,
+                indent: dividerIndent,
+                color: colors[NeriToken.border],
+              ),
+            _ActionRow(action: action),
+          ],
+        ],
       ),
     );
   }
@@ -103,38 +223,55 @@ class _ActionRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.neri;
     final sizing = context.neriSize;
+    final text = context.neriText;
     final color = action.destructive
         ? colors[NeriToken.alert]
         : colors[NeriToken.text];
 
-    return InkWell(
-      onTap: () =>
-          action.dismiss ? Navigator.of(context).pop(action) : action.onTap(),
-      child: Padding(
-        padding: EdgeInsets.symmetric(
-          horizontal: sizing.space(NeriSpacingRole.lg),
-          vertical: sizing.space(NeriSpacingRole.md),
-        ),
-        child: Row(
-          spacing: sizing.space(NeriSpacingRole.lg),
-          children: [
-            Icon(
-              action.icon,
-              fill: action.filled ? 1 : 0,
-              size: sizing.dimen(NeriDimen.iconSm),
-              color: action.destructive
-                  ? color
-                  : colors[NeriToken.textSecondary],
-            ),
-            Expanded(
-              child: Text(
-                action.label,
-                style: context.neriText[NeriTextRole.bodyLarge].copyWith(
-                  color: color,
+    return Opacity(
+      opacity: action.enabled ? 1 : _disabledOpacity,
+      child: InkWell(
+        onTap: !action.enabled
+            ? null
+            : () => action.dismiss
+                  ? Navigator.of(context).pop(action)
+                  : action.onTap(),
+        child: Padding(
+          padding: EdgeInsets.all(sizing.space(NeriSpacingRole.md)),
+          child: Row(
+            spacing: sizing.space(NeriSpacingRole.lg),
+            children: [
+              Icon(
+                action.icon,
+                fill: action.filled ? 1 : 0,
+                size: sizing.dimen(NeriDimen.iconSm),
+                color: action.destructive
+                    ? color
+                    : colors[NeriToken.textSecondary],
+              ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      action.label,
+                      style: context.neriText[NeriTextRole.bodyLarge].copyWith(
+                        color: color,
+                      ),
+                    ),
+                    if (action.hint case final hint?)
+                      Text(
+                        hint,
+                        style: text[NeriTextRole.bodySmall].copyWith(
+                          color: colors[NeriToken.textTertiary],
+                        ),
+                      ),
+                  ],
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
