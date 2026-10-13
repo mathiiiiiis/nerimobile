@@ -49,8 +49,52 @@ class SlideOverPage<T> extends Page<T> {
   Route<T> createRoute(BuildContext context) => SlideOverRoute<T>(this);
 }
 
+class SlideOverOpening {
+  SlideOverOpening._();
+
+  static SlideOverOpening? _pending;
+  static SlideOverOpening begin() => _pending = SlideOverOpening._();
+
+  SlideOverRoute? _route;
+  double _progress = 0;
+  bool? _open;
+
+  void _attach(SlideOverRoute route) {
+    _route = route
+      ..dragStart()
+      ..dragTo(_progress);
+    if (_open case final open?) route.dragEnd(pop: !open);
+  }
+
+  void update(double fraction) {
+    _progress = (_progress + fraction).clamp(0.0, 1.0);
+    _route?.dragTo(_progress);
+  }
+
+  void end(double velocity) {
+    if (identical(_pending, this)) _pending = null;
+
+    final open = velocity < -_flingVelocity
+        ? true
+        : velocity > _flingVelocity
+        ? false
+        : _progress > 1 - _dismissAt;
+    _open = open;
+    _route?.dragEnd(pop: !open);
+  }
+}
+
 class SlideOverRoute<T> extends PageRoute<T> {
   SlideOverRoute(SlideOverPage<T> page) : super(settings: page);
+
+  @override
+  TickerFuture didPush() {
+    final future = super.didPush();
+    final opening = SlideOverOpening._pending;
+    SlideOverOpening._pending = null;
+    opening?._attach(this);
+    return future;
+  }
 
   @override
   Widget buildPage(BuildContext context, Animation<double> animation, _) =>
@@ -87,6 +131,8 @@ class SlideOverRoute<T> extends PageRoute<T> {
   }
 
   void dragUpdate(double fraction) => controller!.value -= fraction;
+
+  void dragTo(double progress) => controller!.value = progress;
 
   Future<void> dragEnd({required bool pop}) async {
     final controller = this.controller!;

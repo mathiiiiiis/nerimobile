@@ -5,6 +5,7 @@ import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:nerimobile/db/cache_hydration.dart';
 
 import 'package:nerimobile/models/channel.dart';
+import 'package:nerimobile/router/slide_over_page.dart';
 import 'package:nerimobile/stores/channel/channel_store.dart';
 import 'package:nerimobile/stores/channel/last_opened_store.dart';
 import 'package:nerimobile/stores/connection/connection_store.dart';
@@ -26,6 +27,7 @@ import 'package:nerimobile/views/server/channel_list_skeleton.dart';
 import 'package:nerimobile/views/shell/widgets/scroll_fade.dart';
 
 const _unreadMotion = Duration(milliseconds: 200);
+const _swipeMinDistance = 12.0;
 
 final collapsedCategoriesProvider =
     NotifierProvider<CollapsedCategories, Set<String>>(CollapsedCategories.new);
@@ -132,7 +134,14 @@ class _ChannelListPaneState extends ConsumerState<ChannelListPane>
       ],
     );
 
-    if (!framed) return list;
+    if (!framed) {
+      return _SwipeToOpen(
+        onOpen: selectedChannelId == null
+            ? null
+            : () => context.go('/app/servers/$serverId/$selectedChannelId'),
+        child: list,
+      );
+    }
 
     return Padding(
       padding: EdgeInsets.all(sizing.space(NeriSpacingRole.sm)),
@@ -176,6 +185,55 @@ class _ChannelListPaneState extends ConsumerState<ChannelListPane>
         child: _ChannelRow(channel: channel, selected: selected),
       );
     }
+  }
+}
+
+class _SwipeToOpen extends StatefulWidget {
+  const _SwipeToOpen({required this.onOpen, required this.child});
+
+  final VoidCallback? onOpen;
+  final Widget child;
+
+  @override
+  State<_SwipeToOpen> createState() => _SwipeToOpenState();
+}
+
+class _SwipeToOpenState extends State<_SwipeToOpen> {
+  double _travelled = 0;
+  SlideOverOpening? _opening;
+
+  void _onUpdate(DragUpdateDetails details, double width) {
+    final delta = details.primaryDelta ?? 0;
+    final opening = _opening;
+    if (opening != null) return opening.update(-delta / width);
+
+    _travelled += delta;
+    if (_travelled > -_swipeMinDistance) return;
+
+    _opening = SlideOverOpening.begin()..update(-_travelled / width);
+    widget.onOpen?.call();
+  }
+
+  void _onEnd(double velocity) {
+    _opening?.end(velocity);
+    _opening = null;
+    _travelled = 0;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.onOpen == null) return widget.child;
+
+    return LayoutBuilder(
+      builder: (context, constraints) => GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onHorizontalDragUpdate: (details) =>
+            _onUpdate(details, constraints.maxWidth),
+        onHorizontalDragEnd: (details) => _onEnd(details.primaryVelocity ?? 0),
+        onHorizontalDragCancel: () => _onEnd(0),
+        child: widget.child,
+      ),
+    );
   }
 }
 
