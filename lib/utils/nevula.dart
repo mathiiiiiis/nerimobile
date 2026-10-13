@@ -176,6 +176,7 @@ final Map<String, String> tokenParts = {
   'checkbox': r'-\[(?:x| )\]',
   'named_link':
       r'\[(?:.|[\s*\p{L}\p{N}\u{21}-\u{2F}_]+)\]\(https?://\S+\.[\p{Alphabetic}\d/\\#?=+&%@!;:._~-]+\)',
+      r'\[[\s\S]+?\]\(https?:\/\/\S+\.[\p{Alphabetic}\d/\\#?=+&%@!;:._~-]+\)/u,'
   'link': r'https?://\S+\.[\p{Alphabetic}\d/\\#?=+&%@!;:._~-]+',
   'link_contained': r'<https?://\S+\.[\p{Alphabetic}\d/\\#?=+&%@!;:._~-]+>',
   'emoji': emojiRegex.pattern,

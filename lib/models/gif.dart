@@ -25,6 +25,23 @@ GifSource gifSource(String url) {
       : GifSource.other;
 }
 
+String? gifName(String? link) {
+  final segments = Uri.tryParse(link ?? '')?.pathSegments ?? const [];
+  final words = segments
+      .lastWhere((s) => s.isNotEmpty, orElse: () => '')
+      .split('-')
+      .where((word) => word.isNotEmpty)
+      .toList();
+  while (words.isNotEmpty &&
+      (words.last == 'gif' || words.last.contains(RegExp(r'\d')))) {
+    words.removeLast();
+  }
+  if (words.isEmpty) return null;
+
+  final name = words.join(' ');
+  return name[0].toUpperCase() + name.substring(1);
+}
+
 double gifRatio(int? width, int? height) =>
     (width ?? 0) > 0 && (height ?? 0) > 0 ? width! / height! : 1;
 

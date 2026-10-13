@@ -743,12 +743,7 @@ class _GifTile extends ConsumerWidget {
       onTap: onTap,
       onLongPress: () {
         Feedback.forLongPress(context);
-        _showGifSheet(
-          context,
-          url: tile.url,
-          link: tile.url,
-          favorite: tile.favorite,
-        );
+        _showGifSheet(context, tile);
       },
       child: ClipRRect(
         borderRadius: context.neriSize.rounded(NeriRadiusRole.image),
@@ -764,12 +759,8 @@ class _GifTile extends ConsumerWidget {
   }
 }
 
-Future<void> _showGifSheet(
-  BuildContext context, {
-  required String url,
-  required FavoriteGif favorite,
-  String? link,
-}) async {
+Future<void> _showGifSheet(BuildContext context, _Tile tile) async {
+  final favorite = tile.favorite;
   final picked = await showSheet<SheetAction>(
     context,
     builder: (context) => Consumer(
@@ -779,27 +770,43 @@ Future<void> _showGifSheet(
         );
 
         return SheetActions(
-          actions: [
-            SheetAction(
-              icon: Symbols.star_rounded,
-              filled: saved,
-              dismiss: false,
-              label: saved
-                  ? 'Remove from favorites'
-                  : 'Add to favorites', //TODO: add l10n
-              onTap: () =>
-                  ref.read(favoriteGifsProvider.notifier).toggle(favorite),
+          header: SheetHeader(
+            title: gifName(tile.link) ?? 'No idea (._. )', //TODO: add l10n
+            subtitle: switch (favorite.source) {
+              GifSource.klipy => 'KLIPY',
+              GifSource.cdn => 'Nerimity',
+              GifSource.other => Uri.tryParse(tile.url)?.host ?? tile.url,
+            },
+            leading: _GifPreview(
+              tile: tile,
+              animate: ref.watch(windowFocusProvider),
             ),
-            SheetAction(
-              icon: Symbols.link_rounded,
-              label: 'Copy GIF link', //TODO: add l10n
-              onTap: () => Clipboard.setData(ClipboardData(text: url)),
-            ),
-            SheetAction(
-              icon: Symbols.open_in_new_rounded,
-              label: 'Open in browser', //TODO: add l10n
-              onTap: () => openExternal(link ?? url),
-            ),
+          ),
+          groups: [
+            SheetGroup([
+              SheetAction(
+                icon: Symbols.star_rounded,
+                filled: saved,
+                dismiss: false,
+                label: saved
+                    ? 'Remove from favorites'
+                    : 'Add to favorites', //TODO: add l10n
+                onTap: () =>
+                    ref.read(favoriteGifsProvider.notifier).toggle(favorite),
+              ),
+            ]),
+            SheetGroup([
+              SheetAction(
+                icon: Symbols.link_rounded,
+                label: 'Copy GIF link', //TODO: add l10n
+                onTap: () => Clipboard.setData(ClipboardData(text: tile.url)),
+              ),
+              SheetAction(
+                icon: Symbols.open_in_new_rounded,
+                label: 'Open in browser', //TODO: add l10n
+                onTap: () => openExternal(tile.link ?? tile.url),
+              ),
+            ]),
           ],
         );
       },
@@ -807,4 +814,27 @@ Future<void> _showGifSheet(
   );
 
   picked?.onTap();
+}
+
+class _GifPreview extends StatelessWidget {
+  const _GifPreview({required this.tile, required this.animate});
+
+  final _Tile tile;
+  final bool animate;
+
+  @override
+  Widget build(BuildContext context) {
+    final sizing = context.neriSize;
+    final height = sizing.dimen(NeriDimen.avatarMd);
+    final width = height * tile.ratio.clamp(1, _tileRatio);
+
+    return SizedBox(
+      width: width,
+      height: height,
+      child: ClipRRect(
+        borderRadius: sizing.rounded(NeriRadiusRole.image),
+        child: _GifImage(url: tile.previewUrl, animate: animate, width: width),
+      ),
+    );
+  }
 }

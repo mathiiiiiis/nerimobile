@@ -284,7 +284,7 @@ class _GroupCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.neri;
     final sizing = context.neriSize;
-    final dWidth = sizing.border(NeriBorderRole.thin);
+    final dWidth = sizing.border(NeriBorderRole.medium);
 
     return Material(
       color: colors[NeriToken.cardBright],
