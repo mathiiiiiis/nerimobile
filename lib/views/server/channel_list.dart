@@ -23,6 +23,7 @@ import 'package:nerimobile/theme/typography/text_styles.dart';
 import 'package:nerimobile/views/cdn_icon.dart';
 import 'package:nerimobile/views/collapse.dart';
 import 'package:nerimobile/views/mention_badge.dart';
+import 'package:nerimobile/views/server/channel_context_menu.dart';
 import 'package:nerimobile/views/server/channel_list_skeleton.dart';
 import 'package:nerimobile/views/shell/widgets/scroll_fade.dart';
 
@@ -329,6 +330,10 @@ class _ChannelRow extends ConsumerWidget {
         child: InkWell(
           onTap: () =>
               context.go('/app/servers/${channel.serverId}/${channel.id}'),
+          onLongPress: () {
+            Feedback.forLongPress(context);
+            showChannelContextMenu(context, ref, channel);
+          },
           child: Padding(
             padding: EdgeInsets.symmetric(
               horizontal: sizing.space(NeriSpacingRole.sm),
