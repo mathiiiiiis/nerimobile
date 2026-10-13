@@ -137,6 +137,7 @@ class SheetHeader extends StatelessWidget {
     required this.title,
     this.leading,
     this.subtitle,
+    this.caption,
     this.leadingRadius,
     this.background,
   });
@@ -144,6 +145,7 @@ class SheetHeader extends StatelessWidget {
   final String title;
   final Widget? leading;
   final String? subtitle;
+  final Widget? caption;
   final BorderRadius? leadingRadius;
   final Widget? background;
 
@@ -213,6 +215,11 @@ class SheetHeader extends StatelessWidget {
     );
   }
 
+  Widget? get _subtitleText => switch (subtitle) {
+    final subtitle? => Text(subtitle),
+    null => null,
+  };
+
   Widget _content(BuildContext context, {required bool onBanner}) {
     final colors = context.neri;
     final sizing = context.neriSize;
@@ -255,9 +262,8 @@ class SheetHeader extends StatelessWidget {
                     color: onBanner ? _onBanner : colors[NeriToken.text],
                   ),
                 ),
-                if (subtitle case final subtitle?)
-                  Text(
-                    subtitle,
+                if (caption ?? _subtitleText case final caption?)
+                  DefaultTextStyle(
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: text[NeriTextRole.bodySmall].copyWith(
@@ -265,6 +271,7 @@ class SheetHeader extends StatelessWidget {
                           ? _onBannerSecondary
                           : colors[NeriToken.textSecondary],
                     ),
+                    child: caption,
                   ),
               ],
             ),

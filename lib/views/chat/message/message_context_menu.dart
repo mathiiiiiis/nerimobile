@@ -9,8 +9,13 @@ import 'package:nerimobile/models/message.dart';
 import 'package:nerimobile/stores/composer/composer_store.dart';
 import 'package:nerimobile/stores/gif/favorite_gif_store.dart';
 import 'package:nerimobile/stores/message/message_store.dart';
+import 'package:nerimobile/theme/core/theme_data.dart';
+import 'package:nerimobile/theme/sizing/dimens.dart';
+import 'package:nerimobile/utils/format.dart';
 import 'package:nerimobile/utils/url.dart';
+import 'package:nerimobile/views/avatar.dart';
 import 'package:nerimobile/views/chat/message/message_access.dart';
+import 'package:nerimobile/views/markup/markup.dart';
 import 'package:nerimobile/views/modal/bottom_sheet.dart';
 import 'package:nerimobile/views/modal/confirm_dialog.dart';
 
@@ -116,9 +121,38 @@ Future<void> showMessageContextMenu(
         ),
     ]),
   ];
-  if (groups.isEmpty) return;
+  if (groups.every((group) => group.actions.isEmpty)) return;
 
-  await showActionSheet(context, groups: groups);
+  await showActionSheet(
+    context,
+    header: SheetHeader(
+      title: message.createdBy.username,
+      caption: _preview(message),
+      leading: Avatar(
+        user: message.createdBy,
+        size: context.neriSize.dimen(NeriDimen.avatarMd),
+      ),
+    ),
+    groups: groups,
+  );
+}
+
+Widget? _preview(Message message) {
+  if (message.content.isNotEmpty) {
+    return MarkupView(
+      rawText: singleLine(message.content),
+      mentions: message.mentions,
+      inline: true,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+    );
+  }
+  if (message.attachments.isEmpty) return null;
+
+  return const Text(
+    'Sent an attachment', //TODO: add l10n
+    style: TextStyle(fontStyle: FontStyle.italic),
+  );
 }
 
 FavoriteGif? _favorite(Message message) {
