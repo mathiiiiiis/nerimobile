@@ -30,84 +30,95 @@ Future<void> showMessageContextMenu(
 
   if (!context.mounted) return;
 
-  final actions = [
-    if (favorite != null)
-      SheetAction(
-        icon: Symbols.star_rounded,
-        filled: saved,
-        label: saved
-            ? 'Remove from favorites'
-            : 'Add to favorites', //TODO: add l10n
-        onTap: () => ref.read(favoriteGifsProvider.notifier).toggle(favorite),
-      ),
-    if (mediaUrl != null) ...[
-      SheetAction(
-        icon: Symbols.open_in_new_rounded,
-        label: 'Open in browser', //TODO: add l10n
-        onTap: () => openExternal(mediaUrl),
-      ),
-      SheetAction(
-        icon: Symbols.link_rounded,
-        label: 'Copy media link', //TODO: add l10n
-        onTap: () => Clipboard.setData(ClipboardData(text: mediaUrl)),
-      ),
-    ],
-    if (access.canReply)
-      SheetAction(
-        icon: Symbols.reply_rounded,
-        label: 'Reply', //TODO: add l10n
-        onTap: () => ref
-            .read(composerProvider(message.channelId).notifier)
-            .reply(message),
-      ),
-    if (access.canQuote)
-      SheetAction(
-        icon: Symbols.format_quote_rounded,
-        label: 'Quote', //TODO: add l10n
-        onTap: () => ref
-            .read(composerProvider(message.channelId).notifier)
-            .insert('[q:${message.id}]'),
-      ),
-    if (access.canEdit)
-      SheetAction(
-        icon: Symbols.edit_rounded,
-        label: 'Edit', //TODO: add l10n
-        onTap: () => ref
-            .read(composerProvider(message.channelId).notifier)
-            .edit(message),
-      ),
-    if (message.content.isNotEmpty)
-      SheetAction(
-        icon: Symbols.content_copy_rounded,
-        label: 'Copy text', //TODO: add l10n
-        onTap: () => Clipboard.setData(ClipboardData(text: message.content)),
-      ),
-    if (access.canCopyId)
-      SheetAction(
-        icon: Symbols.id_card_rounded,
-        label: 'Copy ID', //TODO: add l10n
-        onTap: () => Clipboard.setData(ClipboardData(text: message.id)),
-      ),
-    if (access.canDelete)
-      SheetAction(
-        icon: Symbols.delete_rounded,
-        label: 'Delete', //TODO: add l10n
-        destructive: true,
-        onTap: () => _delete(context, ref, message, confirm: !access.failed),
-      ),
-    if (access.canCancelUpload)
-      SheetAction(
-        icon: Symbols.cancel_rounded,
-        label: 'Cancel upload', //TODO: add l10n
-        destructive: true,
-        onTap: () => ref
-            .read(messagesProvider(message.channelId).notifier)
-            .cancelUpload(message.id),
-      ),
-  ];
-  if (actions.isEmpty) return;
+  final groups = [
+    SheetGroup([
+      if (favorite != null)
+        SheetAction(
+          icon: Symbols.star_rounded,
+          filled: saved,
+          label: saved
+              ? 'Remove from favorites'
+              : 'Add to favorites', //TODO: add l10n
+          onTap: () => ref.read(favoriteGifsProvider.notifier).toggle(favorite),
+        ),
+    ]),
 
-  await showActionSheet(context, actions: actions);
+    SheetGroup([
+      if (access.canReply)
+        SheetAction(
+          icon: Symbols.reply_rounded,
+          label: 'Reply', //TODO: add l10n
+          onTap: () => ref
+              .read(composerProvider(message.channelId).notifier)
+              .reply(message),
+        ),
+      if (access.canQuote)
+        SheetAction(
+          icon: Symbols.format_quote_rounded,
+          label: 'Quote', //TODO: add l10n
+          onTap: () => ref
+              .read(composerProvider(message.channelId).notifier)
+              .insert('[q:${message.id}]'),
+        ),
+      if (access.canEdit)
+        SheetAction(
+          icon: Symbols.edit_rounded,
+          label: 'Edit', //TODO: add l10n
+          onTap: () => ref
+              .read(composerProvider(message.channelId).notifier)
+              .edit(message),
+        ),
+    ]),
+
+    SheetGroup([
+      if (message.content.isNotEmpty)
+        SheetAction(
+          icon: Symbols.content_copy_rounded,
+          label: 'Copy text', //TODO: add l10n
+          onTap: () => Clipboard.setData(ClipboardData(text: message.content)),
+        ),
+      if (mediaUrl != null) ...[
+        SheetAction(
+          icon: Symbols.open_in_new_rounded,
+          label: 'Open in browser', //TODO: add l10n
+          onTap: () => openExternal(mediaUrl),
+        ),
+        SheetAction(
+          icon: Symbols.link_rounded,
+          label: 'Copy media link', //TODO: add l10n
+          onTap: () => Clipboard.setData(ClipboardData(text: mediaUrl)),
+        ),
+      ],
+      if (access.canCopyId)
+        SheetAction(
+          icon: Symbols.id_card_rounded,
+          label: 'Copy ID', //TODO: add l10n
+          onTap: () => Clipboard.setData(ClipboardData(text: message.id)),
+        ),
+    ]),
+
+    SheetGroup([
+      if (access.canDelete)
+        SheetAction(
+          icon: Symbols.delete_rounded,
+          label: 'Delete', //TODO: add l10n
+          destructive: true,
+          onTap: () => _delete(context, ref, message, confirm: !access.failed),
+        ),
+      if (access.canCancelUpload)
+        SheetAction(
+          icon: Symbols.cancel_rounded,
+          label: 'Cancel upload', //TODO: add l10n
+          destructive: true,
+          onTap: () => ref
+              .read(messagesProvider(message.channelId).notifier)
+              .cancelUpload(message.id),
+        ),
+    ]),
+  ];
+  if (groups.isEmpty) return;
+
+  await showActionSheet(context, groups: groups);
 }
 
 FavoriteGif? _favorite(Message message) {
