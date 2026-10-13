@@ -175,8 +175,7 @@ final Map<String, String> tokenParts = {
   'spoiler': r'\|\|',
   'checkbox': r'-\[(?:x| )\]',
   'named_link':
-      r'\[(?:.|[\s*\p{L}\p{N}\u{21}-\u{2F}_]+)\]\(https?://\S+\.[\p{Alphabetic}\d/\\#?=+&%@!;:._~-]+\)',
-      r'\[[\s\S]+?\]\(https?:\/\/\S+\.[\p{Alphabetic}\d/\\#?=+&%@!;:._~-]+\)/u,'
+      r'\[[^\]]+\]\(https?://\S+\.[\p{Alphabetic}\d/\\#?=+&%@!;:._~-]+\)',
   'link': r'https?://\S+\.[\p{Alphabetic}\d/\\#?=+&%@!;:._~-]+',
   'link_contained': r'<https?://\S+\.[\p{Alphabetic}\d/\\#?=+&%@!;:._~-]+>',
   'emoji': emojiRegex.pattern,
@@ -528,7 +527,7 @@ Entity parseMarkup(String text) {
         );
         break;
       case "named_link":
-        final linkRegex = RegExp(r'\[(.*?)\]\((.*?)\)');
+        final linkRegex = RegExp(r'\[([\s\S]*?)\]\((.*?)\)');
         final match = linkRegex.firstMatch(
           text.substring(indice.start, indice.end),
         );
