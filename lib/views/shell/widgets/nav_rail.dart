@@ -17,6 +17,7 @@ import 'package:nerimobile/theme/sizing/radius.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/theme/typography/text_styles.dart';
 import 'package:nerimobile/views/avatar.dart';
+import 'package:nerimobile/views/server/server_context_menu.dart';
 import 'package:nerimobile/views/shell/destinations.dart';
 import 'package:nerimobile/views/shell/widgets/destination_icon.dart';
 import 'package:nerimobile/views/shell/widgets/scroll_fade.dart';
@@ -196,6 +197,10 @@ class _ServerItem extends ConsumerWidget {
           label: server.name,
           child: GestureDetector(
             onTap: () => context.go('/app/servers/${server.id}'),
+            onLongPress: () {
+              Feedback.forLongPress(context);
+              showServerContextMenu(context, ref, server);
+            },
             behavior: HitTestBehavior.opaque,
             child: Container(
               padding: EdgeInsets.all(sizing.space(NeriSpacingRole.xs)),
