@@ -50,6 +50,11 @@
 - Posts:
   - [ ] Add Polls Support
   - [ ] Post interactions (like, comment, repost, more)
+- [ ] Style system messages (member joined, left, kicked, banned, call
+      started, server bumped, message pinned)
+- [ ] Style webhook messages (especially GitHub)
+- [ ] Edited indicator on messages
+- [ ] Scroll to bottom button
 - [ ] Servers:
   - [x] Channel listing
   - [x] Members list
@@ -57,6 +62,32 @@
   - [x] `ChannelHeader` for not just DM
   - [ ] Files tab in the members pane
   - [ ] Search tab in the members pane
+  - [x] Server banner and channel notice in the members pane
+  - [x] Collapsible member groups and categories
+  - [x] Channels and categories ordered together, empty private categories
+        hidden
+  - [x] Unread dot on channel rows
+  - [x] Remembers the last opened channel per server and DM
+  - [x] Restore the last opened channel on start
+  - [x] Swipe left on the channel list to open the last channel
+  - [ ] Context menus:
+    - [ ] Server: mark as read, copy ID, leave
+    - [ ] Channel: mark as read, copy ID
+    - [ ] Invites
+    - [ ] Notification options for Servers and channels
+    - [ ] Server and channel settings
+    - [ ] Bump published servers
+  - [ ] Gate the composer on send permission: disables composer with a
+        reason, no swipe to reply or edit, timer for mute expiry
+  - [ ] Role colours and gradients or usernames in the message list
+  - [ ] Persist collapsed categories and member groups
+- [ ] Settings page:
+  - [ ] Nerimity: Account, Profile, Sessions, Badges, Notifications,
+        Connections, Privacy, Activity Status, Developer, (Experiments),
+        Tickets
+  - [ ] Nerimobile: Settings, App-Notifications, Interface, Language,
+        Custom Activity, Accessibility
+- [ ] User profiles: preview modal and full page
 - [ ] YouTube Embed:
   - [ ] Hyperlink Title (stripped tracking)
   - [ ] Cover card: thumbnail, play button (`youtube_explode_dart` maybe?)
@@ -87,4 +118,8 @@
 ## Improvements
 
 - [ ] Cap decoded size for small avatars with `memCacheWidth`
+- [ ] Remove the unused `currentServer*`, `currentChannel*` and
+      `currentPermissions` providers
+- [ ] One rail around all branches instead of one per branch, phone
+      slide-overs would move to the root navigator
 - [ ] Add tests in all areas some day

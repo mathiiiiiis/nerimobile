@@ -50,29 +50,29 @@ and whether Nerimobile handles them yet.
 - [x] `inbox:closed`
 - [x] `notification:dismissed`
 
-- [ ] `server:joined`
-- [ ] `server:left`
-- [ ] `server:updated`
+- [x] `server:joined`
+- [x] `server:left`
+- [x] `server:updated`
 - [ ] `server:order_updated`
 - [ ] `server:folder_created`
 - [ ] `server:folder_updated`
 - [ ] `server:clan_updated`
 
-- [ ] `server:role_created`
-- [ ] `server:role_updated`
-- [ ] `server:role_deleted`
-- [ ] `server:role_order_updated`
+- [x] `server:role_created`
+- [x] `server:role_updated`
+- [x] `server:role_deleted`
+- [x] `server:role_order_updated`
 
-- [ ] `server:member_joined`
-- [ ] `server:member_left`
-- [ ] `server:member_updated`
+- [x] `server:member_joined`
+- [x] `server:member_left`
+- [x] `server:member_updated`
 - [ ] `server:members_fetched`
 
-- [ ] `server:channel_created`
-- [ ] `server:channel_updated`
-- [ ] `server:channel_deleted`
-- [ ] `server:channel_order_updated`
-- [ ] `server:channel_permissions_updated`
+- [x] `server:channel_created`
+- [x] `server:channel_updated`
+- [x] `server:channel_deleted`
+- [x] `server:channel_order_updated`
+- [x] `server:channel_permissions_updated`
 
 - [x] `server:emoji_add`
 - [x] `server:emoji_remove`
