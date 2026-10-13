@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:nerimobile/stores/channel/restore_on_start.dart';
 
 enum DashboardPage {
   directMessages('Direct Messages'), //TODO: add l10n
@@ -15,8 +16,12 @@ final dashboardPageProvider =
     );
 
 class DashboardPageNotifier extends Notifier<DashboardPage> {
+  //first read after splash when cache is loaded
   @override
-  DashboardPage build() => DashboardPage.dashboard;
+  DashboardPage build() => switch (ref.read(lastPlaceProvider)) {
+    (serverId: null, channelId: _) => DashboardPage.directMessages,
+    _ => DashboardPage.dashboard,
+  };
 
   void setPage(DashboardPage page) => state = page;
 }

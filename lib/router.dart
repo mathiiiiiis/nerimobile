@@ -1,10 +1,13 @@
 import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:nerimobile/db/cache_hydration.dart';
 
 import 'package:nerimobile/router/slide_over_page.dart';
 import 'package:nerimobile/stores/auth/auth_store.dart';
 import 'package:nerimobile/stores/channel/last_opened_store.dart';
+import 'package:nerimobile/stores/channel/restore_on_start.dart';
+import 'package:nerimobile/stores/dashboard/dashboard_page_store.dart';
 import 'package:nerimobile/theme/sizing/breakpoints.dart';
 import 'package:nerimobile/views/auth/login_page.dart';
 import 'package:nerimobile/views/chat/channel/channel_pane.dart';
@@ -20,6 +23,7 @@ import 'package:nerimobile/views/shell/widgets/panes.dart';
 final routerProvider = Provider<GoRouter>((ref) {
   final refresh = ValueNotifier(0);
   ref.listen(authProvider, (_, _) => refresh.value++);
+  ref.listen(cacheHydrationProvider, (_, _) => refresh.value++);
   ref.onDispose(refresh.dispose);
 
   final router = GoRouter(
@@ -159,17 +163,24 @@ final routerProvider = Provider<GoRouter>((ref) {
 
   String? rememberedPath;
   void remember() {
-    final state = router.state;
-    if (state.uri.path == rememberedPath) return;
-    rememberedPath = state.uri.path;
+    final matches = router.routerDelegate.currentConfiguration;
+    if (matches.isEmpty || matches.uri.path == rememberedPath) return;
+    rememberedPath = matches.uri.path;
+    final params = matches.pathParameters;
 
-    final lastOpened = ref.read(lastOpenedProvider.notifier);
-    switch (state.pathParameters) {
-      case {'serverId': final serverId, 'channelId': final channelId}:
-        lastOpened.openServerChannel(serverId, channelId);
-      case {'channelId': final channelId}:
-        lastOpened.openInbox(channelId);
-    }
+    Future.microtask(() {
+      final lastOpened = ref.read(lastOpenedProvider.notifier);
+      switch (params) {
+        case {'serverId': final serverId, 'channelId': final channelId}:
+          lastOpened.openServerChannel(serverId, channelId);
+        case {'channelId': final channelId}:
+          lastOpened.openInbox(channelId);
+          //return to dm list on phones
+          ref
+              .read(dashboardPageProvider.notifier)
+              .setPage(DashboardPage.directMessages);
+      }
+    });
   }
 
   router.routerDelegate.addListener(remember);
@@ -204,5 +215,10 @@ String? _redirect(Ref ref, String location) {
   if (auth.isLoading) return location == '/' ? null : '/';
 
   if (auth.value == null) return location == '/login' ? null : '/login';
-  return location == '/login' || location == '/' ? '/app' : null;
+  if (location == '/login') return '/app';
+  if (location != '/') return null;
+
+  //splash waits until the cache loaded the start location
+  if (ref.read(cacheHydrationProvider).isLoading) return null;
+  return startLocation(ref);
 }

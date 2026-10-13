@@ -198,7 +198,8 @@ class _DashboardPager extends ConsumerStatefulWidget {
 }
 
 class _DashboardPagerState extends ConsumerState<_DashboardPager> {
-  static const _initialPage = 1;
+  late int _page = ref.read(dashboardPageProvider).index;
+  late final _controller = PageController(initialPage: _page);
 
   void _onPageChanged(int page) {
     setState(() => _page = page);
@@ -206,9 +207,6 @@ class _DashboardPagerState extends ConsumerState<_DashboardPager> {
         .read(dashboardPageProvider.notifier)
         .setPage(DashboardPage.values[page]);
   }
-
-  final _controller = PageController(initialPage: _initialPage);
-  int _page = _initialPage;
 
   @override
   void dispose() {
@@ -219,6 +217,11 @@ class _DashboardPagerState extends ConsumerState<_DashboardPager> {
   @override
   Widget build(BuildContext context) {
     final sizing = context.neriSize;
+    ref.listen(dashboardPageProvider, (_, next) {
+      if (next.index != _page && _controller.hasClients) {
+        _controller.jumpToPage(next.index);
+      }
+    });
 
     return Stack(
       children: [
