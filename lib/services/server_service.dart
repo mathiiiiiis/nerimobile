@@ -14,7 +14,7 @@ Future<List<ServerInvite>> fetchServerInvites(Dio dio, String serverId) async {
 }
 
 Future<ServerInvite> createServerInvite(Dio dio, String serverId) async {
-  final response = await dio.get('/servers/$serverId/invites');
+  final response = await dio.post('/servers/$serverId/invites');
   return ServerInvite.fromJson(response.data as Map<String, dynamic>);
 }
 
