@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import 'package:nerimobile/models/message.dart';
+import 'package:nerimobile/models/server_invite.dart';
 import 'package:nerimobile/stores/composer/composer_store.dart';
 import 'package:nerimobile/stores/user/user_store.dart';
 import 'package:nerimobile/theme/core/theme_data.dart';
@@ -12,6 +13,7 @@ import 'package:nerimobile/theme/sizing/radius.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/theme/typography/text_styles.dart';
 import 'package:nerimobile/views/avatar.dart';
+import 'package:nerimobile/views/chat/message/invite_card.dart';
 import 'package:nerimobile/views/chat/message/message_access.dart';
 import 'package:nerimobile/views/chat/message/message_context_menu.dart';
 import 'package:nerimobile/views/chat/message/message_media.dart';
@@ -296,6 +298,8 @@ class _Body extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final inviteCode = inviteCodeIn(message.content);
+
     return Opacity(
       opacity: pending ? _pendingOpacity : 1,
       child: Column(
@@ -303,9 +307,10 @@ class _Body extends StatelessWidget {
         children: [
           if (showsContent(message))
             MarkupView(rawText: message.content, message: message),
+          if (inviteCode != null) InviteCard(code: inviteCode),
           MediaPreview(
             attachments: message.attachments,
-            embed: message.embed,
+            embed: inviteCode == null ? message.embed : null,
             onOptions: (context, ref, url) =>
                 showMessageContextMenu(context, ref, message, mediaUrl: url),
           ),

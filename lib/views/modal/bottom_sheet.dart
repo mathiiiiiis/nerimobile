@@ -145,6 +145,7 @@ class SheetHeader extends StatelessWidget {
     this.caption,
     this.leadingRadius,
     this.background,
+    this.embedded = false,
   });
 
   final String title;
@@ -153,6 +154,7 @@ class SheetHeader extends StatelessWidget {
   final Widget? caption;
   final BorderRadius? leadingRadius;
   final Widget? background;
+  final bool embedded;
 
   @override
   Widget build(BuildContext context) {
@@ -167,6 +169,46 @@ class SheetHeader extends StatelessWidget {
       );
     }
 
+    final banner = Stack(
+      children: [
+        Positioned.fill(child: background),
+        const Positioned.fill(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [_dimTop, _dimBottom],
+              ),
+            ),
+          ),
+        ),
+        Column(
+          children: [
+            if (!embedded)
+              Padding(
+                padding: EdgeInsets.only(top: sizing.space(NeriSpacingRole.sm)),
+                child: Container(
+                  width: _handleWidth,
+                  height: _handleHeight,
+                  decoration: BoxDecoration(
+                    color: _onBannerSecondary,
+                    borderRadius: sizing.rounded(NeriRadiusRole.full),
+                  ),
+                ),
+              ),
+            const SizedBox(height: _bannerSpace),
+            Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: sizing.space(NeriSpacingRole.xs),
+              ),
+              child: _content(context, onBanner: true),
+            ),
+          ],
+        ),
+      ],
+    );
+
     return Padding(
       padding: EdgeInsets.fromLTRB(
         sizing.space(NeriSpacingRole.md),
@@ -175,47 +217,10 @@ class SheetHeader extends StatelessWidget {
         0,
       ),
       child: ClipRRect(
-        borderRadius: sizing.rounded(NeriRadiusRole.lg),
-        child: Stack(
-          children: [
-            Positioned.fill(child: background),
-            const Positioned.fill(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [_dimTop, _dimBottom],
-                  ),
-                ),
-              ),
-            ),
-            Column(
-              children: [
-                Padding(
-                  padding: EdgeInsets.only(
-                    top: sizing.space(NeriSpacingRole.sm),
-                  ),
-                  child: Container(
-                    width: _handleWidth,
-                    height: _handleHeight,
-                    decoration: BoxDecoration(
-                      color: _onBannerSecondary,
-                      borderRadius: sizing.rounded(NeriRadiusRole.full),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: _bannerSpace),
-                Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: sizing.space(NeriSpacingRole.md),
-                  ),
-                  child: _content(context, onBanner: true),
-                ),
-              ],
-            ),
-          ],
+        borderRadius: sizing.rounded(
+          embedded ? NeriRadiusRole.md : NeriRadiusRole.lg,
         ),
+        child: banner,
       ),
     );
   }

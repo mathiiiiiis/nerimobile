@@ -1,3 +1,4 @@
+import 'package:nerimobile/config.dart';
 import 'package:nerimobile/models/server.dart';
 import 'package:nerimobile/models/user.dart';
 
@@ -38,3 +39,10 @@ typedef InvitePreview = ({Server server, int memberCount});
 
 InvitePreview invitePreviewFromJson(Map<String, dynamic> json) =>
     (server: Server.fromJson(json), memberCount: json['memberCount'] as int);
+
+//skips links wrapped in <>
+final _inviteLink = RegExp(
+  '(?<!<)${RegExp.escape(inviteUrl)}([^\\s\\[\\]]*[^\\s\\[\\]()])(?!>)',
+);
+
+String? inviteCodeIn(String content) => _inviteLink.firstMatch(content)?[1];
