@@ -7,6 +7,7 @@ import 'package:nerimobile/theme/sizing/dimens.dart';
 import 'package:nerimobile/theme/sizing/radius.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/theme/typography/text_styles.dart';
+import 'package:nerimobile/views/press_scale.dart';
 
 const _disabledOpacity = 0.4;
 const _bannerSpace = 56.0;
@@ -17,12 +18,15 @@ const _onBannerSecondary = Color(0xCCFFFFFF);
 const _dimTop = Color(0x26000000);
 const _dimBottom = Color(0x99000000);
 
+typedef SheetTrailing = ({IconData icon, String label, VoidCallback onTap});
+
 class SheetAction {
   const SheetAction({
     required this.icon,
     required this.label,
     required this.onTap,
     this.hint,
+    this.trailing,
     this.enabled = true,
     this.destructive = false,
     this.filled = false,
@@ -33,6 +37,7 @@ class SheetAction {
   final String label;
   final VoidCallback onTap;
   final String? hint;
+  final SheetTrailing? trailing;
   final bool enabled;
   final bool destructive;
   final bool filled;
@@ -374,6 +379,20 @@ class _ActionRow extends StatelessWidget {
                   ],
                 ),
               ),
+              if (action.trailing case final trailing?)
+                Tooltip(
+                  message: trailing.label,
+                  child: GestureDetector(
+                    onTap: action.enabled ? trailing.onTap : null,
+                    child: PressScale(
+                      child: Icon(
+                        trailing.icon,
+                        size: sizing.dimen(NeriDimen.iconSm),
+                        color: colors[NeriToken.textTertiary],
+                      ),
+                    ),
+                  ),
+                ),
             ],
           ),
         ),

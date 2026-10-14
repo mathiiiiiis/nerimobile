@@ -21,6 +21,7 @@ import 'package:nerimobile/views/avatar.dart';
 import 'package:nerimobile/views/banner_image.dart';
 import 'package:nerimobile/views/modal/bottom_sheet.dart';
 import 'package:nerimobile/views/modal/confirm_dialog.dart';
+import 'package:nerimobile/views/server/invite_sheet.dart';
 
 Future<void> showServerContextMenu(
   BuildContext context,
@@ -52,6 +53,13 @@ Future<void> showServerContextMenu(
       ),
     ),
     groups: [
+      SheetGroup([
+        SheetAction(
+          icon: Symbols.person_add_rounded,
+          label: 'Invite people', //TODO: add l10n
+          onTap: () => showInviteSheet(context, server),
+        ),
+      ]),
       SheetGroup([
         SheetAction(
           icon: Symbols.mark_chat_read_rounded,
