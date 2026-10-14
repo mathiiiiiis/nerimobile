@@ -273,7 +273,7 @@ class _PreviewState extends ConsumerState<_Preview> {
                     ),
                     child: Text(
                       _joining
-                          ? 'Joining' //TODO: add l10n
+                          ? 'Joining…' //TODO: add l10n
                           : joined
                           ? 'Open server' //TODO: add l10n
                           : 'Join server', //TODO: add l10n
