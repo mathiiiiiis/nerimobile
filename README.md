@@ -119,7 +119,7 @@ Not sure about a change? Open an issue first to discuss it!
 
 ## Disclaimer
 
-To use this App, you need to agree and apply with the Nerimity's
+To use this App, you need to agree and apply with the Nerimity
 [Privacy Policy](https://nerimity.com/privacy) and
 [Terms and Conditions](https://nerimity.com/terms-and-conditions).
 
