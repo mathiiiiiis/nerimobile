@@ -39,7 +39,7 @@
   - [ ] Delete other people's messages with manage messages permission
 - [x] Typing Indicator
 - [x] Swipe to reply (short fast swipe), swipe to edit (longer swipe)
-- [ ] Toast for copies, failed deletes, edits and sends
+- [x] Toast for copies, failed deletes, edits and sends
 - [ ] Dashboard:
   - [x] Activity list
   - [x] Pinned announcement
@@ -71,9 +71,9 @@
   - [x] Restore the last opened channel on start
   - [x] Swipe left on the channel list to open the last channel
   - [ ] Context menus:
-    - [ ] Server: mark as read, copy ID, leave
-    - [ ] Channel: mark as read, copy ID
-    - [ ] Invites
+    - [x] Server: mark as read, copy ID, leave
+    - [x] Channel: mark as read, copy ID
+    - [x] Invites
     - [ ] Notification options for Servers and channels
     - [ ] Server and channel settings
     - [ ] Bump published servers
