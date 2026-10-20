@@ -60,10 +60,17 @@ Future<void> showMessageContextMenu(
       if (access.canQuote)
         SheetAction(
           icon: Symbols.format_quote_rounded,
-          label: 'Quote', //TODO: add l10n
-          onTap: () => ref
-              .read(composerProvider(message.channelId).notifier)
-              .insert('[q:${message.id}]'),
+          label: access.blocked ? 'Copy quote' : 'Quote', //TODO: add l10n
+          onTap: () => access.blocked
+              ? ref
+                    .read(toastProvider.notifier)
+                    .copy(
+                      '[q:${message.id}]',
+                      label: 'Quote copied', //TODO: add l10n
+                    )
+              : ref
+                    .read(composerProvider(message.channelId).notifier)
+                    .insert('[q:${message.id}]'),
         ),
       if (access.canEdit)
         SheetAction(

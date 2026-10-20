@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:nerimobile/models/message.dart';
+import 'package:nerimobile/stores/composer/send_block_store.dart';
 import 'package:nerimobile/stores/message/message_store.dart';
 import 'package:nerimobile/stores/message/upload_progress_store.dart';
 import 'package:nerimobile/stores/user/user_store.dart';
@@ -12,6 +13,7 @@ class MessageAccess {
     required this.failed,
     required this.uploading,
     required this.isContent,
+    required this.blocked,
   });
 
   factory MessageAccess.read(WidgetRef ref, Message message) {
@@ -22,6 +24,7 @@ class MessageAccess {
       failed: channel.failed.contains(message.id),
       uploading: ref.read(uploadProgressProvider(message.id)) != null,
       isContent: message.type == MessageType.content,
+      blocked: ref.read(sendBlockProvider(message.channelId)) != null,
     );
   }
 
@@ -30,11 +33,12 @@ class MessageAccess {
   final bool failed;
   final bool uploading;
   final bool isContent;
+  final bool blocked;
 
   bool get local => pending || failed;
-  bool get canReply => !local && isContent;
+  bool get canReply => !local && !blocked && isContent;
   bool get canQuote => !local;
-  bool get canEdit => own && !local && isContent;
+  bool get canEdit => own && !local && !blocked && isContent;
   bool get canDelete => own && !pending && isContent;
   bool get canCancelUpload => own && uploading;
   bool get canCopyId => !local;
