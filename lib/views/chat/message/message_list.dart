@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 import 'package:nerimobile/models/message.dart';
 import 'package:nerimobile/services/socket_events.dart';
@@ -17,6 +18,7 @@ import 'package:nerimobile/views/chat/channel/channel_header.dart';
 import 'package:nerimobile/views/chat/file_too_large_dialog.dart';
 import 'package:nerimobile/views/chat/message/message_list_skeleton.dart';
 import 'package:nerimobile/views/chat/message/message_row.dart';
+import 'package:nerimobile/views/scroll_jump_button.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 const _loadOlderThreshold = 5;
@@ -24,6 +26,7 @@ const _animateWithin = 20;
 const _scrollAlignment = 0.5;
 const _scrollDuration = Duration(milliseconds: 250);
 const _flashDuration = Duration(seconds: 1);
+const _jumpShowsFrom = 5;
 
 class MessageList extends ConsumerStatefulWidget {
   const MessageList({super.key, required this.channelId, this.bottomInset = 0});
@@ -44,6 +47,9 @@ class MessageListState extends ConsumerState<MessageList> {
 
   int? _lastSeen;
 
+  var _scrolledUp = false;
+  var _missed = 0;
+
   @override
   void initState() {
     super.initState();
@@ -63,6 +69,8 @@ class MessageListState extends ConsumerState<MessageList> {
     _dismissed = false;
     _flash?.cancel();
     _flashed = null;
+    _scrolledUp = false;
+    _missed = 0;
     _lastSeen = _readLastSeen();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(messagesProvider(widget.channelId).notifier).open();
@@ -133,6 +141,7 @@ class MessageListState extends ConsumerState<MessageList> {
 
     if (!_atBottom) _dismissed = false;
     _dismissNow();
+    _updateJump(positions);
 
     final oldest = positions
         .map((p) => p.index)
@@ -140,6 +149,39 @@ class MessageListState extends ConsumerState<MessageList> {
     if (oldest < _messages.length - _loadOlderThreshold) return;
 
     ref.read(messagesProvider(widget.channelId).notifier).loadOlder();
+  }
+
+  void _updateJump(Iterable<ItemPosition> positions) {
+    final newest = positions
+        .map((p) => p.index)
+        .reduce((a, b) => a < b ? a : b);
+    final scrolledUp = newest >= _jumpShowsFrom;
+    final missed = newest == 0 ? 0 : _missed;
+    if (scrolledUp == _scrolledUp && missed == _missed) return;
+
+    setState(() {
+      _scrolledUp = scrolledUp;
+      _missed = missed;
+    });
+  }
+
+  double get _bottomPadding =>
+      widget.bottomInset + context.neriSize.space(NeriSpacingRole.xl);
+
+  void _jumpToNewest(double viewport) {
+    final visible = _positions.itemPositions.value;
+    final from = visible.isEmpty ? 0 : visible.first.index;
+    setState(() => _missed = 0);
+
+    if (from > _animateWithin) {
+      _scroll.jumpTo(index: 0);
+      return;
+    }
+    _scroll.scrollTo(
+      index: 0,
+      alignment: _bottomPadding / viewport,
+      duration: _scrollDuration,
+    );
   }
 
   bool _isFullyVisible(int index) {
@@ -200,6 +242,13 @@ class MessageListState extends ConsumerState<MessageList> {
     });
     ref.listen(messagesProvider(widget.channelId), (previous, next) {
       if (next.messages.length != previous?.messages.length) _dismiss();
+
+      final newest = next.messages.lastOrNull?.id;
+      if (!_scrolledUp || newest == previous?.messages.lastOrNull?.id) return;
+      if (next.messages.last.createdBy.id == ref.read(currentUserIdProvider)) {
+        return;
+      }
+      setState(() => _missed++);
     });
 
     final sizing = context.neriSize;
@@ -210,12 +259,12 @@ class MessageListState extends ConsumerState<MessageList> {
       return MessageListSkeleton(bottomInset: widget.bottomInset);
     }
 
-    return ScrollablePositionedList.builder(
+    final list = ScrollablePositionedList.builder(
       itemScrollController: _scroll,
       itemPositionsListener: _positions,
       reverse: true,
       padding: EdgeInsets.only(
-        bottom: widget.bottomInset + sizing.space(NeriSpacingRole.xl),
+        bottom: _bottomPadding,
         top: channelHeaderExtent(context),
       ),
       itemCount: messages.length,
@@ -237,6 +286,24 @@ class MessageListState extends ConsumerState<MessageList> {
           flashed: message.id == _flashed,
         );
       },
+    );
+
+    return LayoutBuilder(
+      builder: (context, constraints) => Stack(
+        children: [
+          list,
+          Positioned(
+            right: sizing.space(NeriSpacingRole.md),
+            bottom: widget.bottomInset + sizing.space(NeriSpacingRole.md),
+            child: ScrollJumpButton(
+              shown: _scrolledUp,
+              icon: Symbols.arrow_downward_rounded,
+              count: _missed,
+              onTap: () => _jumpToNewest(constraints.maxHeight),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

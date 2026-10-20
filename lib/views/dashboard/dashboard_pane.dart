@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
+
 import 'package:nerimobile/stores/dashboard/announcement_store.dart';
 import 'package:nerimobile/stores/dashboard/dashboard_page_store.dart';
 import 'package:nerimobile/stores/dashboard/feed_store.dart';
-
 import 'package:nerimobile/theme/core/theme_data.dart';
 import 'package:nerimobile/theme/core/token.dart';
-import 'package:nerimobile/theme/sizing/border.dart';
 import 'package:nerimobile/theme/sizing/breakpoints.dart';
 import 'package:nerimobile/theme/sizing/dimens.dart';
 import 'package:nerimobile/theme/sizing/radius.dart';
@@ -16,6 +15,7 @@ import 'package:nerimobile/views/dashboard/dm_list.dart';
 import 'package:nerimobile/views/dashboard/widget/activity_list.dart';
 import 'package:nerimobile/views/dashboard/widget/announcement_list.dart';
 import 'package:nerimobile/views/dashboard/widget/feed/feed_list.dart';
+import 'package:nerimobile/views/scroll_jump_button.dart';
 import 'package:nerimobile/views/shell/app_scaffold.dart';
 import 'package:nerimobile/views/shell/destinations.dart';
 
@@ -119,53 +119,14 @@ class _DashboardContentState extends ConsumerState<DashboardContent> {
           bottom: sizing.space(NeriSpacingRole.md),
           child: ValueListenableBuilder(
             valueListenable: _scrolledAway,
-            builder: (context, shown, child) => AnimatedScale(
-              scale: shown ? 1 : 0,
-              duration: _backToTopAnimation,
-              curve: Curves.easeOutBack,
-              child: IgnorePointer(ignoring: !shown, child: child),
+            builder: (context, shown, _) => ScrollJumpButton(
+              shown: shown,
+              icon: Symbols.arrow_upward_rounded,
+              onTap: _backToTop,
             ),
-            child: _BackToTopButton(onTap: _backToTop),
           ),
         ),
       ],
-    );
-  }
-}
-
-class _BackToTopButton extends StatelessWidget {
-  const _BackToTopButton({required this.onTap});
-
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.neri;
-    final sizing = context.neriSize;
-    final size = sizing.dimen(NeriDimen.controlSize);
-
-    return Material(
-      color: colors[NeriToken.text],
-      shape: RoundedRectangleBorder(
-        borderRadius: sizing.rounded(NeriRadiusRole.md),
-        side: BorderSide(
-          color: colors[NeriToken.border],
-          width: sizing.border(NeriBorderRole.hairline),
-        ),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: sizing.rounded(NeriRadiusRole.md),
-        child: SizedBox(
-          width: size,
-          height: size,
-          child: Icon(
-            Symbols.arrow_upward_rounded,
-            size: sizing.dimen(NeriDimen.iconSm),
-            color: colors[NeriToken.primary],
-          ),
-        ),
-      ),
     );
   }
 }
