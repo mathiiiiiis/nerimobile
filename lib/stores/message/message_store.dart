@@ -104,13 +104,13 @@ class MessagesNotifier extends Notifier<ChannelMessages> {
   Future<void> loadOlder() async {
     final oldest = state.oldest;
     if (state.loading || !state.hasMore || oldest == null) return;
-    state = state.copyWith(loaded: true);
+    state = state.copyWith(loading: true);
 
     final batch = await _fetch(limit: messagePageSize, before: oldest.id);
     state = state.copyWith(
       messages: batch == null ? state.messages : _merge(batch),
       loading: false,
-      hasMore: (batch?.length ?? 0) == messagePageSize,
+      hasMore: batch == null ? null : batch.length == messagePageSize,
     );
   }
 
