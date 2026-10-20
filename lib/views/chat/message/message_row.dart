@@ -5,6 +5,7 @@ import 'package:material_symbols_icons/symbols.dart';
 import 'package:nerimobile/models/message.dart';
 import 'package:nerimobile/models/server_invite.dart';
 import 'package:nerimobile/stores/composer/composer_store.dart';
+import 'package:nerimobile/stores/server/server_store.dart';
 import 'package:nerimobile/stores/user/user_store.dart';
 import 'package:nerimobile/theme/core/theme_data.dart';
 import 'package:nerimobile/theme/core/token.dart';
@@ -12,6 +13,7 @@ import 'package:nerimobile/theme/sizing/dimens.dart';
 import 'package:nerimobile/theme/sizing/radius.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/theme/typography/text_styles.dart';
+import 'package:nerimobile/utils/colors.dart';
 import 'package:nerimobile/views/avatar.dart';
 import 'package:nerimobile/views/chat/message/invite_card.dart';
 import 'package:nerimobile/views/chat/message/message_access.dart';
@@ -239,9 +241,8 @@ class _FullMessage extends StatelessWidget {
                       spacing: sizing.space(NeriSpacingRole.sm),
                       children: [
                         Flexible(
-                          child: Text(
-                            message.createdBy.username,
-                            overflow: TextOverflow.ellipsis,
+                          child: _AuthorName(
+                            message: message,
                             style: context.neriText[NeriTextRole.labelLarge]
                                 .copyWith(color: colors[NeriToken.text]),
                           ),
@@ -327,21 +328,47 @@ class _SystemMessages extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.neri;
     final sizing = context.neriSize;
+    final style = context.neriText[NeriTextRole.bodySmall].copyWith(
+      color: context.neri[NeriToken.textPlaceholder],
+    );
 
     return Padding(
       padding: EdgeInsets.symmetric(
         horizontal: sizing.space(NeriSpacingRole.md),
       ),
-      child: Text(
-        '${message.createdBy.username} ${_systemText(message.type)}',
-        style: context.neriText[NeriTextRole.bodySmall].copyWith(
-          color: colors[NeriToken.textPlaceholder],
-        ),
+      child: Row(
+        spacing: sizing.space(NeriSpacingRole.xs),
+        children: [
+          Flexible(
+            child: _AuthorName(message: message, style: style),
+          ),
+          Text(_systemText(message.type), style: style),
+        ],
       ),
     );
   }
+}
+
+class _AuthorName extends ConsumerWidget {
+  const _AuthorName({required this.message, required this.style});
+
+  final Message message;
+  final TextStyle style;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) => buildColoredName(
+    message.createdBy.username,
+    hexColor: ref.watch(
+      channelMemberColorProvider((
+        channelId: message.channelId,
+        userId: message.createdBy.id,
+      )),
+    ),
+    style: style,
+    maxLines: 1,
+    overflow: TextOverflow.ellipsis,
+  );
 }
 
 class _UnreadDivider extends StatelessWidget {

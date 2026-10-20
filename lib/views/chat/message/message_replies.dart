@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:nerimobile/models/message.dart';
-import 'package:nerimobile/stores/channel/channel_store.dart';
 import 'package:nerimobile/stores/server/server_store.dart';
 import 'package:nerimobile/theme/core/theme_data.dart';
 import 'package:nerimobile/theme/core/token.dart';
@@ -125,18 +124,12 @@ class ReplyPreview extends ConsumerWidget {
     final attachmentOnly =
         reply.content.isEmpty && reply.attachments.isNotEmpty;
 
-    final serverId = ref.watch(
-      channelsProvider.select((c) => c[channelId]?.serverId),
+    final hexColor = ref.watch(
+      channelMemberColorProvider((
+        channelId: channelId,
+        userId: reply.createdBy.id,
+      )),
     );
-
-    final hexColor = serverId == null
-        ? null
-        : ref.watch(
-            memberColorProvider((
-              serverId: serverId,
-              userId: reply.createdBy.id,
-            )),
-          );
 
     return Row(
       spacing: sizing.space(NeriSpacingRole.xs),

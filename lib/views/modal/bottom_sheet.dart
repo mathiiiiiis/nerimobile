@@ -7,6 +7,7 @@ import 'package:nerimobile/theme/sizing/dimens.dart';
 import 'package:nerimobile/theme/sizing/radius.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/theme/typography/text_styles.dart';
+import 'package:nerimobile/utils/colors.dart';
 import 'package:nerimobile/views/press_scale.dart';
 
 const _disabledOpacity = 0.4;
@@ -140,6 +141,7 @@ class SheetHeader extends StatelessWidget {
   const SheetHeader({
     super.key,
     required this.title,
+    this.titleColor,
     this.leading,
     this.subtitle,
     this.caption,
@@ -149,6 +151,7 @@ class SheetHeader extends StatelessWidget {
   });
 
   final String title;
+  final String? titleColor;
   final Widget? leading;
   final String? subtitle;
   final Widget? caption;
@@ -264,8 +267,9 @@ class SheetHeader extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
+                buildColoredName(
                   title,
+                  hexColor: titleColor,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: text[NeriTextRole.headlineSmall].copyWith(

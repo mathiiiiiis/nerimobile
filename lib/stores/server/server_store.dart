@@ -186,3 +186,15 @@ String? memberTopColor(
 
   return defaultRole?.hexColor;
 }
+
+final channelMemberColorProvider =
+    Provider.family<String?, ({String channelId, String userId})>((ref, key) {
+      final serverId = ref.watch(
+        channelsProvider.select((c) => c[key.channelId]?.serverId),
+      );
+      if (serverId == null) return null;
+
+      return ref.watch(
+        memberColorProvider((serverId: serverId, userId: key.userId)),
+      );
+    });

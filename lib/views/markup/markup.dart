@@ -12,6 +12,7 @@ import 'package:nerimobile/models/server_role.dart';
 import 'package:nerimobile/models/user.dart';
 import 'package:nerimobile/stores/channel/channel_store.dart';
 import 'package:nerimobile/stores/server/server_roles_store.dart';
+import 'package:nerimobile/stores/server/server_store.dart';
 import 'package:nerimobile/theme/core/theme_data.dart';
 import 'package:nerimobile/theme/core/token.dart';
 import 'package:nerimobile/theme/sizing/dimens.dart';
@@ -387,12 +388,10 @@ TextSpan userMention(User user, MarkupRenderContext ctx) {
     children: [
       ctx.widgetSpan(
         ctx.cover(
-          MentionChip(
-            leading: Avatar(
-              size: ctx.sizing.dimen(NeriDimen.mentionAvatar),
-              user: user,
-            ),
-            label: user.username,
+          _UserMentionChip(
+            user: user,
+            channelId: ctx.message?.channelId,
+            hidden: ctx.hidden,
           ),
         ),
         size: ctx.chipSize(
@@ -402,6 +401,39 @@ TextSpan userMention(User user, MarkupRenderContext ctx) {
       ),
     ],
   );
+}
+
+class _UserMentionChip extends ConsumerWidget {
+  const _UserMentionChip({
+    required this.user,
+    required this.channelId,
+    required this.hidden,
+  });
+
+  final User user;
+  final String? channelId;
+  final bool hidden;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final channelId = this.channelId;
+    final hexColor = channelId == null || hidden
+        ? null
+        : ref.watch(
+            channelMemberColorProvider((channelId: channelId, userId: user.id)),
+          );
+    final color = hexColor == null ? null : roleColor(hexColor);
+
+    return MentionChip(
+      leading: Avatar(
+        size: context.neriSize.dimen(NeriDimen.mentionAvatar),
+        user: user,
+      ),
+      label: user.username,
+      color: color?.color,
+      gradient: color?.gradient,
+    );
+  }
 }
 
 TextSpan linkSpan(String url, String label, MarkupRenderContext ctx) {

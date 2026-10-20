@@ -9,6 +9,7 @@ import 'package:nerimobile/stores/channel/channel_store.dart';
 import 'package:nerimobile/stores/composer/composer_store.dart';
 import 'package:nerimobile/stores/gif/favorite_gif_store.dart';
 import 'package:nerimobile/stores/message/message_store.dart';
+import 'package:nerimobile/stores/server/server_store.dart';
 import 'package:nerimobile/stores/toast/toast_store.dart';
 import 'package:nerimobile/theme/core/theme_data.dart';
 import 'package:nerimobile/theme/sizing/dimens.dart';
@@ -152,6 +153,12 @@ Future<void> showMessageContextMenu(
     context,
     header: SheetHeader(
       title: message.createdBy.username,
+      titleColor: ref.read(
+        channelMemberColorProvider((
+          channelId: message.channelId,
+          userId: message.createdBy.id,
+        )),
+      ),
       caption: _preview(message),
       leading: Avatar(
         user: message.createdBy,
