@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -5,6 +7,7 @@ import 'package:material_symbols_icons/symbols.dart';
 import 'package:nerimobile/models/message.dart';
 import 'package:nerimobile/stores/channel/channel_store.dart';
 import 'package:nerimobile/stores/composer/composer_store.dart';
+import 'package:nerimobile/stores/composer/send_block_store.dart';
 import 'package:nerimobile/stores/emoji/custom_emoji_store.dart';
 import 'package:nerimobile/stores/inbox/inbox_store.dart';
 
@@ -19,6 +22,7 @@ import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/theme/typography/text_styles.dart';
 import 'package:nerimobile/utils/emoji_markup.dart';
 import 'package:nerimobile/utils/emoji_warmup.dart';
+import 'package:nerimobile/utils/format.dart';
 import 'package:nerimobile/views/chat/composer/attachment_panel.dart';
 import 'package:nerimobile/views/chat/composer/composer_bar.dart';
 import 'package:nerimobile/views/chat/composer/emoji_panel.dart';
@@ -80,6 +84,7 @@ class _ComposerState extends ConsumerState<Composer>
 
   bool get _canSend {
     if (_sending) return false;
+    if (ref.read(sendBlockProvider(widget.channelId)) != null) return false;
     if (_controller.text.trim().isNotEmpty) return true;
 
     final composer = ref.read(composerProvider(widget.channelId));
@@ -215,6 +220,16 @@ class _ComposerState extends ConsumerState<Composer>
       composerProvider(widget.channelId).select((c) => c.sendRequests),
       (_, _) => _send(),
     );
+    ref.listen(sendBlockProvider(widget.channelId), (previous, next) {
+      if (next == null || previous != null) return;
+
+      _focus.unfocus();
+      ref.read(composerProvider(widget.channelId).notifier)
+        ..cancelEdit()
+        ..clearReplies();
+      ref.read(attachmentPickerProvider(widget.channelId).notifier).close();
+      ref.read(emojiPaneProvider(widget.channelId).notifier).close();
+    });
     ref.listen(
       composerProvider(widget.channelId).select((c) => c.pendingInsert),
       (_, next) {
@@ -232,6 +247,7 @@ class _ComposerState extends ConsumerState<Composer>
     ref.watch(
       composerProvider(widget.channelId).select((c) => c.attachment != null),
     );
+    final block = ref.watch(sendBlockProvider(widget.channelId));
     final picker = ref.watch(attachmentPickerProvider(widget.channelId));
     final emoji = ref.watch(emojiPaneProvider(widget.channelId));
     final emojis = emoji.open;
@@ -287,43 +303,125 @@ class _ComposerState extends ConsumerState<Composer>
               mainAxisSize: MainAxisSize.min,
               children: [
                 TypingIndicator(channelId: widget.channelId),
-                TextFieldTapRegion(
-                  child: ComposerBar(channelId: widget.channelId),
-                ),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    TextFieldTapRegion(
-                      child: _ActionButton(
-                        icon: Symbols.add_rounded,
-                        onTap: _togglePicker,
-                      ),
-                    ),
-                    Expanded(
-                      child: TextFieldTapRegion(
-                        child: _Field(
-                          controller: _controller,
-                          focusNode: _focus,
-                          hint: _hint(ref, widget.channelId),
-                          onEmojis: _toggleEmojis,
+                if (block != null)
+                  _Blocked(block: block)
+                else ...[
+                  TextFieldTapRegion(
+                    child: ComposerBar(channelId: widget.channelId),
+                  ),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      TextFieldTapRegion(
+                        child: _ActionButton(
+                          icon: Symbols.add_rounded,
+                          onTap: _togglePicker,
                         ),
                       ),
-                    ),
-                    TextFieldTapRegion(
-                      child: _SendButton(
-                        visible: _canSend,
-                        icon: editing
-                            ? Symbols.check_rounded
-                            : Symbols.send_rounded,
-                        onTap: _send,
+                      Expanded(
+                        child: TextFieldTapRegion(
+                          child: _Field(
+                            controller: _controller,
+                            focusNode: _focus,
+                            hint: _hint(ref, widget.channelId),
+                            onEmojis: _toggleEmojis,
+                          ),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
+                      TextFieldTapRegion(
+                        child: _SendButton(
+                          visible: _canSend,
+                          icon: editing
+                              ? Symbols.check_rounded
+                              : Symbols.send_rounded,
+                          onTap: _send,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _Blocked extends StatefulWidget {
+  const _Blocked({required this.block});
+
+  final SendBlock block;
+
+  @override
+  State<_Blocked> createState() => _BlockedState();
+}
+
+class _BlockedState extends State<_Blocked> {
+  Timer? _tick;
+
+  @override
+  void initState() {
+    _tick = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (widget.block is SendMuted) setState(() {});
+    });
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    _tick?.cancel();
+    super.dispose();
+  }
+
+  String _remaining(int until) {
+    final left = until - DateTime.now().millisecondsSinceEpoch;
+    return formatRemaining(Duration(milliseconds: left < 0 ? 0 : left));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.neri;
+    final sizing = context.neriSize;
+    final (icon, iconColor, label) = switch (widget.block) {
+      SendMuted(:final until) => (
+        Symbols.volume_off_rounded,
+        colors[NeriToken.alert],
+        'You are muted for ${_remaining(until)}', //TODO: add l10n
+      ),
+      NoSendPermission() => (
+        Symbols.lock_rounded,
+        colors[NeriToken.textTertiary],
+        'You are not allowed to send messages here', //TODO: add l10n
+      ),
+    };
+
+    return Container(
+      constraints: const BoxConstraints(minHeight: _fieldHeight),
+      padding: EdgeInsets.symmetric(
+        horizontal: sizing.space(NeriSpacingRole.lg),
+        vertical: sizing.space(NeriSpacingRole.sm),
+      ),
+      decoration: BoxDecoration(
+        color: colors[NeriToken.chatInputBackground],
+        borderRadius: BorderRadius.circular(_fieldRadius),
+      ),
+      child: Row(
+        spacing: sizing.space(NeriSpacingRole.sm),
+        children: [
+          Icon(icon, size: sizing.dimen(NeriDimen.iconSm), color: iconColor),
+          Expanded(
+            child: Text(
+              label,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: context.neriText[NeriTextRole.bodyMedium].copyWith(
+                color: colors[NeriToken.textSecondary],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

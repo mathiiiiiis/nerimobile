@@ -20,6 +20,21 @@ String formatDuration(Duration duration) {
   return '$minutes:$seconds';
 }
 
+String formatRemaining(Duration remaining) {
+  final parts = [
+    (remaining.inDays, 'd'),
+    (remaining.inHours.remainder(24), 'h'),
+    (remaining.inMinutes.remainder(60), 'm'),
+    (remaining.inSeconds.remainder(60), 's'),
+  ];
+  final first = parts.indexWhere((part) => part.$1 > 0);
+
+  return [
+    for (final (value, unit) in parts.skip(first < 0 ? 3 : first))
+      '$value$unit',
+  ].join(' ');
+}
+
 String formatExpiry(int expiresAt) {
   final remaining = expiresAt - DateTime.now().millisecondsSinceEpoch;
   if (remaining <= 0) return 'Expired'; //TODO: add l10n
