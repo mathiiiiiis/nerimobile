@@ -9,6 +9,7 @@ import 'package:nerimobile/services/api_client.dart';
 import 'package:nerimobile/services/cdn_service.dart';
 import 'package:nerimobile/services/channel_service.dart';
 import 'package:nerimobile/stores/message/upload_progress_store.dart';
+import 'package:nerimobile/stores/toast/toast_store.dart';
 import 'package:nerimobile/stores/user/user_store.dart';
 
 const messagePageSize = 50;
@@ -213,6 +214,7 @@ class MessagesNotifier extends Notifier<ChannelMessages> {
       final reason = e is DioException ? e.response?.data : null;
       debugPrint('postMessage($channelId) failed: ${reason ?? e}');
       _fail(localId);
+      _toastError(e, 'Message failed to send'); //TODO: add l10n
       return SendFailure.other;
     }
   }
@@ -304,6 +306,7 @@ class MessagesNotifier extends Notifier<ChannelMessages> {
       if (current != null) {
         _replace(current.copyWith({'content': original.content}));
       }
+      _toastError(e, 'Could not edit message'); //TODO: add l10n
       return false;
     } finally {
       state = state.copyWith(editing: {...state.editing}..remove(messageId));
@@ -327,9 +330,14 @@ class MessagesNotifier extends Notifier<ChannelMessages> {
     } catch (e) {
       debugPrint('deleteMessage($channelId, $messageId) failed: $e');
       addMessage(original);
+      _toastError(e, 'Could not delete message'); //TODO: add l10n
       return false;
     }
   }
+
+  void _toastError(Object error, String fallback) => ref
+      .read(toastProvider.notifier)
+      .error(apiErrorMessage(error) ?? fallback);
 
   void addMessage(Message message) {
     if (state.messages.any((m) => m.id == message.id)) return;

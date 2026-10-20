@@ -52,6 +52,9 @@ class ToastNotifier extends Notifier<Toast?> {
     _hide = Timer(_visibleFor, () => state = null);
   }
 
+  void error(String message) =>
+      show(message, icon: Symbols.error_rounded, alert: true);
+
   Future<void> copy(String text, {required String label}) async {
     await Clipboard.setData(ClipboardData(text: text));
     if (await _systemShowsCopies) return;

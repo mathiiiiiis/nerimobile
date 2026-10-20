@@ -200,10 +200,9 @@ class _PreviewState extends ConsumerState<_Preview> {
     } on DioException catch (error) {
       if (!mounted) return;
       setState(
-        () => _error = switch (error.response?.data) {
-          {'message': final String message} => message,
-          _ => 'Could not reach the server', //TODO: add l10n
-        },
+        () => _error =
+            apiErrorMessage(error) ??
+            'Could not reach the server', //TODO: add l10n
       );
     } finally {
       if (mounted) setState(() => _joining = false);

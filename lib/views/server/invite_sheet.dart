@@ -26,10 +26,8 @@ Future<void> showInviteSheet(BuildContext context, Server server) async {
 
 String _link(ServerInvite invite) => '$inviteUrl${invite.code}';
 
-String _errorMessage(DioException error) => switch (error.response?.data) {
-  {'message': final String message} => message,
-  _ => 'Could not reach the server', //TODO: add l10n
-};
+String _errorMessage(DioException error) =>
+    apiErrorMessage(error) ?? 'Could not reach the server'; //TODO: add l10n
 
 class _InviteSheet extends ConsumerStatefulWidget {
   const _InviteSheet(this.server);
@@ -88,6 +86,7 @@ class _InviteSheetState extends ConsumerState<_InviteSheet> {
   }
 
   Future<void> _delete(ServerInvite invite) async {
+    final toast = ref.read(toastProvider.notifier);
     final previous = _invites;
     setState(() {
       _invites = [...?_invites]..remove(invite);
@@ -99,7 +98,10 @@ class _InviteSheetState extends ConsumerState<_InviteSheet> {
         widget.server.id,
         invite.code,
       );
-    } on DioException {
+    } on DioException catch (error) {
+      toast.error(
+        apiErrorMessage(error) ?? 'Could not delete invite', //TODO: add l10n
+      );
       //put it back, invite still works
       if (mounted) setState(() => _invites = previous);
     }

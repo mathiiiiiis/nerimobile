@@ -114,13 +114,12 @@ Future<void> _leave(BuildContext context, WidgetRef ref, Server server) async {
 
   try {
     await leaveServer(ref.read(dioProvider), server.id);
-  } on DioException {
+  } on DioException catch (error) {
     ref
         .read(toastProvider.notifier)
-        .show(
-          'Could not leave "${server.name}"', //TODO: add l10n
-          icon: Symbols.error_rounded,
-          alert: true,
+        .error(
+          apiErrorMessage(error) ??
+              'Could not leave "${server.name}"', //TODO: add l10n
         );
     return;
   }

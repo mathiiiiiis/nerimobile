@@ -33,3 +33,10 @@ final dioProvider = Provider<Dio>((ref) {
 final cdnDioProvider = Provider<Dio>(
   (ref) => Dio(BaseOptions(baseUrl: cdnUrl)),
 );
+
+//server explains most rejections
+String? apiErrorMessage(Object error) => switch (error) {
+  DioException(response: Response(data: {'message': final String message})) =>
+    message,
+  _ => null,
+};
