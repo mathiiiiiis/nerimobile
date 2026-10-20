@@ -8,6 +8,7 @@ import 'package:nerimobile/models/message.dart';
 import 'package:nerimobile/services/api_client.dart';
 import 'package:nerimobile/services/cdn_service.dart';
 import 'package:nerimobile/services/channel_service.dart';
+import 'package:nerimobile/stores/channel/slow_mode_store.dart';
 import 'package:nerimobile/stores/message/upload_progress_store.dart';
 import 'package:nerimobile/stores/toast/toast_store.dart';
 import 'package:nerimobile/stores/user/user_store.dart';
@@ -202,6 +203,7 @@ class MessagesNotifier extends Notifier<ChannelMessages> {
       );
       _mentionReplies.remove(localId);
       _replaceLocal(localId, Message.fromJson(sent['message'] ?? sent));
+      _startSlowMode();
       return null;
     } on _FileTooLarge {
       _remove(localId);
@@ -213,6 +215,10 @@ class MessagesNotifier extends Notifier<ChannelMessages> {
 
       final reason = e is DioException ? e.response?.data : null;
       debugPrint('postMessage($channelId) failed: ${reason ?? e}');
+      //cooldowns this app missed
+      if (reason case {'slowMode': true, 'ttl': final int ttl}) {
+        _startSlowMode(Duration(milliseconds: ttl));
+      }
       _fail(localId);
       _toastError(e, 'Message failed to send'); //TODO: add l10n
       return SendFailure.other;
@@ -333,6 +339,14 @@ class MessagesNotifier extends Notifier<ChannelMessages> {
       _toastError(e, 'Could not delete message'); //TODO: add l10n
       return false;
     }
+  }
+
+  void _startSlowMode([Duration? wait]) {
+    final slowMode = ref.read(slowModeProvider(channelId));
+    if (slowMode == null) return;
+    ref
+        .read(slowModeCooldownsProvider.notifier)
+        .start(channelId, wait ?? Duration(seconds: slowMode.seconds));
   }
 
   void _toastError(Object error, String fallback) => ref

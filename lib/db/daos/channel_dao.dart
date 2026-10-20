@@ -38,6 +38,7 @@ ChannelsCompanion _row(Channel channel) => ChannelsCompanion.insert(
   permissions: Value(
     channel.permissions == null ? null : jsonEncode(channel.permissions),
   ),
+  slowModeSeconds: Value(channel.slowModeSeconds),
 );
 
 Channel _model(ChannelRow row) => Channel(
@@ -54,4 +55,5 @@ Channel _model(ChannelRow row) => Channel(
       : (jsonDecode(row.permissions!) as List)
             .map((e) => ChannelPermission.fromJson(e))
             .toList(),
+  slowModeSeconds: row.slowModeSeconds,
 );

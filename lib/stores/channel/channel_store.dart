@@ -63,6 +63,9 @@ class ChannelsNotifier extends Notifier<Map<String, Channel>> {
       id: channel.copyWith(
         name: updated['name'],
         icon: updated.containsKey('icon') ? () => updated['icon'] : null,
+        slowModeSeconds: updated.containsKey('slowModeSeconds')
+            ? () => updated['slowModeSeconds']
+            : null,
       ),
     };
   }

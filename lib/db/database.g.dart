@@ -359,6 +359,17 @@ class $ChannelsTable extends Channels
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _slowModeSecondsMeta = const VerificationMeta(
+    'slowModeSeconds',
+  );
+  @override
+  late final GeneratedColumn<int> slowModeSeconds = GeneratedColumn<int>(
+    'slow_mode_seconds',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -370,6 +381,7 @@ class $ChannelsTable extends Channels
     categoryId,
     lastMessagedAt,
     permissions,
+    slowModeSeconds,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -444,6 +456,15 @@ class $ChannelsTable extends Channels
         ),
       );
     }
+    if (data.containsKey('slow_mode_seconds')) {
+      context.handle(
+        _slowModeSecondsMeta,
+        slowModeSeconds.isAcceptableOrUnknown(
+          data['slow_mode_seconds']!,
+          _slowModeSecondsMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -489,6 +510,10 @@ class $ChannelsTable extends Channels
         DriftSqlType.string,
         data['${effectivePrefix}permissions'],
       ),
+      slowModeSeconds: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}slow_mode_seconds'],
+      ),
     );
   }
 
@@ -508,6 +533,7 @@ class ChannelRow extends DataClass implements Insertable<ChannelRow> {
   final String? categoryId;
   final int? lastMessagedAt;
   final String? permissions;
+  final int? slowModeSeconds;
   const ChannelRow({
     required this.id,
     required this.type,
@@ -518,6 +544,7 @@ class ChannelRow extends DataClass implements Insertable<ChannelRow> {
     this.categoryId,
     this.lastMessagedAt,
     this.permissions,
+    this.slowModeSeconds,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -545,6 +572,9 @@ class ChannelRow extends DataClass implements Insertable<ChannelRow> {
     if (!nullToAbsent || permissions != null) {
       map['permissions'] = Variable<String>(permissions);
     }
+    if (!nullToAbsent || slowModeSeconds != null) {
+      map['slow_mode_seconds'] = Variable<int>(slowModeSeconds);
+    }
     return map;
   }
 
@@ -569,6 +599,9 @@ class ChannelRow extends DataClass implements Insertable<ChannelRow> {
       permissions: permissions == null && nullToAbsent
           ? const Value.absent()
           : Value(permissions),
+      slowModeSeconds: slowModeSeconds == null && nullToAbsent
+          ? const Value.absent()
+          : Value(slowModeSeconds),
     );
   }
 
@@ -587,6 +620,7 @@ class ChannelRow extends DataClass implements Insertable<ChannelRow> {
       categoryId: serializer.fromJson<String?>(json['categoryId']),
       lastMessagedAt: serializer.fromJson<int?>(json['lastMessagedAt']),
       permissions: serializer.fromJson<String?>(json['permissions']),
+      slowModeSeconds: serializer.fromJson<int?>(json['slowModeSeconds']),
     );
   }
   @override
@@ -602,6 +636,7 @@ class ChannelRow extends DataClass implements Insertable<ChannelRow> {
       'categoryId': serializer.toJson<String?>(categoryId),
       'lastMessagedAt': serializer.toJson<int?>(lastMessagedAt),
       'permissions': serializer.toJson<String?>(permissions),
+      'slowModeSeconds': serializer.toJson<int?>(slowModeSeconds),
     };
   }
 
@@ -615,6 +650,7 @@ class ChannelRow extends DataClass implements Insertable<ChannelRow> {
     Value<String?> categoryId = const Value.absent(),
     Value<int?> lastMessagedAt = const Value.absent(),
     Value<String?> permissions = const Value.absent(),
+    Value<int?> slowModeSeconds = const Value.absent(),
   }) => ChannelRow(
     id: id ?? this.id,
     type: type ?? this.type,
@@ -627,6 +663,9 @@ class ChannelRow extends DataClass implements Insertable<ChannelRow> {
         ? lastMessagedAt.value
         : this.lastMessagedAt,
     permissions: permissions.present ? permissions.value : this.permissions,
+    slowModeSeconds: slowModeSeconds.present
+        ? slowModeSeconds.value
+        : this.slowModeSeconds,
   );
   ChannelRow copyWithCompanion(ChannelsCompanion data) {
     return ChannelRow(
@@ -645,6 +684,9 @@ class ChannelRow extends DataClass implements Insertable<ChannelRow> {
       permissions: data.permissions.present
           ? data.permissions.value
           : this.permissions,
+      slowModeSeconds: data.slowModeSeconds.present
+          ? data.slowModeSeconds.value
+          : this.slowModeSeconds,
     );
   }
 
@@ -659,7 +701,8 @@ class ChannelRow extends DataClass implements Insertable<ChannelRow> {
           ..write('icon: $icon, ')
           ..write('categoryId: $categoryId, ')
           ..write('lastMessagedAt: $lastMessagedAt, ')
-          ..write('permissions: $permissions')
+          ..write('permissions: $permissions, ')
+          ..write('slowModeSeconds: $slowModeSeconds')
           ..write(')'))
         .toString();
   }
@@ -675,6 +718,7 @@ class ChannelRow extends DataClass implements Insertable<ChannelRow> {
     categoryId,
     lastMessagedAt,
     permissions,
+    slowModeSeconds,
   );
   @override
   bool operator ==(Object other) =>
@@ -688,7 +732,8 @@ class ChannelRow extends DataClass implements Insertable<ChannelRow> {
           other.icon == this.icon &&
           other.categoryId == this.categoryId &&
           other.lastMessagedAt == this.lastMessagedAt &&
-          other.permissions == this.permissions);
+          other.permissions == this.permissions &&
+          other.slowModeSeconds == this.slowModeSeconds);
 }
 
 class ChannelsCompanion extends UpdateCompanion<ChannelRow> {
@@ -701,6 +746,7 @@ class ChannelsCompanion extends UpdateCompanion<ChannelRow> {
   final Value<String?> categoryId;
   final Value<int?> lastMessagedAt;
   final Value<String?> permissions;
+  final Value<int?> slowModeSeconds;
   final Value<int> rowid;
   const ChannelsCompanion({
     this.id = const Value.absent(),
@@ -712,6 +758,7 @@ class ChannelsCompanion extends UpdateCompanion<ChannelRow> {
     this.categoryId = const Value.absent(),
     this.lastMessagedAt = const Value.absent(),
     this.permissions = const Value.absent(),
+    this.slowModeSeconds = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   ChannelsCompanion.insert({
@@ -724,6 +771,7 @@ class ChannelsCompanion extends UpdateCompanion<ChannelRow> {
     this.categoryId = const Value.absent(),
     this.lastMessagedAt = const Value.absent(),
     this.permissions = const Value.absent(),
+    this.slowModeSeconds = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        type = Value(type);
@@ -737,6 +785,7 @@ class ChannelsCompanion extends UpdateCompanion<ChannelRow> {
     Expression<String>? categoryId,
     Expression<int>? lastMessagedAt,
     Expression<String>? permissions,
+    Expression<int>? slowModeSeconds,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -749,6 +798,7 @@ class ChannelsCompanion extends UpdateCompanion<ChannelRow> {
       if (categoryId != null) 'category_id': categoryId,
       if (lastMessagedAt != null) 'last_messaged_at': lastMessagedAt,
       if (permissions != null) 'permissions': permissions,
+      if (slowModeSeconds != null) 'slow_mode_seconds': slowModeSeconds,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -763,6 +813,7 @@ class ChannelsCompanion extends UpdateCompanion<ChannelRow> {
     Value<String?>? categoryId,
     Value<int?>? lastMessagedAt,
     Value<String?>? permissions,
+    Value<int?>? slowModeSeconds,
     Value<int>? rowid,
   }) {
     return ChannelsCompanion(
@@ -775,6 +826,7 @@ class ChannelsCompanion extends UpdateCompanion<ChannelRow> {
       categoryId: categoryId ?? this.categoryId,
       lastMessagedAt: lastMessagedAt ?? this.lastMessagedAt,
       permissions: permissions ?? this.permissions,
+      slowModeSeconds: slowModeSeconds ?? this.slowModeSeconds,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -809,6 +861,9 @@ class ChannelsCompanion extends UpdateCompanion<ChannelRow> {
     if (permissions.present) {
       map['permissions'] = Variable<String>(permissions.value);
     }
+    if (slowModeSeconds.present) {
+      map['slow_mode_seconds'] = Variable<int>(slowModeSeconds.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -827,6 +882,7 @@ class ChannelsCompanion extends UpdateCompanion<ChannelRow> {
           ..write('categoryId: $categoryId, ')
           ..write('lastMessagedAt: $lastMessagedAt, ')
           ..write('permissions: $permissions, ')
+          ..write('slowModeSeconds: $slowModeSeconds, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -4376,6 +4432,7 @@ typedef $$ChannelsTableCreateCompanionBuilder =
       Value<String?> categoryId,
       Value<int?> lastMessagedAt,
       Value<String?> permissions,
+      Value<int?> slowModeSeconds,
       Value<int> rowid,
     });
 typedef $$ChannelsTableUpdateCompanionBuilder =
@@ -4389,6 +4446,7 @@ typedef $$ChannelsTableUpdateCompanionBuilder =
       Value<String?> categoryId,
       Value<int?> lastMessagedAt,
       Value<String?> permissions,
+      Value<int?> slowModeSeconds,
       Value<int> rowid,
     });
 
@@ -4443,6 +4501,11 @@ class $$ChannelsTableFilterComposer
 
   ColumnFilters<String> get permissions => $composableBuilder(
     column: $table.permissions,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get slowModeSeconds => $composableBuilder(
+    column: $table.slowModeSeconds,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -4500,6 +4563,11 @@ class $$ChannelsTableOrderingComposer
     column: $table.permissions,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<int> get slowModeSeconds => $composableBuilder(
+    column: $table.slowModeSeconds,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$ChannelsTableAnnotationComposer
@@ -4541,6 +4609,11 @@ class $$ChannelsTableAnnotationComposer
 
   GeneratedColumn<String> get permissions => $composableBuilder(
     column: $table.permissions,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get slowModeSeconds => $composableBuilder(
+    column: $table.slowModeSeconds,
     builder: (column) => column,
   );
 }
@@ -4585,6 +4658,7 @@ class $$ChannelsTableTableManager
                 Value<String?> categoryId = const Value.absent(),
                 Value<int?> lastMessagedAt = const Value.absent(),
                 Value<String?> permissions = const Value.absent(),
+                Value<int?> slowModeSeconds = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ChannelsCompanion(
                 id: id,
@@ -4596,6 +4670,7 @@ class $$ChannelsTableTableManager
                 categoryId: categoryId,
                 lastMessagedAt: lastMessagedAt,
                 permissions: permissions,
+                slowModeSeconds: slowModeSeconds,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -4609,6 +4684,7 @@ class $$ChannelsTableTableManager
                 Value<String?> categoryId = const Value.absent(),
                 Value<int?> lastMessagedAt = const Value.absent(),
                 Value<String?> permissions = const Value.absent(),
+                Value<int?> slowModeSeconds = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ChannelsCompanion.insert(
                 id: id,
@@ -4620,6 +4696,7 @@ class $$ChannelsTableTableManager
                 categoryId: categoryId,
                 lastMessagedAt: lastMessagedAt,
                 permissions: permissions,
+                slowModeSeconds: slowModeSeconds,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

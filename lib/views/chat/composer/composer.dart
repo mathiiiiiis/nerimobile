@@ -6,6 +6,7 @@ import 'package:material_symbols_icons/symbols.dart';
 
 import 'package:nerimobile/models/message.dart';
 import 'package:nerimobile/stores/channel/channel_store.dart';
+import 'package:nerimobile/stores/channel/slow_mode_store.dart';
 import 'package:nerimobile/stores/composer/composer_store.dart';
 import 'package:nerimobile/stores/composer/send_block_store.dart';
 import 'package:nerimobile/stores/emoji/custom_emoji_store.dart';
@@ -85,9 +86,12 @@ class _ComposerState extends ConsumerState<Composer>
   bool get _canSend {
     if (_sending) return false;
     if (ref.read(sendBlockProvider(widget.channelId)) != null) return false;
-    if (_controller.text.trim().isNotEmpty) return true;
 
     final composer = ref.read(composerProvider(widget.channelId));
+    final cooling = ref.read(slowModeProvider(widget.channelId))?.until != null;
+    if (composer.editing == null && cooling) return false;
+    if (_controller.text.trim().isNotEmpty) return true;
+
     return composer.editing == null && composer.attachment != null;
   }
 
@@ -248,6 +252,7 @@ class _ComposerState extends ConsumerState<Composer>
       composerProvider(widget.channelId).select((c) => c.attachment != null),
     );
     final block = ref.watch(sendBlockProvider(widget.channelId));
+    final slowMode = ref.watch(slowModeProvider(widget.channelId));
     final picker = ref.watch(attachmentPickerProvider(widget.channelId));
     final emoji = ref.watch(emojiPaneProvider(widget.channelId));
     final emojis = emoji.open;
@@ -306,6 +311,7 @@ class _ComposerState extends ConsumerState<Composer>
                 if (block != null)
                   _Blocked(block: block)
                 else ...[
+                  if (slowMode != null) _SlowModeHint(slowMode: slowMode),
                   TextFieldTapRegion(
                     child: ComposerBar(channelId: widget.channelId),
                   ),
@@ -422,6 +428,73 @@ class _BlockedState extends State<_Blocked> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _SlowModeHint extends StatefulWidget {
+  const _SlowModeHint({required this.slowMode});
+
+  final SlowMode slowMode;
+
+  @override
+  State<_SlowModeHint> createState() => _SlowModeHintState();
+}
+
+class _SlowModeHintState extends State<_SlowModeHint> {
+  Timer? _tick;
+
+  @override
+  void initState() {
+    super.initState();
+    _tick = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (widget.slowMode.until != null) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _tick?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.neri;
+    final sizing = context.neriSize;
+    final (:seconds, :until) = widget.slowMode;
+    final left = until == null
+        ? null
+        : until - DateTime.now().millisecondsSinceEpoch;
+    final label = left == null
+        ? 'Slow mode, one message every ${formatRemaining(Duration(seconds: seconds))}' //TODO: add l10n
+        : 'Slow mode, wait ${formatRemaining(Duration(milliseconds: left < 0 ? 0 : left))}'; //TODO: add l10n
+
+    return SizedBox(
+      height: sizing.dimen(NeriDimen.replyHeight),
+      child: Padding(
+        padding: EdgeInsets.only(left: sizing.space(NeriSpacingRole.md)),
+        child: Row(
+          spacing: sizing.space(NeriSpacingRole.xs),
+          children: [
+            Icon(
+              Symbols.timer_rounded,
+              size: sizing.dimen(NeriDimen.mentionAvatar),
+              color: colors[left == null ? NeriToken.primary : NeriToken.alert],
+            ),
+            Flexible(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: context.neriText[NeriTextRole.bodySmall].copyWith(
+                  color: colors[NeriToken.textSecondary],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

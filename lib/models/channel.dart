@@ -20,6 +20,7 @@ class Channel {
   final String? categoryId;
   final int? lastMessagedAt;
   final List<ChannelPermission>? permissions;
+  final int? slowModeSeconds;
 
   Channel({
     required this.id,
@@ -31,6 +32,7 @@ class Channel {
     this.order,
     this.categoryId,
     this.lastMessagedAt,
+    this.slowModeSeconds,
   });
 
   factory Channel.fromJson(Map<String, dynamic> json) => Channel(
@@ -46,6 +48,7 @@ class Channel {
         ?.map((e) => ChannelPermission.fromJson(e))
         .toList(),
     lastMessagedAt: json['lastMessagedAt'] as int?,
+    slowModeSeconds: json['slowModeSeconds'] as int?,
   );
 
   Channel copyWith({
@@ -55,6 +58,7 @@ class Channel {
     String? Function()? icon,
     String? Function()? categoryId,
     List<ChannelPermission>? permissions,
+    int? Function()? slowModeSeconds,
   }) {
     return Channel(
       id: id,
@@ -66,6 +70,9 @@ class Channel {
       categoryId: categoryId != null ? categoryId() : this.categoryId,
       permissions: permissions ?? this.permissions,
       lastMessagedAt: lastMessagedAt ?? this.lastMessagedAt,
+      slowModeSeconds: slowModeSeconds != null
+          ? slowModeSeconds()
+          : this.slowModeSeconds,
     );
   }
 }

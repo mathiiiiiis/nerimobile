@@ -11,6 +11,7 @@ class Channels extends Table {
   TextColumn get categoryId => text().nullable()();
   IntColumn get lastMessagedAt => integer().nullable()();
   TextColumn get permissions => text().nullable()();
+  IntColumn get slowModeSeconds => integer().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
