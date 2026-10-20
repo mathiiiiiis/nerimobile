@@ -26,11 +26,12 @@ import 'package:nerimobile/utils/emoji_warmup.dart';
 import 'package:nerimobile/utils/format.dart';
 import 'package:nerimobile/views/chat/composer/attachment_panel.dart';
 import 'package:nerimobile/views/chat/composer/composer_bar.dart';
+import 'package:nerimobile/views/chat/composer/composer_layout.dart';
 import 'package:nerimobile/views/chat/composer/emoji_panel.dart';
 import 'package:nerimobile/views/chat/composer/typing_indicator.dart';
 import 'package:nerimobile/views/chat/file_too_large_dialog.dart';
 
-const _fieldHeight = 48.0;
+const _fieldHeight = composerFieldHeight;
 const _maxFieldLines = 6;
 const _sendMorph = Duration(milliseconds: 150);
 const _sendAppear = Duration(milliseconds: 200);
@@ -474,7 +475,7 @@ class _SlowModeHintState extends State<_SlowModeHint> {
     return SizedBox(
       height: sizing.dimen(NeriDimen.replyHeight),
       child: Padding(
-        padding: EdgeInsets.only(left: sizing.space(NeriSpacingRole.md)),
+        padding: EdgeInsets.only(left: composerStripInset(context)),
         child: Row(
           spacing: sizing.space(NeriSpacingRole.xs),
           children: [

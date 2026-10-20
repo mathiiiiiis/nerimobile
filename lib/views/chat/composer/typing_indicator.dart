@@ -11,6 +11,7 @@ import 'package:nerimobile/theme/core/token.dart';
 import 'package:nerimobile/theme/sizing/dimens.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/theme/typography/text_styles.dart';
+import 'package:nerimobile/views/chat/composer/composer_layout.dart';
 
 const _named = 2;
 const _resize = Duration(milliseconds: 150);
@@ -69,9 +70,7 @@ class _TypingIndicatorState extends ConsumerState<TypingIndicator>
           : SizedBox(
               height: sizing.dimen(NeriDimen.replyHeight),
               child: Padding(
-                padding: EdgeInsets.only(
-                  left: sizing.space(NeriSpacingRole.md),
-                ),
+                padding: EdgeInsets.only(left: composerStripInset(context)),
                 child: Row(
                   spacing: sizing.space(NeriSpacingRole.xs),
                   children: [

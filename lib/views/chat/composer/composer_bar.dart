@@ -13,6 +13,7 @@ import 'package:nerimobile/theme/sizing/dimens.dart';
 import 'package:nerimobile/theme/sizing/radius.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/theme/typography/text_styles.dart';
+import 'package:nerimobile/views/chat/composer/composer_layout.dart';
 import 'package:nerimobile/views/chat/message/message_replies.dart';
 import 'package:nerimobile/views/press_scale.dart';
 
@@ -52,7 +53,7 @@ class ComposerBar extends ConsumerWidget {
           ? const SizedBox(width: double.infinity)
           : Padding(
               padding: EdgeInsets.fromLTRB(
-                sizing.space(NeriSpacingRole.md),
+                composerStripInset(context),
                 0,
                 0,
                 sizing.space(NeriSpacingRole.xs),
@@ -104,12 +105,7 @@ class _ReplyBar extends ConsumerWidget {
     );
 
     return Padding(
-      padding: EdgeInsets.fromLTRB(
-        sizing.space(NeriSpacingRole.md),
-        0,
-        0,
-        sizing.space(NeriSpacingRole.xs),
-      ),
+      padding: EdgeInsets.only(bottom: sizing.space(NeriSpacingRole.xs)),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
