@@ -3,7 +3,6 @@ import 'dart:math';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -12,6 +11,7 @@ import 'package:nerimobile/models/gif.dart';
 import 'package:nerimobile/stores/composer/composer_store.dart';
 import 'package:nerimobile/stores/gif/favorite_gif_store.dart';
 import 'package:nerimobile/stores/gif/gif_store.dart';
+import 'package:nerimobile/stores/toast/toast_store.dart';
 import 'package:nerimobile/stores/window/window_focus_store.dart';
 import 'package:nerimobile/theme/core/theme_data.dart';
 import 'package:nerimobile/theme/core/token.dart';
@@ -768,6 +768,7 @@ Future<void> _showGifSheet(BuildContext context, _Tile tile) async {
         final saved = ref.watch(
           favoriteUrlsProvider.select((urls) => urls.contains(favorite.url)),
         );
+        final toast = ref.read(toastProvider.notifier);
 
         return SheetActions(
           header: SheetHeader(
@@ -799,7 +800,10 @@ Future<void> _showGifSheet(BuildContext context, _Tile tile) async {
               SheetAction(
                 icon: Symbols.link_rounded,
                 label: 'Copy GIF link', //TODO: add l10n
-                onTap: () => Clipboard.setData(ClipboardData(text: tile.url)),
+                onTap: () => toast.copy(
+                  tile.url,
+                  label: 'Link copied', //TODO: add l10n
+                ),
               ),
               SheetAction(
                 icon: Symbols.open_in_new_rounded,

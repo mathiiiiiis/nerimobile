@@ -1,6 +1,5 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
@@ -82,7 +81,9 @@ Future<void> showServerContextMenu(
         SheetAction(
           icon: Symbols.id_card_rounded,
           label: 'Copy ID', //TODO: add l10n
-          onTap: () => Clipboard.setData(ClipboardData(text: server.id)),
+          onTap: () => ref
+              .read(toastProvider.notifier)
+              .copy(server.id, label: 'ID copied'), //TODO: add l10n
         ),
       ]),
       SheetGroup([

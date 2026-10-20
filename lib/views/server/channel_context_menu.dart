@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
@@ -8,6 +7,7 @@ import 'package:nerimobile/services/socket_events.dart';
 import 'package:nerimobile/stores/channel/channel_store.dart';
 import 'package:nerimobile/stores/connection/connection_store.dart';
 import 'package:nerimobile/stores/server/server_store.dart';
+import 'package:nerimobile/stores/toast/toast_store.dart';
 import 'package:nerimobile/theme/core/theme_data.dart';
 import 'package:nerimobile/theme/core/token.dart';
 import 'package:nerimobile/theme/sizing/dimens.dart';
@@ -46,7 +46,9 @@ Future<void> showChannelContextMenu(
         SheetAction(
           icon: Symbols.id_card_rounded,
           label: 'Copy ID', //TODO: add l10n
-          onTap: () => Clipboard.setData(ClipboardData(text: channel.id)),
+          onTap: () => ref
+              .read(toastProvider.notifier)
+              .copy(channel.id, label: 'ID copied'), //TODO: add l10n
         ),
       ]),
     ],

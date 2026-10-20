@@ -1,9 +1,21 @@
 import 'dart:async';
+import 'dart:io';
 
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 const _visibleFor = Duration(milliseconds: 2500);
+const _clipboardPreviewSdk = 33;
+
+//andr13+ show own copied text preview
+final Future<bool> _systemShowsCopies = Platform.isAndroid
+    ? DeviceInfoPlugin().androidInfo.then(
+        (info) => info.version.sdkInt >= _clipboardPreviewSdk,
+      )
+    : Future.value(false);
 
 class Toast {
   const Toast({
@@ -38,5 +50,12 @@ class ToastNotifier extends Notifier<Toast?> {
     _hide?.cancel();
     state = Toast(id: _nextId++, message: message, icon: icon, alert: alert);
     _hide = Timer(_visibleFor, () => state = null);
+  }
+
+  Future<void> copy(String text, {required String label}) async {
+    await Clipboard.setData(ClipboardData(text: text));
+    if (await _systemShowsCopies) return;
+
+    show(label, icon: Symbols.content_copy_rounded);
   }
 }

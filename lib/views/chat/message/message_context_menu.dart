@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:nerimobile/config.dart';
@@ -9,6 +8,7 @@ import 'package:nerimobile/models/message.dart';
 import 'package:nerimobile/stores/composer/composer_store.dart';
 import 'package:nerimobile/stores/gif/favorite_gif_store.dart';
 import 'package:nerimobile/stores/message/message_store.dart';
+import 'package:nerimobile/stores/toast/toast_store.dart';
 import 'package:nerimobile/theme/core/theme_data.dart';
 import 'package:nerimobile/theme/sizing/dimens.dart';
 import 'package:nerimobile/utils/format.dart';
@@ -80,7 +80,9 @@ Future<void> showMessageContextMenu(
         SheetAction(
           icon: Symbols.content_copy_rounded,
           label: 'Copy text', //TODO: add l10n
-          onTap: () => Clipboard.setData(ClipboardData(text: message.content)),
+          onTap: () => ref
+              .read(toastProvider.notifier)
+              .copy(message.content, label: 'Text copied'), //TODO: add l10n
         ),
       if (mediaUrl != null) ...[
         SheetAction(
@@ -91,14 +93,18 @@ Future<void> showMessageContextMenu(
         SheetAction(
           icon: Symbols.link_rounded,
           label: 'Copy media link', //TODO: add l10n
-          onTap: () => Clipboard.setData(ClipboardData(text: mediaUrl)),
+          onTap: () => ref
+              .read(toastProvider.notifier)
+              .copy(message.content, label: 'Link copied'), //TODO: add l10n
         ),
       ],
       if (access.canCopyId)
         SheetAction(
           icon: Symbols.id_card_rounded,
           label: 'Copy ID', //TODO: add l10n
-          onTap: () => Clipboard.setData(ClipboardData(text: message.id)),
+          onTap: () => ref
+              .read(toastProvider.notifier)
+              .copy(message.id, label: 'ID copied'), //TODO: add l10n
         ),
     ]),
 

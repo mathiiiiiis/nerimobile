@@ -1,6 +1,5 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
@@ -9,6 +8,7 @@ import 'package:nerimobile/models/server.dart';
 import 'package:nerimobile/models/server_invite.dart';
 import 'package:nerimobile/services/api_client.dart';
 import 'package:nerimobile/services/server_service.dart';
+import 'package:nerimobile/stores/toast/toast_store.dart';
 import 'package:nerimobile/stores/user/user_store.dart';
 import 'package:nerimobile/theme/core/theme_data.dart';
 import 'package:nerimobile/theme/sizing/dimens.dart';
@@ -76,7 +76,9 @@ class _InviteSheetState extends ConsumerState<_InviteSheet> {
         ref.read(dioProvider),
         widget.server.id,
       );
-      await Clipboard.setData(ClipboardData(text: _link(invite)));
+      await ref
+          .read(toastProvider.notifier)
+          .copy(_link(invite), label: 'Invite link copied'); //TODO: add l10n
       if (mounted) setState(() => _invites = [invite, ...?_invites]);
     } on DioException catch (error) {
       if (mounted) setState(() => _createError = _errorMessage(error));
@@ -164,8 +166,12 @@ class _InviteSheetState extends ConsumerState<_InviteSheet> {
                         ? 'by ${creator.username} (You)' //TODO: add l10n
                         : 'by ${creator.username}', //TODO: add l10n
                 ].join(' • '),
-                onTap: () =>
-                    Clipboard.setData(ClipboardData(text: _link(invite))),
+                onTap: () => ref
+                    .read(toastProvider.notifier)
+                    .copy(
+                      _link(invite),
+                      label: 'Invite link copied', //TODO: add l10n
+                    ),
                 dismiss: false,
                 trailing: (
                   icon: Symbols.delete_rounded,
