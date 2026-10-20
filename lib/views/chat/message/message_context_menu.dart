@@ -155,9 +155,9 @@ Future<void> showMessageContextMenu(
     context,
     header: SheetHeader(
       title:
-          ref.read(channelMemberColorProvider(author)) ??
+          ref.read(channelMemberNicknameProvider(author)) ??
           message.createdBy.username,
-      titleColor: ref.read(channelMemberColorProvider((author))),
+      titleColor: ref.read(channelMemberColorProvider(author)),
       caption: _preview(message),
       leading: Avatar(
         user: message.createdBy,
