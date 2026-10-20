@@ -57,4 +57,5 @@ class MessageAccess {
   bool get canDelete => (own || moderator) && !pending;
   bool get canCancelUpload => own && uploading;
   bool get canCopyId => !local;
+  bool get canCopyLink => !local;
 }

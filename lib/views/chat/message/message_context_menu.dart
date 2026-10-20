@@ -5,6 +5,7 @@ import 'package:nerimobile/config.dart';
 import 'package:nerimobile/models/gif.dart';
 
 import 'package:nerimobile/models/message.dart';
+import 'package:nerimobile/stores/channel/channel_store.dart';
 import 'package:nerimobile/stores/composer/composer_store.dart';
 import 'package:nerimobile/stores/gif/favorite_gif_store.dart';
 import 'package:nerimobile/stores/message/message_store.dart';
@@ -102,9 +103,20 @@ Future<void> showMessageContextMenu(
           label: 'Copy media link', //TODO: add l10n
           onTap: () => ref
               .read(toastProvider.notifier)
-              .copy(message.content, label: 'Link copied'), //TODO: add l10n
+              .copy(mediaUrl, label: 'Link copied'), //TODO: add l10n
         ),
       ],
+      if (access.canCopyLink)
+        SheetAction(
+          icon: Symbols.insert_link_rounded,
+          label: 'Copy message link', //TODO: add l10n
+          onTap: () => ref
+              .read(toastProvider.notifier)
+              .copy(
+                _messageLink(ref, message),
+                label: 'Message link copied', //TODO: add l10n
+              ),
+        ),
       if (access.canCopyId)
         SheetAction(
           icon: Symbols.id_card_rounded,
@@ -166,6 +178,14 @@ Widget? _preview(Message message) {
     'Sent an attachment', //TODO: add l10n
     style: TextStyle(fontStyle: FontStyle.italic),
   );
+}
+
+String _messageLink(WidgetRef ref, Message message) {
+  final serverId = ref.read(channelsProvider)[message.channelId]?.serverId;
+  final path = serverId == null
+      ? 'inbox/${message.channelId}'
+      : 'servers/$serverId/${message.channelId}';
+  return '$appUrl$path?messageId=${message.id}';
 }
 
 FavoriteGif? _favorite(Message message) {
