@@ -12,6 +12,7 @@ import 'package:nerimobile/services/socket_events.dart';
 import 'package:nerimobile/stores/channel/channel_store.dart';
 import 'package:nerimobile/stores/connection/connection_store.dart';
 import 'package:nerimobile/stores/server/server_member_store.dart';
+import 'package:nerimobile/stores/toast/toast_store.dart';
 import 'package:nerimobile/stores/user/user_store.dart';
 import 'package:nerimobile/theme/core/theme_data.dart';
 import 'package:nerimobile/theme/sizing/dimens.dart';
@@ -113,7 +114,13 @@ Future<void> _leave(BuildContext context, WidgetRef ref, Server server) async {
   try {
     await leaveServer(ref.read(dioProvider), server.id);
   } on DioException {
-    //TODO: toast once toasts exist
+    ref
+        .read(toastProvider.notifier)
+        .show(
+          'Could not leave "${server.name}"', //TODO: add l10n
+          icon: Symbols.error_rounded,
+          alert: true,
+        );
     return;
   }
 

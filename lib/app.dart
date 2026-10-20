@@ -9,6 +9,7 @@ import 'package:nerimobile/theme/presets/presets.dart';
 import 'package:nerimobile/theme/sizing/breakpoints.dart';
 
 import 'package:nerimobile/utils/theme_notifier.dart';
+import 'package:nerimobile/views/toast_host.dart';
 import 'package:nerimobile/views/window_focus_observer.dart';
 import 'package:nerimobile/router.dart';
 
@@ -34,7 +35,9 @@ class MainApp extends ConsumerWidget {
           routerConfig: ref.watch(routerProvider),
           builder: (context, child) => FocusObserver(
             child: NeriWindowScope(
-              child: Scaffold(resizeToAvoidBottomInset: true, body: child!),
+              child: ToastHost(
+                child: Scaffold(resizeToAvoidBottomInset: true, body: child!),
+              ),
             ),
           ),
         );
