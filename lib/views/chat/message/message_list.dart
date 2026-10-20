@@ -49,6 +49,9 @@ class MessageListState extends ConsumerState<MessageList> {
 
   var _scrolledUp = false;
   var _missed = 0;
+  double? _heldPadding;
+  var _pinned = false;
+  double? _viewport;
 
   @override
   void initState() {
@@ -71,6 +74,8 @@ class MessageListState extends ConsumerState<MessageList> {
     _flashed = null;
     _scrolledUp = false;
     _missed = 0;
+    _heldPadding = null;
+    _pinned = false;
     _lastSeen = _readLastSeen();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(messagesProvider(widget.channelId).notifier).open();
@@ -142,6 +147,8 @@ class MessageListState extends ConsumerState<MessageList> {
     if (!_atBottom) _dismissed = false;
     _dismissNow();
     _updateJump(positions);
+    _holdPadding();
+    _unpinAtNewest(positions);
 
     final oldest = positions
         .map((p) => p.index)
@@ -165,12 +172,60 @@ class MessageListState extends ConsumerState<MessageList> {
     });
   }
 
-  double get _bottomPadding =>
+  double get _livePadding =>
       widget.bottomInset + context.neriSize.space(NeriSpacingRole.xl);
+
+  double get _bottomPadding => _heldPadding ?? _livePadding;
+
+  void _holdPadding() {
+    if (!_atBottom) {
+      _heldPadding ??= _livePadding;
+      return;
+    }
+    if (_heldPadding != null) setState(() => _heldPadding = null);
+  }
+
+  void _keepPlace(ChannelMessages? previous, ChannelMessages next) {
+    final lastId = previous?.messages.lastOrNull?.id;
+    if (previous == null || lastId == null || _atBottom) return;
+
+    final at = next.messages.indexWhere((m) => m.id == lastId);
+    final added = next.messages.length - 1 - at;
+    if (at == -1 || added <= 0) return;
+
+    if (next.messages.last.createdBy.id == ref.read(currentUserIdProvider)) {
+      _scroll.jumpTo(index: 0);
+      return;
+    }
+
+    final visible = _positions.itemPositions.value;
+    if (visible.isEmpty) return;
+    final anchor = visible.reduce((a, b) => a.index < b.index ? a : b);
+    if (anchor.index + added > previous.messages.length - 1) return;
+
+    _pinned = true;
+    _scroll.jumpTo(
+      index: anchor.index + added,
+      alignment: anchor.itemLeadingEdge,
+    );
+  }
+
+  void _unpinAtNewest(Iterable<ItemPosition> positions) {
+    final viewport = _viewport;
+    if (!_pinned || viewport == null) return;
+
+    final newest = positions.where((p) => p.index == 0).firstOrNull;
+    if (newest == null) return;
+    if (newest.itemLeadingEdge * viewport > _bottomPadding + 1) return;
+
+    _pinned = false;
+    _scroll.jumpTo(index: 0);
+  }
 
   void _jumpToNewest(double viewport) {
     final visible = _positions.itemPositions.value;
     final from = visible.isEmpty ? 0 : visible.first.index;
+    _pinned = false;
     setState(() => _missed = 0);
 
     if (from > _animateWithin) {
@@ -201,6 +256,7 @@ class MessageListState extends ConsumerState<MessageList> {
     final index = messages.length - 1 - target;
     final visible = _positions.itemPositions.value;
     final from = visible.isEmpty ? index : visible.first.index;
+    _pinned = index != 0;
 
     _flash?.cancel();
     setState(() => _flashed = messageId);
@@ -242,6 +298,7 @@ class MessageListState extends ConsumerState<MessageList> {
     });
     ref.listen(messagesProvider(widget.channelId), (previous, next) {
       if (next.messages.length != previous?.messages.length) _dismiss();
+      _keepPlace(previous, next);
 
       final newest = next.messages.lastOrNull?.id;
       if (!_scrolledUp || newest == previous?.messages.lastOrNull?.id) return;
@@ -289,21 +346,24 @@ class MessageListState extends ConsumerState<MessageList> {
     );
 
     return LayoutBuilder(
-      builder: (context, constraints) => Stack(
-        children: [
-          list,
-          Positioned(
-            right: sizing.space(NeriSpacingRole.md),
-            bottom: widget.bottomInset + sizing.space(NeriSpacingRole.md),
-            child: ScrollJumpButton(
-              shown: _scrolledUp,
-              icon: Symbols.arrow_downward_rounded,
-              count: _missed,
-              onTap: () => _jumpToNewest(constraints.maxHeight),
+      builder: (context, constraints) {
+        _viewport = constraints.maxHeight;
+        return Stack(
+          children: [
+            list,
+            Positioned(
+              right: sizing.space(NeriSpacingRole.md),
+              bottom: widget.bottomInset + sizing.space(NeriSpacingRole.md),
+              child: ScrollJumpButton(
+                shown: _scrolledUp,
+                icon: Symbols.arrow_downward_rounded,
+                count: _missed,
+                onTap: () => _jumpToNewest(constraints.maxHeight),
+              ),
             ),
-          ),
-        ],
-      ),
+          ],
+        );
+      },
     );
   }
 }
