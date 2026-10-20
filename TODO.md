@@ -36,7 +36,9 @@
       styling instead of an embed
 - [x] Context menu(s)
   - [ ] Reactions, pin and mark unread
-  - [ ] Delete other people's messages with manage messages permission
+  - [ ] Report messages
+  - [x] Delete other people's messages with manage messages permission
+  - [x] Copy message link
 - [x] Typing Indicator
 - [x] Swipe to reply (short fast swipe), swipe to edit (longer swipe)
 - [x] Toast for copies, failed deletes, edits and sends
@@ -53,8 +55,8 @@
 - [ ] Style system messages (member joined, left, kicked, banned, call
       started, server bumped, message pinned)
 - [ ] Style webhook messages (especially GitHub)
-- [ ] Edited indicator on messages
-- [ ] Scroll to bottom button
+- [x] Edited indicator on messages
+- [x] Scroll to bottom button
 - [ ] Servers:
   - [x] Channel listing
   - [x] Members list
@@ -77,9 +79,10 @@
     - [ ] Notification options for Servers and channels
     - [ ] Server and channel settings
     - [ ] Bump published servers
-  - [ ] Gate the composer on send permission: disables composer with a
+  - [x] Gate the composer on send permission: disables composer with a
         reason, no swipe to reply or edit, timer for mute expiry
-  - [ ] Role colours and gradients or usernames in the message list
+  - [x] Slow mode cooldown in the composer
+  - [x] Role colours and gradients or usernames in the message list
   - [ ] Persist collapsed categories and member groups
 - [ ] Settings page:
   - [ ] Nerimity: Account, Profile, Sessions, Badges, Notifications,
@@ -88,6 +91,7 @@
   - [ ] Nerimobile: Settings, App-Notifications, Interface, Language,
         Custom Activity, Accessibility
 - [ ] User profiles: preview modal and full page
+  - [ ] Avatar borders (badge rings, ears, etc.)
 - [ ] YouTube Embed:
   - [ ] Hyperlink Title (stripped tracking)
   - [ ] Cover card: thumbnail, play button (`youtube_explode_dart` maybe?)
