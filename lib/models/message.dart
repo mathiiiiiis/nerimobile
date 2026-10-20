@@ -28,6 +28,7 @@ class Message {
   final List<User> mentions;
   final List<Attachment> attachments;
   final int createdAt;
+  final int? editedAt;
   final Embed? embed;
   final List<ReplyMessage> replyMessages;
   final List<PartialMessage> quotedMessages;
@@ -40,6 +41,7 @@ class Message {
     required this.createdBy,
     required this.attachments,
     required this.createdAt,
+    this.editedAt,
     this.embed,
     this.mentions = const [],
     this.replyMessages = const [],
@@ -52,6 +54,7 @@ class Message {
     content: json['content'] ?? '',
     channelId: json['channelId'],
     createdAt: json['createdAt'] as int,
+    editedAt: json['editedAt'] as int?,
     createdBy: User.fromJson(json['createdBy']),
     mentions: (json['mentions'] as List).map((m) => User.fromJson(m)).toList(),
     embed: json['embed'] != null ? Embed.fromJson(json['embed']) : null,
@@ -76,6 +79,7 @@ class Message {
       mentions: mentions,
       attachments: attachments,
       createdAt: createdAt,
+      editedAt: partial["editedAt"] ?? editedAt,
       embed: partial.containsKey("embed")
           ? (partial["embed"] != null ? Embed.fromJson(partial["embed"]) : null)
           : embed,

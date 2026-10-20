@@ -6,6 +6,7 @@ import 'package:nerimobile/models/message.dart';
 import 'package:nerimobile/models/server_invite.dart';
 import 'package:nerimobile/stores/composer/composer_store.dart';
 import 'package:nerimobile/stores/server/server_store.dart';
+import 'package:nerimobile/stores/toast/toast_store.dart';
 import 'package:nerimobile/stores/user/user_store.dart';
 import 'package:nerimobile/theme/core/theme_data.dart';
 import 'package:nerimobile/theme/core/token.dart';
@@ -14,6 +15,7 @@ import 'package:nerimobile/theme/sizing/radius.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/theme/typography/text_styles.dart';
 import 'package:nerimobile/utils/colors.dart';
+import 'package:nerimobile/utils/date.dart';
 import 'package:nerimobile/views/avatar.dart';
 import 'package:nerimobile/views/chat/message/invite_card.dart';
 import 'package:nerimobile/views/chat/message/message_access.dart';
@@ -315,6 +317,8 @@ class _Body extends StatelessWidget {
             onOptions: (context, ref, url) =>
                 showMessageContextMenu(context, ref, message, mediaUrl: url),
           ),
+          if (message.editedAt case final editedAt?)
+            _EditedLabel(editedAt: editedAt),
         ],
       ),
     );
@@ -345,6 +349,31 @@ class _SystemMessages extends StatelessWidget {
           ),
           Text(_systemText(message.type), style: style),
         ],
+      ),
+    );
+  }
+}
+
+class _EditedLabel extends ConsumerWidget {
+  const _EditedLabel({required this.editedAt});
+
+  final int editedAt;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => ref
+          .read(toastProvider.notifier)
+          .show(
+            'Edited at ${formatRelative(editedAt)}', //TODO: add l10n
+            icon: Symbols.edit_rounded,
+          ),
+      child: Text(
+        '(edited)', //TODO: add l10n
+        style: context.neriText[NeriTextRole.labelSmall].copyWith(
+          color: context.neri[NeriToken.textPlaceholder],
+        ),
       ),
     );
   }
