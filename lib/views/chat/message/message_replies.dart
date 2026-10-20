@@ -124,12 +124,11 @@ class ReplyPreview extends ConsumerWidget {
     final attachmentOnly =
         reply.content.isEmpty && reply.attachments.isNotEmpty;
 
-    final hexColor = ref.watch(
-      channelMemberColorProvider((
-        channelId: channelId,
-        userId: reply.createdBy.id,
-      )),
-    );
+    final author = (channelId: channelId, userId: reply.createdBy.id);
+    final hexColor = ref.watch(channelMemberColorProvider((author)));
+    final name =
+        ref.watch(channelMemberNicknameProvider(author)) ??
+        reply.createdBy.username;
 
     return Row(
       spacing: sizing.space(NeriSpacingRole.xs),
@@ -137,7 +136,7 @@ class ReplyPreview extends ConsumerWidget {
         ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 200),
           child: buildColoredName(
-            reply.createdBy.username,
+            name,
             hexColor: hexColor,
             style: style.copyWith(color: colors[NeriToken.textSecondary]),
             maxLines: 1,

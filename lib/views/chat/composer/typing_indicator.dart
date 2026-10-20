@@ -3,8 +3,8 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:nerimobile/models/user.dart';
 import 'package:nerimobile/stores/channel/typing_store.dart';
+import 'package:nerimobile/stores/server/server_store.dart';
 import 'package:nerimobile/stores/user/user_store.dart';
 import 'package:nerimobile/theme/core/theme_data.dart';
 import 'package:nerimobile/theme/core/token.dart';
@@ -54,6 +54,15 @@ class _TypingIndicatorState extends ConsumerState<TypingIndicator>
       typingProvider.select((t) => t[widget.channelId] ?? const <String>[]),
     );
     final users = ref.watch(usersProvider);
+    String name(String userId) =>
+        ref.watch(
+          channelMemberNicknameProvider((
+            channelId: widget.channelId,
+            userId: userId,
+          )),
+        ) ??
+        users[userId]?.username ??
+        'Someone'; //TODO: add l10n
 
     if (typing.isEmpty) {
       _bounceController.stop();
@@ -76,7 +85,7 @@ class _TypingIndicatorState extends ConsumerState<TypingIndicator>
                   children: [
                     Flexible(
                       child: Text(
-                        _label(typing, users),
+                        _label(typing, name),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: context.neriText[NeriTextRole.bodySmall]
@@ -96,10 +105,8 @@ class _TypingIndicatorState extends ConsumerState<TypingIndicator>
 }
 
 //TODO: add l10n
-String _label(List<String> typing, Map<String, User> users) {
-  final names = [
-    for (final id in typing.take(_named)) users[id]?.username ?? 'Someone',
-  ];
+String _label(List<String> typing, String Function(String userId) name) {
+  final names = [for (final id in typing.take(_named)) name(id)];
   final rest = typing.length - names.length;
 
   final who = switch ((names.length, rest)) {

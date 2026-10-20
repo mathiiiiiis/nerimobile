@@ -149,16 +149,15 @@ Future<void> showMessageContextMenu(
   ];
   if (groups.every((group) => group.actions.isEmpty)) return;
 
+  final author = (channelId: message.channelId, userId: message.createdBy.id);
+
   await showActionSheet(
     context,
     header: SheetHeader(
-      title: message.createdBy.username,
-      titleColor: ref.read(
-        channelMemberColorProvider((
-          channelId: message.channelId,
-          userId: message.createdBy.id,
-        )),
-      ),
+      title:
+          ref.read(channelMemberColorProvider(author)) ??
+          message.createdBy.username,
+      titleColor: ref.read(channelMemberColorProvider((author))),
       caption: _preview(message),
       leading: Avatar(
         user: message.createdBy,

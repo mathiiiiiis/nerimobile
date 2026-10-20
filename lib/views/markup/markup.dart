@@ -8,9 +8,11 @@ import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 import 'package:nerimobile/models/channel.dart';
 import 'package:nerimobile/models/message.dart';
+import 'package:nerimobile/models/server_member.dart';
 import 'package:nerimobile/models/server_role.dart';
 import 'package:nerimobile/models/user.dart';
 import 'package:nerimobile/stores/channel/channel_store.dart';
+import 'package:nerimobile/stores/server/server_member_store.dart';
 import 'package:nerimobile/stores/server/server_roles_store.dart';
 import 'package:nerimobile/stores/server/server_store.dart';
 import 'package:nerimobile/theme/core/theme_data.dart';
@@ -70,6 +72,7 @@ class MarkupRenderContext {
     required this.text,
     required this.channels,
     required this.serverRoles,
+    required this.serverMembers,
     required this.spoilers,
     required this.links,
     required this.spoilerBackground,
@@ -90,6 +93,7 @@ class MarkupRenderContext {
   final String text;
   final Map<String, Channel> channels;
   final Map<String, Map<String, ServerRole>> serverRoles;
+  final Map<String, Map<String, ServerMember>> serverMembers;
   final SpoilerController spoilers;
   final LinkTapController links;
   final Color spoilerBackground;
@@ -128,6 +132,12 @@ class MarkupRenderContext {
   ServerRole? role(String roleId) {
     final serverId = channels[message?.channelId]?.serverId;
     return serverId == null ? null : serverRoles[serverId]?[roleId];
+  }
+
+  String displayName(User user) {
+    final serverId = channels[message?.channelId]?.serverId;
+    final member = serverId == null ? null : serverMembers[serverId]?[user.id];
+    return member?.nickname ?? user.username;
   }
 
   TextStyle get codeStyle => textStyles.mono.copyWith(
@@ -291,7 +301,16 @@ TextSpan transformCustomTextSpan(Entity entity, MarkupRenderContext ctx) {
       ctx.quoteCount++;
       ctx.countText(content);
       return TextSpan(
-        children: [ctx.widgetSpan(ctx.cover(QuoteMessageView(quote: quote)))],
+        children: [
+          ctx.widgetSpan(
+            ctx.cover(
+              QuoteMessageView(
+                quote: quote,
+                name: ctx.displayName(quote.createdBy),
+              ),
+            ),
+          ),
+        ],
       );
 
     case "to":
@@ -384,20 +403,20 @@ TextSpan twemoji(String unicode, MarkupRenderContext ctx) {
 }
 
 TextSpan userMention(User user, MarkupRenderContext ctx) {
+  final name = ctx.displayName(user);
+
   return TextSpan(
     children: [
       ctx.widgetSpan(
         ctx.cover(
           _UserMentionChip(
             user: user,
+            name: name,
             channelId: ctx.message?.channelId,
             hidden: ctx.hidden,
           ),
         ),
-        size: ctx.chipSize(
-          user.username,
-          ctx.sizing.dimen(NeriDimen.mentionAvatar),
-        ),
+        size: ctx.chipSize(name, ctx.sizing.dimen(NeriDimen.mentionAvatar)),
       ),
     ],
   );
@@ -406,11 +425,13 @@ TextSpan userMention(User user, MarkupRenderContext ctx) {
 class _UserMentionChip extends ConsumerWidget {
   const _UserMentionChip({
     required this.user,
+    required this.name,
     required this.channelId,
     required this.hidden,
   });
 
   final User user;
+  final String name;
   final String? channelId;
   final bool hidden;
 
@@ -429,7 +450,7 @@ class _UserMentionChip extends ConsumerWidget {
         size: context.neriSize.dimen(NeriDimen.mentionAvatar),
         user: user,
       ),
-      label: user.username,
+      label: name,
       color: color?.color,
       gradient: color?.gradient,
     );
@@ -812,6 +833,7 @@ class _MarkupViewState extends ConsumerState<MarkupView> {
       text: widget.rawText ?? '',
       channels: ref.read(channelsProvider),
       serverRoles: ref.read(serverRolesProvider),
+      serverMembers: ref.read(serverMembersProvider),
       spoilers: _spoilers,
       links: _links,
       spoilerBackground: context.neri[NeriToken.markupSpoilerBackground],

@@ -386,18 +386,23 @@ class _AuthorName extends ConsumerWidget {
   final TextStyle style;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) => buildColoredName(
-    message.createdBy.username,
-    hexColor: ref.watch(
-      channelMemberColorProvider((
-        channelId: message.channelId,
-        userId: message.createdBy.id,
-      )),
-    ),
-    style: style,
-    maxLines: 1,
-    overflow: TextOverflow.ellipsis,
-  );
+  Widget build(BuildContext context, WidgetRef ref) {
+    final key = (channelId: message.channelId, userId: message.createdBy.id);
+
+    return buildColoredName(
+      ref.watch(channelMemberNicknameProvider(key)) ??
+          message.createdBy.username,
+      hexColor: ref.watch(
+        channelMemberColorProvider((
+          channelId: message.channelId,
+          userId: message.createdBy.id,
+        )),
+      ),
+      style: style,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+    );
+  }
 }
 
 class _UnreadDivider extends StatelessWidget {

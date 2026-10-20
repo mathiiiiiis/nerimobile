@@ -15,9 +15,10 @@ import 'package:nerimobile/views/chat/message/message_list.dart';
 import 'package:nerimobile/views/markup/markup.dart';
 
 class QuoteMessageView extends StatelessWidget {
-  const QuoteMessageView({super.key, required this.quote});
+  const QuoteMessageView({super.key, required this.quote, required this.name});
 
   final PartialMessage quote;
+  final String name;
 
   @override
   Widget build(BuildContext context) {
@@ -65,7 +66,7 @@ class QuoteMessageView extends StatelessWidget {
                         user: quote.createdBy,
                       ),
                       Text(
-                        quote.createdBy.username,
+                        name,
                         style: text[NeriTextRole.bodyMedium].copyWith(
                           color: hexToColor(quote.createdBy.hexColor),
                         ),

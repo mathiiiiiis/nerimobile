@@ -198,3 +198,17 @@ final channelMemberColorProvider =
         memberColorProvider((serverId: serverId, userId: key.userId)),
       );
     });
+
+final channelMemberNicknameProvider =
+    Provider.family<String?, ({String channelId, String userId})>((ref, key) {
+      final serverId = ref.watch(
+        channelsProvider.select((c) => c[key.channelId]?.serverId),
+      );
+      if (serverId == null) return null;
+
+      return ref.watch(
+        serverMembersProvider.select(
+          (members) => members[serverId]?[key.userId]?.nickname,
+        ),
+      );
+    });
