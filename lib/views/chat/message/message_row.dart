@@ -366,7 +366,7 @@ class _EditedLabel extends ConsumerWidget {
       onTap: () => ref
           .read(toastProvider.notifier)
           .show(
-            'Edited at ${formatRelative(editedAt)}', //TODO: add l10n
+            'Edited ${formatRelative(editedAt)}', //TODO: add l10n
             icon: Symbols.edit_rounded,
           ),
       child: Text(
