@@ -10,11 +10,11 @@ import 'package:nerimobile/theme/sizing/dimens.dart';
 import 'package:nerimobile/theme/sizing/radius.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/theme/typography/text_styles.dart';
-import 'package:nerimobile/views/shell/destinations.dart';
-import 'package:nerimobile/views/shell/widgets/connection_banner.dart';
-import 'package:nerimobile/views/shell/widgets/nav_bar.dart';
-import 'package:nerimobile/views/shell/widgets/nav_rail.dart';
-import 'package:nerimobile/views/shell/widgets/panes.dart';
+import 'package:nerimobile/views/shell/nav/destinations.dart';
+import 'package:nerimobile/views/shell/connection_banner.dart';
+import 'package:nerimobile/views/shell/nav/nav_bar.dart';
+import 'package:nerimobile/views/shell/nav/nav_rail.dart';
+import 'package:nerimobile/views/shell/panes.dart';
 
 class AppScaffold extends StatelessWidget {
   const AppScaffold({

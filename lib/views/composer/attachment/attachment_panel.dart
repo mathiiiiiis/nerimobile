@@ -1,0 +1,570 @@
+import 'dart:math';
+
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:material_symbols_icons/material_symbols_icons.dart';
+import 'package:nerimobile/theme/sizing/breakpoints.dart';
+import 'package:nerimobile/views/composer/composer_panel.dart';
+import 'package:photo_manager/photo_manager.dart';
+
+import 'package:nerimobile/stores/composer/composer_store.dart';
+import 'package:nerimobile/stores/media/recent_media_store.dart';
+import 'package:nerimobile/theme/colors/derive.dart';
+import 'package:nerimobile/theme/core/theme_data.dart';
+import 'package:nerimobile/theme/core/token.dart';
+import 'package:nerimobile/theme/sizing/border.dart';
+import 'package:nerimobile/theme/sizing/dimens.dart';
+import 'package:nerimobile/theme/sizing/radius.dart';
+import 'package:nerimobile/theme/sizing/spacing.dart';
+import 'package:nerimobile/theme/typography/text_styles.dart';
+import 'package:nerimobile/utils/format.dart';
+import 'package:nerimobile/views/core/press_scale.dart';
+
+//must match panel layout below for prebuild sizing
+double collapsedPanelHeight(BuildContext context, double width) {
+  final sizing = context.neriSize;
+  final gap = sizing.space(NeriSpacingRole.sm);
+  final hariline = sizing.border(NeriBorderRole.hairline);
+  final dual = NeriWindow.of(context).isDualPane;
+  final side = dual ? gap + hariline : 0.0;
+  final frame = dual
+      ? gap * 2 + hariline * 2
+      : MediaQuery.paddingOf(context).bottom;
+  final card = _cardLayout(context, width - (gap + side) * 2).size;
+
+  return frame +
+      sizing.border(NeriBorderRole.thick) +
+      sizing.dimen(NeriDimen.controlSize) +
+      card * _visibleRows +
+      gap * (_visibleRows + 2);
+}
+
+//adjust columns to keep cards near target size
+({int columns, double size}) _cardLayout(BuildContext context, double width) {
+  final sizing = context.neriSize;
+  final gap = sizing.space(NeriSpacingRole.sm);
+  final target = sizing.dimen(NeriDimen.attachmentCard);
+  final columns = max(_minColumns, ((width + gap) / (target + gap)).round());
+
+  return (columns: columns, size: (width - gap * (columns - 1)) / columns);
+}
+
+const _minColumns = 3;
+const _loadMoreRows = 3;
+const _visibleRows = 2;
+const _filesPressScale = 0.97;
+const _headerFade = Duration(milliseconds: 150);
+const _markerOpacity = 0.55;
+const _selectedOpacity = 0.3;
+
+enum AttachmentPicker { closed, collapsed, expanded }
+
+class AttachmentPickerState {
+  const AttachmentPickerState({required this.mode});
+
+  final AttachmentPicker mode;
+
+  bool get expanded => mode == AttachmentPicker.expanded;
+  bool get open => mode != AttachmentPicker.closed;
+}
+
+final attachmentPickerProvider =
+    NotifierProvider.family<
+      AttachmentPickerNotifier,
+      AttachmentPickerState,
+      String
+    >(AttachmentPickerNotifier.new);
+
+class AttachmentPickerNotifier extends Notifier<AttachmentPickerState> {
+  AttachmentPickerNotifier(this.channelId);
+
+  final String channelId;
+
+  @override
+  AttachmentPickerState build() =>
+      const AttachmentPickerState(mode: AttachmentPicker.closed);
+
+  void toggle() => state.open ? close() : collapse();
+
+  void expand() => _mode(AttachmentPicker.expanded);
+  void collapse() => _mode(AttachmentPicker.collapsed);
+
+  void close() =>
+      state = const AttachmentPickerState(mode: AttachmentPicker.closed);
+
+  void _mode(AttachmentPicker mode) =>
+      state = AttachmentPickerState(mode: mode);
+}
+
+class AttachmentPanel extends ConsumerWidget {
+  const AttachmentPanel({
+    super.key,
+    required this.channelId,
+    this.expansion = 0,
+  });
+
+  final String channelId;
+  final double expansion;
+
+  AttachmentPickerNotifier _picker(WidgetRef ref) =>
+      ref.read(attachmentPickerProvider(channelId).notifier);
+
+  Future<void> _pickFile(WidgetRef ref) async {
+    await PhotoManager.requestPermissionExtend(
+      requestOption: PermissionRequestOption(
+        androidPermission: AndroidPermission(
+          type: RequestType.common | RequestType.audio,
+          mediaLocation: false,
+        ),
+      ),
+    );
+
+    final picked = await FilePicker.pickFile();
+    _use(ref, picked?.path);
+  }
+
+  Future<void> _takePhoto(WidgetRef ref) async {
+    final photo = await ImagePicker().pickImage(source: ImageSource.camera);
+    _use(ref, photo?.path);
+  }
+
+  Future<void> _toggleAsset(WidgetRef ref, AssetEntity asset) async {
+    final composer = ref.read(composerProvider(channelId).notifier);
+    final attached = ref.read(composerProvider(channelId)).attachment;
+    if (attached?.assetId == asset.id) {
+      composer.removeAttachment();
+      return;
+    }
+
+    final file = await asset.file;
+    if (file != null) composer.attach(file.path, assetId: asset.id);
+  }
+
+  void _send(WidgetRef ref) {
+    ref.read(composerProvider(channelId).notifier).requestSend();
+    _picker(ref).close();
+  }
+
+  void _use(WidgetRef ref, String? path) {
+    if (path == null) return;
+
+    ref.read(composerProvider(channelId).notifier).attach(path);
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final sizing = context.neriSize;
+    final gap = sizing.space(NeriSpacingRole.sm);
+    final recents = ref.watch(recentMediaProvider);
+    final attached = ref.watch(
+      composerProvider(channelId).select((c) => c.attachment != null),
+    );
+    //show sheet as soon as it starts expanding
+    final sheet = expansion > 0;
+
+    return ComposerPanelFrame(
+      expansion: expansion,
+      child: Column(
+        mainAxisSize: sheet ? MainAxisSize.max : MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: gap,
+        children: [
+          const PanelDragHandle(),
+          AnimatedSwitcher(
+            duration: _headerFade,
+            child: sheet
+                ? _ExpandedHeader(
+                    onBack: _picker(ref).collapse,
+                    onAlbums: () => _pickFile(ref),
+                  )
+                : _FilesButton(onTap: () => _pickFile(ref)),
+          ),
+          if (recents.hasError)
+            _AccessNotice(onTap: PhotoManager.openSetting)
+          else if (sheet)
+            Expanded(
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: _grid(context, ref, recents, sheet: true),
+                  ),
+                  if (attached)
+                    Positioned(
+                      right: gap,
+                      bottom: gap,
+                      child: _SendButton(onTap: () => _send(ref)),
+                    ),
+                ],
+              ),
+            )
+          else
+            _grid(context, ref, recents, sheet: false),
+        ],
+      ),
+    );
+  }
+
+  Widget _grid(
+    BuildContext context,
+    WidgetRef ref,
+    AsyncValue<List<AssetEntity>> recents, {
+    required bool sheet,
+  }) {
+    final sizing = context.neriSize;
+    final gap = sizing.space(NeriSpacingRole.sm);
+    final attachedId = ref.watch(
+      composerProvider(channelId).select((c) => c.attachment?.assetId),
+    );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final (:columns, :size) = _cardLayout(context, constraints.maxWidth);
+
+        final grid = GridView.builder(
+          padding: EdgeInsets.zero,
+          physics: sheet
+              ? const AlwaysScrollableScrollPhysics()
+              : const NeverScrollableScrollPhysics(),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: columns,
+            mainAxisSpacing: gap,
+            crossAxisSpacing: gap,
+          ),
+          itemCount: (recents.value?.length ?? 0) + 1,
+          itemBuilder: (context, index) {
+            if (index == 0) {
+              return _Card(
+                onTap: () => _takePhoto(ref),
+                child: Center(
+                  child: Icon(
+                    Symbols.photo_camera_rounded,
+                    fill: 1,
+                    size: sizing.dimen(NeriDimen.iconMd),
+                    color: context.neri[NeriToken.textSecondary],
+                  ),
+                ),
+              );
+            }
+
+            final asset = recents.value?.elementAtOrNull(index - 1);
+            if (asset == null) return const _Card();
+
+            return _Card(
+              onTap: () => _toggleAsset(ref, asset),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  _Thumbnail(asset: asset, size: size),
+                  if (asset.type == AssetType.video)
+                    _VideoMarker(duration: asset.videoDuration),
+                  if (attachedId == asset.id) const _Selected(),
+                ],
+              ),
+            );
+          },
+        );
+
+        if (sheet) {
+          return NotificationListener<ScrollUpdateNotification>(
+            onNotification: (notification) {
+              final metrics = notification.metrics;
+              final trigger = (size + gap) * _loadMoreRows;
+              if (metrics.extentAfter < trigger) {
+                ref.read(recentMediaProvider.notifier).loadMore();
+              }
+
+              return false;
+            },
+            child: grid,
+          );
+        }
+
+        return SizedBox(
+          height: size * _visibleRows + gap * (_visibleRows - 1),
+          child: grid,
+        );
+      },
+    );
+  }
+}
+
+class _Thumbnail extends ConsumerStatefulWidget {
+  const _Thumbnail({required this.asset, required this.size});
+
+  final AssetEntity asset;
+  final double size;
+
+  @override
+  ConsumerState<_Thumbnail> createState() => _ThumbnailState();
+}
+
+class _ThumbnailState extends ConsumerState<_Thumbnail> {
+  late final RecentMediaNotifier _media = ref.read(
+    recentMediaProvider.notifier,
+  );
+  late final Future<Uint8List?> _data = _media.thumbnail(widget.asset);
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder(
+      future: _data,
+      initialData: _media.cachedThumbnail(widget.asset),
+      builder: (context, snapshot) {
+        final thumbnail = snapshot.data;
+        if (thumbnail == null) return const SizedBox.shrink();
+
+        return Image.memory(
+          thumbnail,
+          fit: BoxFit.cover,
+          gaplessPlayback: true,
+          cacheWidth: (widget.size * MediaQuery.devicePixelRatioOf(context))
+              .round(),
+        );
+      },
+    );
+  }
+}
+
+class _Card extends StatelessWidget {
+  const _Card({this.child, this.onTap});
+
+  final Widget? child;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final sizing = context.neriSize;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: PressScale(
+        scale: _filesPressScale,
+        child: Container(
+          clipBehavior: Clip.antiAlias,
+          decoration: BoxDecoration(
+            color: context.neri[NeriToken.card],
+            borderRadius: sizing.rounded(NeriRadiusRole.md),
+          ),
+          child: child,
+        ),
+      ),
+    );
+  }
+}
+
+class _VideoMarker extends StatelessWidget {
+  const _VideoMarker({required this.duration});
+
+  final Duration duration;
+
+  @override
+  Widget build(BuildContext context) {
+    final sizing = context.neriSize;
+    final gap = sizing.space(NeriSpacingRole.xs);
+
+    return Align(
+      alignment: Alignment.bottomRight,
+      child: Padding(
+        padding: EdgeInsets.all(gap),
+        child: Container(
+          padding: EdgeInsets.symmetric(horizontal: gap, vertical: gap / 2),
+          decoration: BoxDecoration(
+            color: Colors.black.withValues(alpha: _markerOpacity),
+            borderRadius: BorderRadius.circular(
+              sizing.radius(NeriRadiusRole.full),
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            spacing: gap / 2,
+            children: [
+              Icon(
+                Symbols.play_arrow_rounded,
+                fill: 1,
+                size: sizing.dimen(NeriDimen.mentionIcon),
+                color: Colors.white,
+              ),
+              Text(
+                formatDuration(duration),
+                style: context.neriText[NeriTextRole.labelSmall].copyWith(
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FilesButton extends StatelessWidget {
+  const _FilesButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.neri;
+    final sizing = context.neriSize;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: PressScale(
+        scale: _filesPressScale,
+        child: Container(
+          height: sizing.dimen(NeriDimen.controlSize),
+          padding: EdgeInsets.symmetric(
+            horizontal: sizing.space(NeriSpacingRole.md),
+          ),
+          decoration: BoxDecoration(
+            color: colors[NeriToken.card],
+            borderRadius: sizing.rounded(NeriRadiusRole.lg),
+          ),
+          child: Row(
+            spacing: sizing.space(NeriSpacingRole.sm),
+            children: [
+              Icon(
+                Symbols.attach_file_rounded,
+                size: sizing.dimen(NeriDimen.iconSm),
+                color: colors[NeriToken.textSecondary],
+              ),
+              Text(
+                'Files', //TODO: add l10n
+                style: context.neriText[NeriTextRole.bodyLarge].copyWith(
+                  color: colors[NeriToken.textSecondary],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _Selected extends StatelessWidget {
+  const _Selected();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.neri;
+    final sizing = context.neriSize;
+
+    return Container(
+      color: colors[NeriToken.primary].withValues(alpha: _selectedOpacity),
+      alignment: Alignment.center,
+      child: Icon(
+        Symbols.check_circle_rounded,
+        fill: 1,
+        size: sizing.dimen(NeriDimen.iconMd),
+        color: colors[NeriToken.primary],
+      ),
+    );
+  }
+}
+
+class _ExpandedHeader extends StatelessWidget {
+  const _ExpandedHeader({required this.onBack, required this.onAlbums});
+
+  final VoidCallback onBack;
+  final VoidCallback onAlbums;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.neri;
+    final sizing = context.neriSize;
+    return SizedBox(
+      height: sizing.dimen(NeriDimen.controlSize),
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: onBack,
+            child: PressScale(
+              child: Icon(
+                Symbols.arrow_back_rounded,
+                size: sizing.dimen(NeriDimen.iconSm),
+                color: colors[NeriToken.text],
+              ),
+            ),
+          ),
+          const Spacer(),
+          GestureDetector(
+            onTap: onAlbums,
+            child: PressScale(
+              scale: _filesPressScale,
+              child: Text(
+                'All albums', //TODO: add l10n
+                style: context.neriText[NeriTextRole.bodyLarge].copyWith(
+                  color: colors[NeriToken.primary],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SendButton extends StatelessWidget {
+  const _SendButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.neri;
+    final sizing = context.neriSize;
+    final size = sizing.dimen(NeriDimen.avatarMd);
+
+    return GestureDetector(
+      onTap: onTap,
+      child: PressScale(
+        child: Container(
+          width: size,
+          height: size,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: colors[NeriToken.primary],
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            Symbols.send_rounded,
+            fill: 1,
+            size: sizing.dimen(NeriDimen.iconMd),
+            color: onColor(colors[NeriToken.primary]),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AccessNotice extends StatelessWidget {
+  const _AccessNotice({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.neri;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Padding(
+        padding: EdgeInsets.all(context.neriSize.space(NeriSpacingRole.md)),
+        child: Text(
+          'Allow photo access to pick from your gallery', //TODO: add l10n
+          textAlign: TextAlign.center,
+          style: context.neriText[NeriTextRole.bodyMedium].copyWith(
+            color: colors[NeriToken.textSecondary],
+          ),
+        ),
+      ),
+    );
+  }
+}

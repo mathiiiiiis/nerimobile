@@ -10,15 +10,15 @@ import 'package:nerimobile/stores/channel/restore_on_start.dart';
 import 'package:nerimobile/stores/dashboard/dashboard_page_store.dart';
 import 'package:nerimobile/theme/sizing/breakpoints.dart';
 import 'package:nerimobile/views/auth/login_page.dart';
-import 'package:nerimobile/views/chat/channel/channel_pane.dart';
+import 'package:nerimobile/views/channel/channel_pane.dart';
 import 'package:nerimobile/views/dashboard/dashboard_pane.dart';
-import 'package:nerimobile/views/dashboard/dm_list.dart';
-import 'package:nerimobile/views/server/channel_list.dart';
-import 'package:nerimobile/views/server/member_list.dart';
+import 'package:nerimobile/views/dashboard/dm/dm_list.dart';
+import 'package:nerimobile/views/server/channels/channel_list.dart';
+import 'package:nerimobile/views/server/members/member_list.dart';
 import 'package:nerimobile/views/server/server_landing.dart';
 import 'package:nerimobile/views/shell/app_scaffold.dart';
-import 'package:nerimobile/views/shell/destinations.dart';
-import 'package:nerimobile/views/shell/widgets/panes.dart';
+import 'package:nerimobile/views/shell/nav/destinations.dart';
+import 'package:nerimobile/views/shell/panes.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final refresh = ValueNotifier(0);

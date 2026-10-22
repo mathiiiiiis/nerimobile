@@ -17,11 +17,11 @@ import 'package:nerimobile/theme/core/theme_data.dart';
 import 'package:nerimobile/theme/sizing/dimens.dart';
 import 'package:nerimobile/theme/sizing/radius.dart';
 import 'package:nerimobile/utils/colors.dart';
-import 'package:nerimobile/views/avatar.dart';
-import 'package:nerimobile/views/banner_image.dart';
-import 'package:nerimobile/views/modal/bottom_sheet.dart';
-import 'package:nerimobile/views/modal/confirm_dialog.dart';
-import 'package:nerimobile/views/server/invite_sheet.dart';
+import 'package:nerimobile/views/user/avatar.dart';
+import 'package:nerimobile/views/core/banner_image.dart';
+import 'package:nerimobile/views/core/modal/bottom_sheet.dart';
+import 'package:nerimobile/views/core/modal/confirm_dialog.dart';
+import 'package:nerimobile/views/server/invite/invite_sheet.dart';
 
 Future<void> showServerContextMenu(
   BuildContext context,

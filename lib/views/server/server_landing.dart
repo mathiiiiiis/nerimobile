@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:nerimobile/stores/channel/last_opened_store.dart';
-import 'package:nerimobile/views/shell/widgets/panes.dart';
+import 'package:nerimobile/views/shell/panes.dart';
 
 class ServerLanding extends ConsumerWidget {
   const ServerLanding({super.key, required this.serverId});

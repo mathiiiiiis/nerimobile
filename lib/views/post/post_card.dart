@@ -12,8 +12,8 @@ import 'package:nerimobile/theme/sizing/radius.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/theme/typography/text_styles.dart';
 import 'package:nerimobile/utils/date.dart';
-import 'package:nerimobile/views/avatar.dart';
-import 'package:nerimobile/views/chat/message/message_media.dart';
+import 'package:nerimobile/views/user/avatar.dart';
+import 'package:nerimobile/views/media/message_media.dart';
 import 'package:nerimobile/views/markup/markup.dart';
 
 class PostCard extends StatelessWidget {
