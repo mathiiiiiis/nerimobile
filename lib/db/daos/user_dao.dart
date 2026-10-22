@@ -20,13 +20,21 @@ class UserDao extends DatabaseAccessor<NeriDatabase> with _$UserDaoMixin {
 UsersCompanion _row(User user) => UsersCompanion.insert(
   id: user.id,
   username: user.username,
+  tag: Value(user.tag),
   hexColor: user.hexColor,
   avatar: Value(user.avatar),
+  banner: Value(user.banner),
+  badges: Value(user.badges),
+  font: Value(user.profile?.font),
 );
 
 User _model(UserRow row) => User(
   id: row.id,
   username: row.username,
+  tag: row.tag,
   hexColor: row.hexColor,
   avatar: row.avatar,
+  banner: row.banner,
+  badges: row.badges,
+  profile: row.font == null ? null : Profile(font: row.font),
 );

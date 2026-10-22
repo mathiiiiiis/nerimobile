@@ -3927,6 +3927,16 @@ class $UsersTable extends Users with TableInfo<$UsersTable, UserRow> {
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _tagMeta = const VerificationMeta('tag');
+  @override
+  late final GeneratedColumn<String> tag = GeneratedColumn<String>(
+    'tag',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
   static const VerificationMeta _hexColorMeta = const VerificationMeta(
     'hexColor',
   );
@@ -3947,8 +3957,45 @@ class $UsersTable extends Users with TableInfo<$UsersTable, UserRow> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _bannerMeta = const VerificationMeta('banner');
   @override
-  List<GeneratedColumn> get $columns => [id, username, hexColor, avatar];
+  late final GeneratedColumn<String> banner = GeneratedColumn<String>(
+    'banner',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _badgesMeta = const VerificationMeta('badges');
+  @override
+  late final GeneratedColumn<int> badges = GeneratedColumn<int>(
+    'badges',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _fontMeta = const VerificationMeta('font');
+  @override
+  late final GeneratedColumn<int> font = GeneratedColumn<int>(
+    'font',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    username,
+    tag,
+    hexColor,
+    avatar,
+    banner,
+    badges,
+    font,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -3974,6 +4021,12 @@ class $UsersTable extends Users with TableInfo<$UsersTable, UserRow> {
     } else if (isInserting) {
       context.missing(_usernameMeta);
     }
+    if (data.containsKey('tag')) {
+      context.handle(
+        _tagMeta,
+        tag.isAcceptableOrUnknown(data['tag']!, _tagMeta),
+      );
+    }
     if (data.containsKey('hex_color')) {
       context.handle(
         _hexColorMeta,
@@ -3986,6 +4039,24 @@ class $UsersTable extends Users with TableInfo<$UsersTable, UserRow> {
       context.handle(
         _avatarMeta,
         avatar.isAcceptableOrUnknown(data['avatar']!, _avatarMeta),
+      );
+    }
+    if (data.containsKey('banner')) {
+      context.handle(
+        _bannerMeta,
+        banner.isAcceptableOrUnknown(data['banner']!, _bannerMeta),
+      );
+    }
+    if (data.containsKey('badges')) {
+      context.handle(
+        _badgesMeta,
+        badges.isAcceptableOrUnknown(data['badges']!, _badgesMeta),
+      );
+    }
+    if (data.containsKey('font')) {
+      context.handle(
+        _fontMeta,
+        font.isAcceptableOrUnknown(data['font']!, _fontMeta),
       );
     }
     return context;
@@ -4005,6 +4076,10 @@ class $UsersTable extends Users with TableInfo<$UsersTable, UserRow> {
         DriftSqlType.string,
         data['${effectivePrefix}username'],
       )!,
+      tag: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tag'],
+      )!,
       hexColor: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}hex_color'],
@@ -4012,6 +4087,18 @@ class $UsersTable extends Users with TableInfo<$UsersTable, UserRow> {
       avatar: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}avatar'],
+      ),
+      banner: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}banner'],
+      ),
+      badges: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}badges'],
+      )!,
+      font: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}font'],
       ),
     );
   }
@@ -4025,22 +4112,38 @@ class $UsersTable extends Users with TableInfo<$UsersTable, UserRow> {
 class UserRow extends DataClass implements Insertable<UserRow> {
   final String id;
   final String username;
+  final String tag;
   final String hexColor;
   final String? avatar;
+  final String? banner;
+  final int badges;
+  final int? font;
   const UserRow({
     required this.id,
     required this.username,
+    required this.tag,
     required this.hexColor,
     this.avatar,
+    this.banner,
+    required this.badges,
+    this.font,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<String>(id);
     map['username'] = Variable<String>(username);
+    map['tag'] = Variable<String>(tag);
     map['hex_color'] = Variable<String>(hexColor);
     if (!nullToAbsent || avatar != null) {
       map['avatar'] = Variable<String>(avatar);
+    }
+    if (!nullToAbsent || banner != null) {
+      map['banner'] = Variable<String>(banner);
+    }
+    map['badges'] = Variable<int>(badges);
+    if (!nullToAbsent || font != null) {
+      map['font'] = Variable<int>(font);
     }
     return map;
   }
@@ -4049,10 +4152,16 @@ class UserRow extends DataClass implements Insertable<UserRow> {
     return UsersCompanion(
       id: Value(id),
       username: Value(username),
+      tag: Value(tag),
       hexColor: Value(hexColor),
       avatar: avatar == null && nullToAbsent
           ? const Value.absent()
           : Value(avatar),
+      banner: banner == null && nullToAbsent
+          ? const Value.absent()
+          : Value(banner),
+      badges: Value(badges),
+      font: font == null && nullToAbsent ? const Value.absent() : Value(font),
     );
   }
 
@@ -4064,8 +4173,12 @@ class UserRow extends DataClass implements Insertable<UserRow> {
     return UserRow(
       id: serializer.fromJson<String>(json['id']),
       username: serializer.fromJson<String>(json['username']),
+      tag: serializer.fromJson<String>(json['tag']),
       hexColor: serializer.fromJson<String>(json['hexColor']),
       avatar: serializer.fromJson<String?>(json['avatar']),
+      banner: serializer.fromJson<String?>(json['banner']),
+      badges: serializer.fromJson<int>(json['badges']),
+      font: serializer.fromJson<int?>(json['font']),
     );
   }
   @override
@@ -4074,28 +4187,44 @@ class UserRow extends DataClass implements Insertable<UserRow> {
     return <String, dynamic>{
       'id': serializer.toJson<String>(id),
       'username': serializer.toJson<String>(username),
+      'tag': serializer.toJson<String>(tag),
       'hexColor': serializer.toJson<String>(hexColor),
       'avatar': serializer.toJson<String?>(avatar),
+      'banner': serializer.toJson<String?>(banner),
+      'badges': serializer.toJson<int>(badges),
+      'font': serializer.toJson<int?>(font),
     };
   }
 
   UserRow copyWith({
     String? id,
     String? username,
+    String? tag,
     String? hexColor,
     Value<String?> avatar = const Value.absent(),
+    Value<String?> banner = const Value.absent(),
+    int? badges,
+    Value<int?> font = const Value.absent(),
   }) => UserRow(
     id: id ?? this.id,
     username: username ?? this.username,
+    tag: tag ?? this.tag,
     hexColor: hexColor ?? this.hexColor,
     avatar: avatar.present ? avatar.value : this.avatar,
+    banner: banner.present ? banner.value : this.banner,
+    badges: badges ?? this.badges,
+    font: font.present ? font.value : this.font,
   );
   UserRow copyWithCompanion(UsersCompanion data) {
     return UserRow(
       id: data.id.present ? data.id.value : this.id,
       username: data.username.present ? data.username.value : this.username,
+      tag: data.tag.present ? data.tag.value : this.tag,
       hexColor: data.hexColor.present ? data.hexColor.value : this.hexColor,
       avatar: data.avatar.present ? data.avatar.value : this.avatar,
+      banner: data.banner.present ? data.banner.value : this.banner,
+      badges: data.badges.present ? data.badges.value : this.badges,
+      font: data.font.present ? data.font.value : this.font,
     );
   }
 
@@ -4104,42 +4233,63 @@ class UserRow extends DataClass implements Insertable<UserRow> {
     return (StringBuffer('UserRow(')
           ..write('id: $id, ')
           ..write('username: $username, ')
+          ..write('tag: $tag, ')
           ..write('hexColor: $hexColor, ')
-          ..write('avatar: $avatar')
+          ..write('avatar: $avatar, ')
+          ..write('banner: $banner, ')
+          ..write('badges: $badges, ')
+          ..write('font: $font')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, username, hexColor, avatar);
+  int get hashCode =>
+      Object.hash(id, username, tag, hexColor, avatar, banner, badges, font);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is UserRow &&
           other.id == this.id &&
           other.username == this.username &&
+          other.tag == this.tag &&
           other.hexColor == this.hexColor &&
-          other.avatar == this.avatar);
+          other.avatar == this.avatar &&
+          other.banner == this.banner &&
+          other.badges == this.badges &&
+          other.font == this.font);
 }
 
 class UsersCompanion extends UpdateCompanion<UserRow> {
   final Value<String> id;
   final Value<String> username;
+  final Value<String> tag;
   final Value<String> hexColor;
   final Value<String?> avatar;
+  final Value<String?> banner;
+  final Value<int> badges;
+  final Value<int?> font;
   final Value<int> rowid;
   const UsersCompanion({
     this.id = const Value.absent(),
     this.username = const Value.absent(),
+    this.tag = const Value.absent(),
     this.hexColor = const Value.absent(),
     this.avatar = const Value.absent(),
+    this.banner = const Value.absent(),
+    this.badges = const Value.absent(),
+    this.font = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   UsersCompanion.insert({
     required String id,
     required String username,
+    this.tag = const Value.absent(),
     required String hexColor,
     this.avatar = const Value.absent(),
+    this.banner = const Value.absent(),
+    this.badges = const Value.absent(),
+    this.font = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        username = Value(username),
@@ -4147,15 +4297,23 @@ class UsersCompanion extends UpdateCompanion<UserRow> {
   static Insertable<UserRow> custom({
     Expression<String>? id,
     Expression<String>? username,
+    Expression<String>? tag,
     Expression<String>? hexColor,
     Expression<String>? avatar,
+    Expression<String>? banner,
+    Expression<int>? badges,
+    Expression<int>? font,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (username != null) 'username': username,
+      if (tag != null) 'tag': tag,
       if (hexColor != null) 'hex_color': hexColor,
       if (avatar != null) 'avatar': avatar,
+      if (banner != null) 'banner': banner,
+      if (badges != null) 'badges': badges,
+      if (font != null) 'font': font,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -4163,15 +4321,23 @@ class UsersCompanion extends UpdateCompanion<UserRow> {
   UsersCompanion copyWith({
     Value<String>? id,
     Value<String>? username,
+    Value<String>? tag,
     Value<String>? hexColor,
     Value<String?>? avatar,
+    Value<String?>? banner,
+    Value<int>? badges,
+    Value<int?>? font,
     Value<int>? rowid,
   }) {
     return UsersCompanion(
       id: id ?? this.id,
       username: username ?? this.username,
+      tag: tag ?? this.tag,
       hexColor: hexColor ?? this.hexColor,
       avatar: avatar ?? this.avatar,
+      banner: banner ?? this.banner,
+      badges: badges ?? this.badges,
+      font: font ?? this.font,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -4185,11 +4351,23 @@ class UsersCompanion extends UpdateCompanion<UserRow> {
     if (username.present) {
       map['username'] = Variable<String>(username.value);
     }
+    if (tag.present) {
+      map['tag'] = Variable<String>(tag.value);
+    }
     if (hexColor.present) {
       map['hex_color'] = Variable<String>(hexColor.value);
     }
     if (avatar.present) {
       map['avatar'] = Variable<String>(avatar.value);
+    }
+    if (banner.present) {
+      map['banner'] = Variable<String>(banner.value);
+    }
+    if (badges.present) {
+      map['badges'] = Variable<int>(badges.value);
+    }
+    if (font.present) {
+      map['font'] = Variable<int>(font.value);
     }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
@@ -4202,8 +4380,12 @@ class UsersCompanion extends UpdateCompanion<UserRow> {
     return (StringBuffer('UsersCompanion(')
           ..write('id: $id, ')
           ..write('username: $username, ')
+          ..write('tag: $tag, ')
           ..write('hexColor: $hexColor, ')
           ..write('avatar: $avatar, ')
+          ..write('banner: $banner, ')
+          ..write('badges: $badges, ')
+          ..write('font: $font, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -6465,16 +6647,24 @@ typedef $$UsersTableCreateCompanionBuilder =
     UsersCompanion Function({
       required String id,
       required String username,
+      Value<String> tag,
       required String hexColor,
       Value<String?> avatar,
+      Value<String?> banner,
+      Value<int> badges,
+      Value<int?> font,
       Value<int> rowid,
     });
 typedef $$UsersTableUpdateCompanionBuilder =
     UsersCompanion Function({
       Value<String> id,
       Value<String> username,
+      Value<String> tag,
       Value<String> hexColor,
       Value<String?> avatar,
+      Value<String?> banner,
+      Value<int> badges,
+      Value<int?> font,
       Value<int> rowid,
     });
 
@@ -6496,6 +6686,11 @@ class $$UsersTableFilterComposer extends Composer<_$NeriDatabase, $UsersTable> {
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<String> get tag => $composableBuilder(
+    column: $table.tag,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<String> get hexColor => $composableBuilder(
     column: $table.hexColor,
     builder: (column) => ColumnFilters(column),
@@ -6503,6 +6698,21 @@ class $$UsersTableFilterComposer extends Composer<_$NeriDatabase, $UsersTable> {
 
   ColumnFilters<String> get avatar => $composableBuilder(
     column: $table.avatar,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get banner => $composableBuilder(
+    column: $table.banner,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get badges => $composableBuilder(
+    column: $table.badges,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get font => $composableBuilder(
+    column: $table.font,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -6526,6 +6736,11 @@ class $$UsersTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get tag => $composableBuilder(
+    column: $table.tag,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get hexColor => $composableBuilder(
     column: $table.hexColor,
     builder: (column) => ColumnOrderings(column),
@@ -6533,6 +6748,21 @@ class $$UsersTableOrderingComposer
 
   ColumnOrderings<String> get avatar => $composableBuilder(
     column: $table.avatar,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get banner => $composableBuilder(
+    column: $table.banner,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get badges => $composableBuilder(
+    column: $table.badges,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get font => $composableBuilder(
+    column: $table.font,
     builder: (column) => ColumnOrderings(column),
   );
 }
@@ -6552,11 +6782,23 @@ class $$UsersTableAnnotationComposer
   GeneratedColumn<String> get username =>
       $composableBuilder(column: $table.username, builder: (column) => column);
 
+  GeneratedColumn<String> get tag =>
+      $composableBuilder(column: $table.tag, builder: (column) => column);
+
   GeneratedColumn<String> get hexColor =>
       $composableBuilder(column: $table.hexColor, builder: (column) => column);
 
   GeneratedColumn<String> get avatar =>
       $composableBuilder(column: $table.avatar, builder: (column) => column);
+
+  GeneratedColumn<String> get banner =>
+      $composableBuilder(column: $table.banner, builder: (column) => column);
+
+  GeneratedColumn<int> get badges =>
+      $composableBuilder(column: $table.badges, builder: (column) => column);
+
+  GeneratedColumn<int> get font =>
+      $composableBuilder(column: $table.font, builder: (column) => column);
 }
 
 class $$UsersTableTableManager
@@ -6589,28 +6831,44 @@ class $$UsersTableTableManager
               ({
                 Value<String> id = const Value.absent(),
                 Value<String> username = const Value.absent(),
+                Value<String> tag = const Value.absent(),
                 Value<String> hexColor = const Value.absent(),
                 Value<String?> avatar = const Value.absent(),
+                Value<String?> banner = const Value.absent(),
+                Value<int> badges = const Value.absent(),
+                Value<int?> font = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => UsersCompanion(
                 id: id,
                 username: username,
+                tag: tag,
                 hexColor: hexColor,
                 avatar: avatar,
+                banner: banner,
+                badges: badges,
+                font: font,
                 rowid: rowid,
               ),
           createCompanionCallback:
               ({
                 required String id,
                 required String username,
+                Value<String> tag = const Value.absent(),
                 required String hexColor,
                 Value<String?> avatar = const Value.absent(),
+                Value<String?> banner = const Value.absent(),
+                Value<int> badges = const Value.absent(),
+                Value<int?> font = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => UsersCompanion.insert(
                 id: id,
                 username: username,
+                tag: tag,
                 hexColor: hexColor,
                 avatar: avatar,
+                banner: banner,
+                badges: badges,
+                font: font,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

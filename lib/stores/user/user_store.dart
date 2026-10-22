@@ -32,7 +32,12 @@ class UsersNotifier extends Notifier<Map<String, User>> {
   Map<String, User> build() => const {};
 
   void setUsers(List<User> list) =>
-      state = {...state, for (final user in list) user.id: user};
+      state = {...state, for (final user in list) user.id: _filled(user)};
 
-  void addUser(User user) => state = {...state, user.id: user};
+  void addUser(User user) => state = {...state, user.id: _filled(user)};
+
+  User _filled(User user) => switch (state[user.id]) {
+    final known? => user.filledFrom(known),
+    null => user,
+  };
 }
