@@ -1,7 +1,7 @@
 {
   description = "dev env for nerimobile";
 
-  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+  inputs.nixpkgs.url = "github:NixOS/nixpkgs/fe13242281a67641c0102cdb1087f0ebe586c7df";
 
   outputs =
     { self, nixpkgs }:
