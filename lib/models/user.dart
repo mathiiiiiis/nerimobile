@@ -56,6 +56,19 @@ class User {
     profile: _unsent.contains('profile') ? known.profile : profile,
     unsent: _unsent.intersection(known._unsent),
   );
+
+  User merge(Map<String, dynamic> updated) => User(
+    id: id,
+    username: updated['username'] ?? username,
+    tag: updated['tag'] ?? tag,
+    hexColor: hexColor,
+    avatar: updated.containsKey('avatar') ? updated['avatar'] : avatar,
+    banner: updated.containsKey('banner') ? updated['banner'] : banner,
+    badges: badges,
+    bot: bot,
+    profile: profile,
+    unsent: _unsent,
+  );
 }
 
 class Profile {

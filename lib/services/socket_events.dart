@@ -33,6 +33,10 @@ void handleSocketEvent(Ref ref, String event, dynamic payload) {
       onUserAuthenticated(ref, payload);
     case 'user:presence_update':
       onUserPresenceUpdate(ref, payload);
+    case 'user:updated':
+      onUserUpdated(ref, payload);
+    case 'user:updatedSelf':
+      onUserUpdatedSelf(ref, payload);
     case 'message:created':
       onMessageCreated(ref, payload);
     case 'message:updated':
@@ -388,6 +392,18 @@ void onInboxClosed(Ref ref, dynamic payload) {
   final channelId = payload['channelId'] as String;
   ref.read(inboxProvider.notifier).removeInbox(channelId);
   ref.read(channelsProvider.notifier).removeChannel(channelId);
+}
+
+void onUserUpdated(Ref ref, dynamic payload) => ref
+    .read(usersProvider.notifier)
+    .updateUser(payload['userId'], payload['updated']);
+
+void onUserUpdatedSelf(Ref ref, dynamic payload) {
+  final updated = payload as Map<String, dynamic>;
+  ref.read(currentUserProvider.notifier).updateCurrentUser(updated);
+  if (ref.read(currentUserIdProvider) case final userId?) {
+    ref.read(usersProvider.notifier).updateUser(userId, updated);
+  }
 }
 
 void onUserPresenceUpdate(Ref ref, dynamic payload) {
