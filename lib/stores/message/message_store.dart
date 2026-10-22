@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
@@ -79,9 +80,13 @@ class MessagesNotifier extends Notifier<ChannelMessages> {
 
   final _mentionReplies = <String>{};
   final _uploads = <String, CancelToken>{};
+  Timer? _olderRetry;
 
   @override
-  ChannelMessages build() => const ChannelMessages();
+  ChannelMessages build() {
+    ref.onDispose(() => _olderRetry?.cancel());
+    return const ChannelMessages();
+  }
 
   Future<void> open() async {
     if (state.loaded) return catchUp();
@@ -104,9 +109,14 @@ class MessagesNotifier extends Notifier<ChannelMessages> {
   Future<void> loadOlder() async {
     final oldest = state.oldest;
     if (state.loading || !state.hasMore || oldest == null) return;
+    _olderRetry?.cancel();
     state = state.copyWith(loading: true);
 
-    final batch = await _fetch(limit: messagePageSize, before: oldest.id);
+    final batch = await _fetch(
+      limit: messagePageSize,
+      before: oldest.id,
+      onRateLimited: (wait) => _olderRetry = Timer(wait, loadOlder),
+    );
     state = state.copyWith(
       messages: batch == null ? state.messages : _merge(batch),
       loading: false,
@@ -372,6 +382,7 @@ class MessagesNotifier extends Notifier<ChannelMessages> {
     required int limit,
     String? before,
     String? after,
+    void Function(Duration wait)? onRateLimited,
   }) async {
     try {
       return await fetchMessages(
@@ -383,9 +394,18 @@ class MessagesNotifier extends Notifier<ChannelMessages> {
       );
     } catch (e) {
       debugPrint('fetchMessages($channelId) failed: $e');
+      if (_rateLimitWait(e) case final wait?) onRateLimited?.call(wait);
       return null;
     }
   }
+
+  Duration? _rateLimitWait(Object error) => switch (error) {
+    DioException(
+      response: Response(statusCode: 429, data: {'ttl': final num ttl}),
+    ) =>
+      Duration(milliseconds: ttl.ceil()),
+    _ => null,
+  };
 
   bool _isLocal(String messageId) =>
       state.pending.contains(messageId) || state.failed.contains(messageId);
