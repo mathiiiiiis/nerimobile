@@ -1,8 +1,8 @@
 import 'package:flutter/widgets.dart';
 
 import 'package:nerimobile/utils/cached_svg_loader.dart';
-import 'package:nerimobile/utils/emoji_catalog.dart';
-import 'package:nerimobile/utils/emojis.dart';
+import 'package:nerimobile/utils/emoji/emoji_catalog.dart';
+import 'package:nerimobile/utils/emoji/emojis.dart';
 
 const _warmCount = 64;
 

@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nerimobile/models/custom_emoji.dart';
-import 'package:nerimobile/utils/emoji_shortcodes.dart';
+import 'package:nerimobile/utils/emoji/emoji_shortcodes.dart';
 
 final customEmojisProvider =
     NotifierProvider<CustomEmojiNotifier, Map<String, List<CustomEmoji>>>(

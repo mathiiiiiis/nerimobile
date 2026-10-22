@@ -23,7 +23,7 @@ import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/theme/typography/text_styles.dart';
 import 'package:nerimobile/utils/colors.dart';
 import 'package:nerimobile/utils/date.dart';
-import 'package:nerimobile/utils/emoji_shortcodes.dart';
+import 'package:nerimobile/utils/emoji/emoji_shortcodes.dart';
 import 'package:nerimobile/utils/nevula.dart';
 import 'package:nerimobile/utils/url.dart';
 import 'package:nerimobile/views/user/avatar.dart';

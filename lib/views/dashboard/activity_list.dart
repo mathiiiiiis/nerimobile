@@ -15,7 +15,7 @@ import 'package:nerimobile/theme/sizing/radius.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/theme/typography/text_styles.dart';
 import 'package:nerimobile/utils/caches.dart';
-import 'package:nerimobile/utils/emojis.dart';
+import 'package:nerimobile/utils/emoji/emojis.dart';
 import 'package:nerimobile/utils/format.dart';
 import 'package:nerimobile/utils/image.dart';
 import 'package:nerimobile/views/user/avatar.dart';

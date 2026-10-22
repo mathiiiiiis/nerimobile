@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nerimobile/stores/channel/channel_store.dart';
 import 'package:nerimobile/stores/server/server_permissions.dart';
-import 'package:nerimobile/utils/role_permission_flag.dart';
+import 'package:nerimobile/utils/permissions/role_permission_flag.dart';
 
 final slowModeCooldownsProvider =
     NotifierProvider<SlowModeCooldowns, Map<String, int>>(

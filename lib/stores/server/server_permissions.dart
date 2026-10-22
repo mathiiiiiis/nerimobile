@@ -10,9 +10,9 @@ import 'package:nerimobile/stores/server/server_roles_store.dart';
 import 'package:nerimobile/stores/server/server_store.dart';
 import 'package:nerimobile/stores/user/user_store.dart';
 
-import 'package:nerimobile/utils/bitwise.dart';
-import 'package:nerimobile/utils/channel_permission_flag.dart';
-import 'package:nerimobile/utils/role_permission_flag.dart';
+import 'package:nerimobile/utils/permissions/bitwise.dart';
+import 'package:nerimobile/utils/permissions/channel_permission_flag.dart';
+import 'package:nerimobile/utils/permissions/role_permission_flag.dart';
 
 typedef ServerAccess = ({
   Server server,

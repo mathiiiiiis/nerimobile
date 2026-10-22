@@ -1,4 +1,4 @@
-import 'package:nerimobile/utils/emoji_catalog.dart';
+import 'package:nerimobile/utils/emoji/emoji_catalog.dart';
 
 final emojiEntries = <String, CatalogEmoji>{
   for (final emojis in emojiCatalog.values)

@@ -8,10 +8,10 @@ import 'package:nerimobile/theme/core/theme_data.dart';
 import 'package:nerimobile/theme/presets/presets.dart';
 import 'package:nerimobile/theme/sizing/breakpoints.dart';
 
-import 'package:nerimobile/utils/theme_notifier.dart';
+import 'package:nerimobile/theme/theme_notifier.dart';
 import 'package:nerimobile/views/shell/toast_host.dart';
 import 'package:nerimobile/views/shell/window_focus_observer.dart';
-import 'package:nerimobile/router.dart';
+import 'package:nerimobile/router/router.dart';
 
 class MainApp extends ConsumerWidget {
   const MainApp({super.key});

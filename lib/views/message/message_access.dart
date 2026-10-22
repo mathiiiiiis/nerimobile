@@ -7,7 +7,7 @@ import 'package:nerimobile/stores/message/message_store.dart';
 import 'package:nerimobile/stores/message/upload_progress_store.dart';
 import 'package:nerimobile/stores/server/server_permissions.dart';
 import 'package:nerimobile/stores/user/user_store.dart';
-import 'package:nerimobile/utils/role_permission_flag.dart';
+import 'package:nerimobile/utils/permissions/role_permission_flag.dart';
 
 class MessageAccess {
   const MessageAccess._({

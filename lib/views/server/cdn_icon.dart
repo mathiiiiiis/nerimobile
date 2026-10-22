@@ -6,7 +6,7 @@ import 'package:nerimobile/models/channel.dart';
 import 'package:nerimobile/models/server_role.dart';
 import 'package:nerimobile/utils/cached_svg_loader.dart';
 import 'package:nerimobile/utils/caches.dart';
-import 'package:nerimobile/utils/emojis.dart';
+import 'package:nerimobile/utils/emoji/emojis.dart';
 import 'package:nerimobile/utils/image.dart';
 
 class CdnIcon extends StatelessWidget {
