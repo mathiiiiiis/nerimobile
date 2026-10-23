@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 import 'package:nerimobile/theme/core/theme_data.dart';
@@ -11,6 +13,7 @@ import 'package:nerimobile/utils/colors.dart';
 import 'package:nerimobile/views/core/press_scale.dart';
 
 const _disabledOpacity = 0.4;
+const _maxSheetHeight = 0.6;
 const _bannerSpace = 56.0;
 const _handleWidth = 32.0;
 const _handleHeight = 4.0;
@@ -69,8 +72,65 @@ Future<T?> showSheet<T>(
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.only(topLeft: radius, topRight: radius),
     ),
-    builder: builder,
+    builder: (context) => _GrowingSheet(child: builder(context)),
   );
+}
+
+class _GrowingSheet extends StatefulWidget {
+  const _GrowingSheet({required this.child});
+
+  final Widget child;
+
+  @override
+  State<_GrowingSheet> createState() => _GrowingSheetState();
+}
+
+class _GrowingSheetState extends State<_GrowingSheet> {
+  final _scroll = ScrollController();
+  double? _height;
+  var _available = double.infinity;
+
+  @override
+  void initState() {
+    super.initState();
+    _scroll.addListener(_grow);
+  }
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  void _grow() {
+    final height = _height;
+    final offset = _scroll.offset;
+    if (height == null || offset <= 0 || height >= _available) return;
+
+    final grown = min(_available, height + offset);
+    _scroll.position.correctBy(-(grown - height));
+    setState(() => _height = grown);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cap = MediaQuery.sizeOf(context).height * _maxSheetHeight;
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        _available = constraints.maxHeight;
+        final height = _height ??= min(cap, _available);
+
+        return ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: height),
+          child: PrimaryScrollController(
+            controller: _scroll,
+            child: widget.child,
+          ),
+        );
+      },
+    );
+  }
 }
 
 Future<void> showActionSheet(
