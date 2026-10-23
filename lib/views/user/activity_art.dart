@@ -10,37 +10,43 @@ import 'package:nerimobile/utils/caches.dart';
 import 'package:nerimobile/utils/emoji/emojis.dart';
 import 'package:nerimobile/utils/image.dart';
 import 'package:nerimobile/views/emoji/twemoji.dart';
+import 'package:nerimobile/views/user/presence_line.dart';
 
 const _blur = 10.0;
 const _backdropScale = 2.0;
 const _backdropOpacity = 0.7;
+const _videoAspect = 16 / 9;
 
 class ActivityArt extends StatelessWidget {
-  const ActivityArt({super.key, required this.activity, required this.size});
+  const ActivityArt({super.key, required this.activity, required this.height});
 
   final ActivityStatus activity;
-  final double size;
+  final double height;
 
   @override
   Widget build(BuildContext context) {
     final emoji = activity.emoji;
-    if (emoji != null) return _EmojiArt(emoji: emoji, size: size);
+    if (emoji != null) return _EmojiArt(emoji: emoji, size: height);
 
     final art = activity.imgSrc;
     if (art == null) return const SizedBox.shrink();
+
+    final video = activityKindOf(activity) == ActivityKind.video;
+    final width = video ? height * _videoAspect : height;
+    final empty = SizedBox(width: width, height: height);
 
     return ClipRRect(
       borderRadius: context.neriSize.rounded(NeriRadiusRole.image),
       child: CachedNetworkImage(
         imageUrl: proxiedImageUrl(art),
         cacheManager: mediaCache,
-        width: size,
-        height: size,
+        width: width,
+        height: height,
         fit: BoxFit.cover,
         fadeInDuration: Duration.zero,
         fadeOutDuration: Duration.zero,
-        placeholder: (_, _) => SizedBox.square(dimension: size),
-        errorWidget: (_, _, _) => SizedBox.square(dimension: size),
+        placeholder: (_, _) => empty,
+        errorWidget: (_, _, _) => empty,
       ),
     );
   }

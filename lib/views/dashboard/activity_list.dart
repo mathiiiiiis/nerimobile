@@ -120,7 +120,7 @@ class _ActivityCard extends StatelessWidget {
         children: [
           ActivityArt(
             activity: activity.activity,
-            size: _cardHeight - inset * 2,
+            height: _cardHeight - inset * 2,
           ),
           Expanded(child: _Details(activity: activity)),
         ],
