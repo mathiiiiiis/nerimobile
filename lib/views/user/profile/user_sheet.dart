@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:material_symbols_icons/material_symbols_icons.dart';
+import 'package:nerimobile/models/friend.dart';
 import 'package:nerimobile/models/server.dart';
 
 import 'package:nerimobile/models/user.dart';
@@ -10,6 +12,8 @@ import 'package:nerimobile/models/user_presence.dart';
 import 'package:nerimobile/stores/channel/channel_store.dart';
 import 'package:nerimobile/stores/server/server_member_store.dart';
 import 'package:nerimobile/stores/server/server_store.dart';
+import 'package:nerimobile/stores/toast/toast_store.dart';
+import 'package:nerimobile/stores/user/friend_store.dart';
 import 'package:nerimobile/stores/user/user_details_store.dart';
 import 'package:nerimobile/stores/user/user_presence_store.dart';
 import 'package:nerimobile/stores/user/user_store.dart';
@@ -41,11 +45,19 @@ Future<void> showUserSheet(
   BuildContext context, {
   required User user,
   String? channelId,
-}) => showSheet(
-  context,
-  dragHandle: false,
-  builder: (_) => _UserSheet(user: user, channelId: channelId),
-);
+}) async {
+  ProviderScope.containerOf(
+    context,
+    listen: false,
+  ).invalidate(userDetailsProvider(user.id));
+
+  final picked = await showSheet<SheetAction>(
+    context,
+    dragHandle: false,
+    builder: (_) => _UserSheet(user: user, channelId: channelId),
+  );
+  picked?.onTap();
+}
 
 class _UserSheet extends ConsumerWidget {
   const _UserSheet({required this.user, this.channelId});
@@ -140,11 +152,86 @@ class _UserSheet extends ConsumerWidget {
                   ),
               ],
             ),
+            groups: _actions(ref, user, details.value),
           ),
         ),
       ),
     );
   }
+}
+
+//TODO: add l10n
+List<SheetGroup> _actions(WidgetRef ref, User user, UserDetails? details) {
+  final toast = ref.read(toastProvider.notifier);
+  void notAdded() => toast.show('Not added yet :/');
+  final copyId = SheetGroup([
+    SheetAction(
+      icon: Symbols.id_card_rounded,
+      label: 'Copy ID',
+      dismiss: false,
+      onTap: () => toast.copy(user.id, label: 'ID copied'),
+    ),
+  ]);
+  if (user.id == ref.watch(currentUserIdProvider)) return [copyId];
+
+  final friend = ref.watch(
+    friendsProvider.select((friends) => friends[user.id]?.status),
+  );
+  final blocked = friend == FriendStatus.blocked;
+  final unreachable = blocked || (details?.blockedYou ?? false);
+  final following = details?.following ?? false;
+
+  return [
+    SheetGroup([
+      switch (friend) {
+        FriendStatus.friends => SheetAction(
+          icon: Symbols.person_remove_rounded,
+          label: 'Remove friend',
+          dismiss: false,
+          onTap: notAdded,
+        ),
+        FriendStatus.pending => SheetAction(
+          icon: Symbols.person_add_rounded,
+          label: 'Accept friend request',
+          dismiss: false,
+          onTap: notAdded,
+        ),
+        FriendStatus.sent => SheetAction(
+          icon: Symbols.close_rounded,
+          label: 'Pending request',
+          enabled: !unreachable,
+          dismiss: false,
+          onTap: notAdded,
+        ),
+        _ => SheetAction(
+          icon: Symbols.person_add_rounded,
+          label: 'Add friend',
+          enabled: !unreachable,
+          dismiss: false,
+          onTap: notAdded,
+        ),
+      },
+      SheetAction(
+        icon: following
+            ? Symbols.remove_circle_rounded
+            : Symbols.add_circle_rounded,
+        label: following ? 'Unfollow' : 'Follow',
+        enabled: details != null && !unreachable,
+        dismiss: false,
+        onTap: notAdded,
+      ),
+    ]),
+    copyId,
+    SheetGroup([
+      SheetAction(
+        icon: Symbols.block_rounded,
+        label: blocked ? 'Unblock' : 'Block',
+        destructive: !blocked,
+        dismiss: false,
+        onTap: notAdded,
+      ),
+    ]),
+  ];
 }
 
 class _ProfileStyle {
