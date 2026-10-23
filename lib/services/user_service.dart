@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:nerimobile/models/user_details.dart';
 
 Future<String> userLogin(
   Dio dio, {
@@ -15,4 +16,9 @@ Future<String> userLogin(
     },
   );
   return response.data['token'] as String;
+}
+
+Future<UserDetails> fetchUserDetails(Dio dio, String userId) async {
+  final response = await dio.get('/users/$userId');
+  return UserDetails.fromJson(response.data as Map<String, dynamic>);
 }
