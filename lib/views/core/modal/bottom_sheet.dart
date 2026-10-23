@@ -425,29 +425,29 @@ class _GroupCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.neri;
     final sizing = context.neriSize;
-    final dWidth = sizing.border(NeriBorderRole.medium);
 
-    return Material(
-      color: colors[NeriToken.cardBright],
-      clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(
-        borderRadius: sizing.rounded(NeriRadiusRole.lg),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          for (final (index, action) in group.actions.indexed) ...[
-            if (index > 0)
-              Divider(
-                height: dWidth,
-                thickness: dWidth,
-                color: colors[NeriToken.pane],
+    final outer = Radius.circular(sizing.radius(NeriRadiusRole.lg));
+    final inner = Radius.circular(sizing.radius(NeriRadiusRole.sm));
+    final last = group.actions.length - 1;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      spacing: sizing.border(NeriBorderRole.medium),
+      children: [
+        for (final (index, action) in group.actions.indexed)
+          Material(
+            color: colors[NeriToken.cardBright],
+            clipBehavior: Clip.antiAlias,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.vertical(
+                top: index == 0 ? outer : inner,
+                bottom: index == last ? outer : inner,
               ),
-            _ActionRow(action: action),
-          ],
-        ],
-      ),
+            ),
+            child: _ActionRow(action: action),
+          ),
+      ],
     );
   }
 }
