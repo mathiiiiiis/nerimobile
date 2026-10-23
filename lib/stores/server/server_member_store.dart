@@ -39,6 +39,7 @@ class ServerMembersNotifier
         roleIds: raw.roleIds,
         nickname: raw.nickname,
         muteExpireAt: raw.muteExpireAt,
+        joinedAt: raw.joinedAt,
       );
     }
     ref.read(usersProvider.notifier).setUsers(users);

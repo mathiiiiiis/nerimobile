@@ -5,6 +5,7 @@ class ServerMember {
   final String? nickname;
   final Set<String> roleIds;
   final int? muteExpireAt;
+  final int? joinedAt;
 
   ServerMember({
     required this.id,
@@ -13,6 +14,7 @@ class ServerMember {
     required this.roleIds,
     this.nickname,
     this.muteExpireAt,
+    this.joinedAt,
   });
 
   bool get isMuted =>
@@ -26,6 +28,7 @@ class ServerMember {
     roleIds: Set<String>.from(json['roleIds'] as List),
     nickname: json['nickname'] as String?,
     muteExpireAt: json['muteExpireAt'] as int?,
+    joinedAt: json['joinedAt'] as int?,
   );
 
   //keep unchanged fields, allow nullables to be cleared
@@ -42,5 +45,6 @@ class ServerMember {
     muteExpireAt: updated.containsKey('muteExpireAt')
         ? updated['muteExpireAt'] as int?
         : muteExpireAt,
+    joinedAt: joinedAt,
   );
 }
