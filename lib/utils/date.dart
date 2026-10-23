@@ -79,8 +79,13 @@ String formatTimestamp(int milliseconds) {
   } else if (dateOnly == yesterday) {
     return 'Yesterday at $time'; //TODO: add l10n
   } else {
-    final day = date.day.toString().padLeft(2, '0');
-    final month = date.month.toString().padLeft(2, '0');
-    return '$day/$month/${date.year} at $time';
+    return '${formatDate(milliseconds)} at $time'; //TODO: add l10n
   }
+}
+
+String formatDate(int milliseconds) {
+  final date = DateTime.fromMillisecondsSinceEpoch(milliseconds);
+  final day = date.day.toString().padLeft(2, '0');
+  final month = date.month.toString().padLeft(2, '0');
+  return '$day/$month/${date.year}';
 }
