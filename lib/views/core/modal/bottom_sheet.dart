@@ -14,6 +14,9 @@ import 'package:nerimobile/views/core/press_scale.dart';
 
 const _disabledOpacity = 0.4;
 const _maxSheetHeight = 0.6;
+const _closeFraction = 0.25;
+const _closeVelocity = 700.0;
+const _settleTime = Duration(milliseconds: 200);
 const _bannerSpace = 56.0;
 const _handleWidth = 32.0;
 const _handleHeight = 4.0;
@@ -85,10 +88,16 @@ class _GrowingSheet extends StatefulWidget {
   State<_GrowingSheet> createState() => _GrowingSheetState();
 }
 
-class _GrowingSheetState extends State<_GrowingSheet> {
+class _GrowingSheetState extends State<_GrowingSheet>
+    with SingleTickerProviderStateMixin {
   final _scroll = ScrollController();
+  late final _settle = AnimationController(vsync: this, duration: _settleTime)
+    ..addListener(_settled);
   double? _height;
   var _available = double.infinity;
+
+  double? _pulledFrom;
+  Animation<double>? _settleTo;
 
   @override
   void initState() {
@@ -99,6 +108,7 @@ class _GrowingSheetState extends State<_GrowingSheet> {
   @override
   void dispose() {
     _scroll.dispose();
+    _settle.dispose();
     super.dispose();
   }
 
@@ -112,6 +122,48 @@ class _GrowingSheetState extends State<_GrowingSheet> {
     setState(() => _height = grown);
   }
 
+  bool _onScroll(ScrollNotification notification) {
+    final height = _height;
+    if (height == null ||
+        notification.depth != 0 ||
+        notification.metrics.axis != Axis.vertical) {
+      return false;
+    }
+
+    switch (notification) {
+      case OverscrollNotification(:final overscroll, dragDetails: _?)
+          when overscroll < 0:
+        _settle.stop();
+        _pulledFrom ??= height;
+        setState(() => _height = max(0, height + overscroll));
+      case ScrollEndNotification(:final dragDetails):
+        _release(dragDetails?.velocity.pixelsPerSecond.dy ?? 0);
+    }
+    return false;
+  }
+
+  void _release(double velocity) {
+    final from = _pulledFrom;
+    final height = _height;
+    _pulledFrom = null;
+    if (from == null || height == null) return;
+
+    if (velocity > _closeVelocity || from - height > from * _closeFraction) {
+      Navigator.of(context).maybePop();
+      return;
+    }
+    _settleTo = Tween(
+      begin: height,
+      end: from,
+    ).animate(CurvedAnimation(parent: _settle, curve: Curves.easeOut));
+    _settle.forward(from: 0);
+  }
+
+  void _settled() {
+    final to = _settleTo;
+    if (to != null) setState(() => _height = to.value);
+  }
+
   @override
   Widget build(BuildContext context) {
     final cap = MediaQuery.sizeOf(context).height * _maxSheetHeight;
@@ -123,9 +175,17 @@ class _GrowingSheetState extends State<_GrowingSheet> {
 
         return ConstrainedBox(
           constraints: BoxConstraints(maxHeight: height),
-          child: PrimaryScrollController(
-            controller: _scroll,
-            child: widget.child,
+          child: NotificationListener<ScrollNotification>(
+            onNotification: _onScroll,
+            child: ScrollConfiguration(
+              behavior: ScrollConfiguration.of(
+                context,
+              ).copyWith(physics: const ClampingScrollPhysics()),
+              child: PrimaryScrollController(
+                controller: _scroll,
+                child: widget.child,
+              ),
+            ),
           ),
         );
       },
