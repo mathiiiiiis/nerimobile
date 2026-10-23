@@ -206,16 +206,18 @@ class _FailedNotice extends StatelessWidget {
   }
 }
 
-class _FullMessage extends StatelessWidget {
+class _FullMessage extends ConsumerWidget {
   const _FullMessage({required this.message, this.pending = false});
 
   final Message message;
   final bool pending;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.neri;
     final sizing = context.neriSize;
+    final author =
+        ref.watch(userProvider(message.createdBy.id)) ?? message.createdBy;
 
     return Padding(
       padding: EdgeInsets.symmetric(
@@ -234,7 +236,7 @@ class _FullMessage extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             spacing: sizing.space(NeriSpacingRole.md),
             children: [
-              Avatar(user: message.createdBy, size: sizing.dimen(_avatarSize)),
+              Avatar(user: author, size: sizing.dimen(_avatarSize)),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -391,7 +393,8 @@ class _AuthorName extends ConsumerWidget {
 
     return buildColoredName(
       ref.watch(channelMemberNicknameProvider(key)) ??
-          message.createdBy.username,
+          (ref.watch(userProvider(message.createdBy.id)) ?? message.createdBy)
+              .username,
       hexColor: ref.watch(
         channelMemberColorProvider((
           channelId: message.channelId,

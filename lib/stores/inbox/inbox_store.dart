@@ -1,7 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:nerimobile/models/inbox.dart';
+import 'package:nerimobile/models/user.dart';
 import 'package:nerimobile/stores/channel/channel_store.dart';
+import 'package:nerimobile/stores/user/user_store.dart';
 
 final inboxProvider = NotifierProvider<InboxNotifier, Map<String, Inbox>>(
   InboxNotifier.new,
@@ -24,6 +26,12 @@ class InboxNotifier extends Notifier<Map<String, Inbox>> {
     state = {...state, channelId: item.copyWith(lastSeen: lastSeen)};
   }
 }
+
+final inboxRecipientProvider = Provider.family<User?, String>((ref, channelId) {
+  final inbox = ref.watch(inboxProvider.select((items) => items[channelId]));
+  if (inbox == null) return null;
+  return ref.watch(userProvider(inbox.recipientId)) ?? inbox.recipient;
+});
 
 final sortedInboxProvider = Provider<List<Inbox>>((ref) {
   final channels = ref.watch(channelsProvider);

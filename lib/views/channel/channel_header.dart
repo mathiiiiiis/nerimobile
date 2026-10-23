@@ -48,7 +48,7 @@ class ChannelHeader extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.neri;
     final sizing = context.neriSize;
-    final recipient = ref.watch(inboxProvider)[channelId]?.recipient;
+    final recipient = ref.watch(inboxRecipientProvider(channelId));
     final channel = ref.watch(channelsProvider.select((c) => c[channelId]));
     final radius = sizing.rounded(NeriRadiusRole.image);
 

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:nerimobile/models/message.dart';
 import 'package:nerimobile/stores/server/server_store.dart';
+import 'package:nerimobile/stores/user/user_store.dart';
 import 'package:nerimobile/theme/core/theme_data.dart';
 import 'package:nerimobile/theme/core/token.dart';
 import 'package:nerimobile/theme/sizing/dimens.dart';
@@ -128,7 +129,8 @@ class ReplyPreview extends ConsumerWidget {
     final hexColor = ref.watch(channelMemberColorProvider((author)));
     final name =
         ref.watch(channelMemberNicknameProvider(author)) ??
-        reply.createdBy.username;
+        (ref.watch(userProvider(reply.createdBy.id)) ?? reply.createdBy)
+            .username;
 
     return Row(
       spacing: sizing.space(NeriSpacingRole.xs),

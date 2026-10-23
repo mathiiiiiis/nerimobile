@@ -13,6 +13,10 @@ final usersProvider = NotifierProvider<UsersNotifier, Map<String, User>>(
   UsersNotifier.new,
 );
 
+final userProvider = Provider.family<User?, String>(
+  (ref, userId) => ref.watch(usersProvider.select((users) => users[userId])),
+);
+
 class CurrentUserNotifier extends Notifier<User?> {
   @override
   User? build() => null;

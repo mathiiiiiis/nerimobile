@@ -8,6 +8,7 @@ import 'package:nerimobile/models/inbox.dart';
 import 'package:nerimobile/stores/channel/last_opened_store.dart';
 import 'package:nerimobile/stores/inbox/inbox_store.dart';
 import 'package:nerimobile/stores/message/message_mention_store.dart';
+import 'package:nerimobile/stores/user/user_store.dart';
 
 import 'package:nerimobile/theme/core/theme_data.dart';
 import 'package:nerimobile/theme/core/token.dart';
@@ -106,6 +107,8 @@ class DmRow extends ConsumerWidget {
     final sizing = context.neriSize;
     final size = sizing.dimen(NeriDimen.avatarMd);
     final mentions = ref.watch(messageMentionsProvider)[inbox.channelId];
+    final recipient =
+        ref.watch(userProvider(inbox.recipientId)) ?? inbox.recipient;
 
     return Padding(
       padding: EdgeInsets.symmetric(
@@ -125,7 +128,7 @@ class DmRow extends ConsumerWidget {
               spacing: sizing.space(NeriSpacingRole.md),
               children: [
                 PresenceAvatar(
-                  user: inbox.recipient,
+                  user: recipient,
                   size: size,
                   surface: NeriWindow.of(context).isDualPane
                       ? colors[NeriToken.background]
@@ -137,7 +140,7 @@ class DmRow extends ConsumerWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        inbox.recipient.username,
+                        recipient.username,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: context.neriText[NeriTextRole.bodyLarge]

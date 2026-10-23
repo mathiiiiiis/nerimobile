@@ -11,6 +11,7 @@ import 'package:nerimobile/stores/gif/favorite_gif_store.dart';
 import 'package:nerimobile/stores/message/message_store.dart';
 import 'package:nerimobile/stores/server/server_store.dart';
 import 'package:nerimobile/stores/toast/toast_store.dart';
+import 'package:nerimobile/stores/user/user_store.dart';
 import 'package:nerimobile/theme/core/theme_data.dart';
 import 'package:nerimobile/theme/sizing/dimens.dart';
 import 'package:nerimobile/utils/format.dart';
@@ -150,17 +151,17 @@ Future<void> showMessageContextMenu(
   if (groups.every((group) => group.actions.isEmpty)) return;
 
   final author = (channelId: message.channelId, userId: message.createdBy.id);
+  final user =
+      ref.read(userProvider(message.createdBy.id)) ?? message.createdBy;
 
   await showActionSheet(
     context,
     header: SheetHeader(
-      title:
-          ref.read(channelMemberNicknameProvider(author)) ??
-          message.createdBy.username,
+      title: ref.read(channelMemberNicknameProvider(author)) ?? user.username,
       titleColor: ref.read(channelMemberColorProvider(author)),
       caption: _preview(message),
       leading: Avatar(
-        user: message.createdBy,
+        user: user,
         size: context.neriSize.dimen(NeriDimen.avatarMd),
       ),
     ),

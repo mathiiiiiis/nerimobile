@@ -590,7 +590,7 @@ class _Field extends StatelessWidget {
 
 //TODO: add l10n
 String _hint(WidgetRef ref, String channelId) {
-  final recipient = ref.watch(inboxProvider)[channelId]?.recipient;
+  final recipient = ref.watch(inboxRecipientProvider(channelId));
   if (recipient != null) return 'Message ${recipient.username}';
 
   final name = ref.watch(channelsProvider)[channelId]?.name;
