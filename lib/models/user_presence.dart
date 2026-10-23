@@ -27,6 +27,7 @@ class ActivityStatus {
   final String? link;
   final int? startedAt;
   final int? endsAt;
+  final int? updatedAt;
   final num? speed;
 
   ActivityStatus({
@@ -39,6 +40,7 @@ class ActivityStatus {
     this.link,
     this.startedAt,
     this.endsAt,
+    this.updatedAt,
     this.speed,
   });
 
@@ -52,8 +54,28 @@ class ActivityStatus {
     link: json['link'],
     startedAt: json['startedAt'],
     endsAt: json['endsAt'],
+    updatedAt: json['updatedAt'],
     speed: json['speed'],
   );
+
+  Duration? get length => switch ((startedAt, endsAt)) {
+    (final start?, final end?) => Duration(milliseconds: end - start),
+    _ => null,
+  };
+
+  Duration? elapsedAt(DateTime now) {
+    final start = startedAt;
+    if (start == null) return null;
+
+    var elapsed = (now.millisecondsSinceEpoch - start).toDouble();
+    final seekedAt = updatedAt;
+    if (seekedAt != null) {
+      final rate = (speed ?? 1).toDouble();
+      final seeked = (seekedAt - start).toDouble();
+      elapsed = elapsed * rate + (seeked - seeked * rate);
+    }
+    return Duration(milliseconds: elapsed < 0 ? 0 : elapsed.round());
+  }
 }
 
 class UserPresence {
