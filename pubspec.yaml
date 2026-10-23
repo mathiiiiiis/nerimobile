@@ -52,4 +52,5 @@ flutter:
   assets:
     - assets/icon/
     - assets/klipy/
+    - assets/nerimity/
     - assets/fonts/OFL.txt

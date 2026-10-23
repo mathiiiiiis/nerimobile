@@ -24,6 +24,7 @@ import 'package:nerimobile/views/media/message_media.dart';
 import 'package:nerimobile/views/message/message_replies.dart';
 import 'package:nerimobile/views/message/message_swipe.dart';
 import 'package:nerimobile/views/markup/markup.dart';
+import 'package:nerimobile/views/user/profile/user_sheet.dart';
 
 //avoid showing an image url twice
 bool showsContent(Message message) {
@@ -236,7 +237,14 @@ class _FullMessage extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             spacing: sizing.space(NeriSpacingRole.md),
             children: [
-              Avatar(user: author, size: sizing.dimen(_avatarSize)),
+              GestureDetector(
+                onTap: () => showUserSheet(
+                  context,
+                  user: author,
+                  channelId: message.channelId,
+                ),
+                child: Avatar(user: author, size: sizing.dimen(_avatarSize)),
+              ),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -245,10 +253,17 @@ class _FullMessage extends ConsumerWidget {
                       spacing: sizing.space(NeriSpacingRole.sm),
                       children: [
                         Flexible(
-                          child: _AuthorName(
-                            message: message,
-                            style: context.neriText[NeriTextRole.labelLarge]
-                                .copyWith(color: colors[NeriToken.text]),
+                          child: GestureDetector(
+                            onTap: () => showUserSheet(
+                              context,
+                              user: author,
+                              channelId: message.channelId,
+                            ),
+                            child: _AuthorName(
+                              message: message,
+                              style: context.neriText[NeriTextRole.labelLarge]
+                                  .copyWith(color: colors[NeriToken.text]),
+                            ),
                           ),
                         ),
                         Text(
