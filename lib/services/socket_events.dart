@@ -37,6 +37,16 @@ void handleSocketEvent(Ref ref, String event, dynamic payload) {
       onUserUpdated(ref, payload);
     case 'user:updatedSelf':
       onUserUpdatedSelf(ref, payload);
+    case 'user:blocked':
+      onUserBlocked(ref, payload);
+    case 'user:unblocked':
+      onUserUnblocked(ref, payload);
+    case 'friend:request_sent' || 'friend:request_pending':
+      onFriendRequest(ref, payload);
+    case 'friend:request_accepted':
+      onFriendRequestAccepted(ref, payload);
+    case 'friend:removed':
+      onFriendRemoved(ref, payload);
     case 'message:created':
       onMessageCreated(ref, payload);
     case 'message:updated':
@@ -387,6 +397,30 @@ void onInboxOpened(Ref ref, dynamic payload) {
       .read(inboxProvider.notifier)
       .addInbox(Inbox.fromJson({...payload, 'channelId': channel.id}));
 }
+
+void onFriendRequest(Ref ref, dynamic payload) {
+  final friend = Friend.fromJson(payload);
+  ref.read(usersProvider.notifier).addUser(friend.recipient);
+  ref.read(friendsProvider.notifier).addFriend(friend);
+}
+
+void onFriendRequestAccepted(Ref ref, dynamic payload) => ref
+    .read(friendsProvider.notifier)
+    .setStatus(payload['friendId'], FriendStatus.friends);
+
+void onFriendRemoved(Ref ref, dynamic payload) =>
+    ref.read(friendsProvider.notifier).removeFriend(payload['friendId']);
+
+void onUserBlocked(Ref ref, dynamic payload) {
+  final userId = ref.read(currentUserIdProvider);
+  if (userId == null) return;
+  final user = User.fromJson(payload['user']);
+  ref.read(usersProvider.notifier).addUser(user);
+  ref.read(friendsProvider.notifier).block(userId, user);
+}
+
+void onUserUnblocked(Ref ref, dynamic payload) =>
+    ref.read(friendsProvider.notifier).removeFriend(payload['userId']);
 
 void onInboxClosed(Ref ref, dynamic payload) {
   final channelId = payload['channelId'] as String;

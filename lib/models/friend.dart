@@ -14,7 +14,6 @@ enum FriendStatus {
 }
 
 class Friend {
-  final String id;
   final FriendStatus status;
   final String userId;
   final String recipientId;
@@ -22,7 +21,6 @@ class Friend {
   final int createdAt;
 
   Friend({
-    required this.id,
     required this.status,
     required this.userId,
     required this.recipientId,
@@ -31,7 +29,6 @@ class Friend {
   });
 
   Friend copyWith({FriendStatus? status}) => Friend(
-    id: id,
     status: status ?? this.status,
     userId: userId,
     recipientId: recipientId,
@@ -40,7 +37,6 @@ class Friend {
   );
 
   factory Friend.fromJson(Map<String, dynamic> json) => Friend(
-    id: json['id'],
     status: FriendStatus.fromInt(json['status'] as int),
     userId: json['userId'],
     recipientId: json['recipientId'],

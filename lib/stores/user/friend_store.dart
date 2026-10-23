@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nerimobile/models/friend.dart';
+import 'package:nerimobile/models/user.dart';
 
 final friendsProvider = NotifierProvider<FriendsNotifier, Map<String, Friend>>(
   FriendsNotifier.new,
@@ -17,6 +18,17 @@ class FriendsNotifier extends Notifier<Map<String, Friend>> {
 
   void removeFriend(String recipientId) =>
       state = {...state}..remove(recipientId);
+
+  void block(String userId, User recipient) => state = {
+    ...state,
+    recipient.id: Friend(
+      status: FriendStatus.blocked,
+      userId: userId,
+      recipientId: recipient.id,
+      recipient: recipient,
+      createdAt: DateTime.now().millisecondsSinceEpoch,
+    ),
+  };
 
   void setStatus(String recipientId, FriendStatus status) {
     final friend = state[recipientId];

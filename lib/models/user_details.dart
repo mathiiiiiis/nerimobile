@@ -19,7 +19,7 @@ class UserDetails {
 
   final bool following;
   final bool followsYou;
-  final bool blocked;
+  final bool blockedYou;
 
   final List<String> mutualFriendIds;
   final List<String> mutualServerIds;
@@ -41,7 +41,7 @@ class UserDetails {
     this.hideFollowing = false,
     this.following = false,
     this.followsYou = false,
-    this.blocked = false,
+    this.blockedYou = false,
     this.mutualFriendIds = const [],
     this.mutualServerIds = const [],
     this.latestPost,
@@ -67,8 +67,8 @@ class UserDetails {
       hideFollowers: (json['hideFollowers'] ?? false) as bool,
       hideFollowing: (json['hideFollowing'] ?? false) as bool,
       following: (user['followers'] as List?)?.isNotEmpty ?? false,
-      followsYou: (user['followsYou'] ?? false) as bool,
-      blocked: (json['block'] ?? false) as bool,
+      followsYou: (json['followsYou'] ?? false) as bool,
+      blockedYou: (json['block'] ?? false) as bool,
       mutualFriendIds: _ids(json['mutualFriendIds']),
       mutualServerIds: _ids(json['mutualServerIds']),
       latestPost: json['latestPost'] != null
