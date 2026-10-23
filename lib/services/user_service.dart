@@ -18,6 +18,11 @@ Future<String> userLogin(
   return response.data['token'] as String;
 }
 
+Future<Map<String, dynamic>> openDmChannel(Dio dio, String userId) async {
+  final response = await dio.post('/users/$userId/open-channel');
+  return response.data as Map<String, dynamic>;
+}
+
 Future<UserDetails> fetchUserDetails(Dio dio, String userId) async {
   final response = await dio.get('/users/$userId');
   return UserDetails.fromJson(response.data as Map<String, dynamic>);

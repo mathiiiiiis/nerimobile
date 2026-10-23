@@ -1,7 +1,9 @@
 import 'dart:async';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:nerimobile/models/friend.dart';
 import 'package:nerimobile/models/server.dart';
@@ -9,7 +11,10 @@ import 'package:nerimobile/models/server.dart';
 import 'package:nerimobile/models/user.dart';
 import 'package:nerimobile/models/user_details.dart';
 import 'package:nerimobile/models/user_presence.dart';
+import 'package:nerimobile/services/api_client.dart';
+
 import 'package:nerimobile/stores/channel/channel_store.dart';
+import 'package:nerimobile/stores/inbox/inbox_store.dart';
 import 'package:nerimobile/stores/server/server_member_store.dart';
 import 'package:nerimobile/stores/server/server_store.dart';
 import 'package:nerimobile/stores/toast/toast_store.dart';
@@ -17,16 +22,19 @@ import 'package:nerimobile/stores/user/friend_store.dart';
 import 'package:nerimobile/stores/user/user_details_store.dart';
 import 'package:nerimobile/stores/user/user_presence_store.dart';
 import 'package:nerimobile/stores/user/user_store.dart';
+
 import 'package:nerimobile/theme/core/theme_data.dart';
 import 'package:nerimobile/theme/core/token.dart';
 import 'package:nerimobile/theme/sizing/dimens.dart';
 import 'package:nerimobile/theme/sizing/radius.dart';
 import 'package:nerimobile/theme/sizing/spacing.dart';
 import 'package:nerimobile/theme/typography/text_styles.dart';
+
 import 'package:nerimobile/utils/colors.dart';
 import 'package:nerimobile/utils/date.dart';
 import 'package:nerimobile/utils/format.dart';
 import 'package:nerimobile/utils/url.dart';
+
 import 'package:nerimobile/views/core/banner_image.dart';
 import 'package:nerimobile/views/core/list/skeleton.dart';
 import 'package:nerimobile/views/core/modal/bottom_sheet.dart';
@@ -51,18 +59,42 @@ Future<void> showUserSheet(
     listen: false,
   ).invalidate(userDetailsProvider(user.id));
 
+  final router = GoRouter.of(context);
+  final container = ProviderScope.containerOf(context, listen: false);
+
+  Future<void> openDm() async {
+    try {
+      final channelId = await container
+          .read(inboxProvider.notifier)
+          .openWith(user.id);
+      router.go('/app/inbox/$channelId');
+    } on DioException catch (error) {
+      container
+          .read(toastProvider.notifier)
+          .error(
+            apiErrorMessage(error) ?? 'Could not open DM', //TODO: add l10n
+          );
+    }
+  }
+
   final picked = await showSheet<SheetAction>(
     context,
     dragHandle: false,
-    builder: (_) => _UserSheet(user: user, channelId: channelId),
+    builder: (_) =>
+        _UserSheet(user: user, channelId: channelId, onOpenDm: openDm),
   );
   picked?.onTap();
 }
 
 class _UserSheet extends ConsumerWidget {
-  const _UserSheet({required this.user, this.channelId});
+  const _UserSheet({
+    required this.user,
+    required this.onOpenDm,
+    this.channelId,
+  });
 
   final User user;
+  final VoidCallback onOpenDm;
   final String? channelId;
 
   @override
@@ -152,7 +184,7 @@ class _UserSheet extends ConsumerWidget {
                   ),
               ],
             ),
-            groups: _actions(ref, user, details.value),
+            groups: _actions(ref, user, details.value, onOpenDm: onOpenDm),
           ),
         ),
       ),
@@ -161,7 +193,12 @@ class _UserSheet extends ConsumerWidget {
 }
 
 //TODO: add l10n
-List<SheetGroup> _actions(WidgetRef ref, User user, UserDetails? details) {
+List<SheetGroup> _actions(
+  WidgetRef ref,
+  User user,
+  UserDetails? details, {
+  required VoidCallback onOpenDm,
+}) {
   final toast = ref.read(toastProvider.notifier);
   void notAdded() => toast.show('Not added yet :/');
   final copyId = SheetGroup([
@@ -172,7 +209,18 @@ List<SheetGroup> _actions(WidgetRef ref, User user, UserDetails? details) {
       onTap: () => toast.copy(user.id, label: 'ID copied'),
     ),
   ]);
-  if (user.id == ref.watch(currentUserIdProvider)) return [copyId];
+  if (user.id == ref.watch(currentUserIdProvider)) {
+    return [
+      SheetGroup([
+        SheetAction(
+          icon: Symbols.edit_note_rounded,
+          label: 'Notes',
+          onTap: onOpenDm,
+        ),
+      ]),
+      copyId,
+    ];
+  }
 
   final friend = ref.watch(
     friendsProvider.select((friends) => friends[user.id]?.status),
@@ -182,6 +230,14 @@ List<SheetGroup> _actions(WidgetRef ref, User user, UserDetails? details) {
   final following = details?.following ?? false;
 
   return [
+    SheetGroup([
+      SheetAction(
+        icon: Symbols.chat_rounded,
+        label: 'Message',
+        enabled: !unreachable,
+        onTap: onOpenDm,
+      ),
+    ]),
     SheetGroup([
       switch (friend) {
         FriendStatus.friends => SheetAction(

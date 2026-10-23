@@ -1,7 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:nerimobile/models/channel.dart';
 import 'package:nerimobile/models/inbox.dart';
 import 'package:nerimobile/models/user.dart';
+import 'package:nerimobile/services/api_client.dart';
+import 'package:nerimobile/services/user_service.dart';
 import 'package:nerimobile/stores/channel/channel_store.dart';
 import 'package:nerimobile/stores/user/user_store.dart';
 
@@ -19,6 +22,20 @@ class InboxNotifier extends Notifier<Map<String, Inbox>> {
   void addInbox(Inbox item) => state = {...state, item.channelId: item};
 
   void removeInbox(String channelId) => state = {...state}..remove(channelId);
+
+  Future<String> openWith(String userId) async {
+    final open = state.values.where((item) => item.recipientId == userId);
+    if (open.firstOrNull case final inbox?) return inbox.channelId;
+
+    final payload = await openDmChannel(ref.read(dioProvider), userId);
+    final channel = Channel.fromJson(payload['channel']);
+    ref.read(channelsProvider.notifier).addChannel(channel);
+    ref
+        .read(usersProvider.notifier)
+        .addUser(User.fromJson(payload['recipient']));
+    addInbox(Inbox.fromJson({...payload, 'channelId': channel.id}));
+    return channel.id;
+  }
 
   void updateLastSeen(String channelId, int lastSeen) {
     final item = state[channelId];
