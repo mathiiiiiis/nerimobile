@@ -15,12 +15,14 @@ String formatFileSize(int bytes) {
 }
 
 String formatDuration(Duration duration) {
-  final minutes = duration.inMinutes;
+  final hours = duration.inHours;
   final seconds = duration.inSeconds.remainder(60).toString().padLeft(2, '0');
-  return '$minutes:$seconds';
+  if (hours == 0) return '${duration.inMinutes}:$seconds';
+  final minutes = duration.inMinutes.remainder(60).toString().padLeft(2, '0');
+  return '$hours:$minutes:$seconds';
 }
 
-String formatRemaining(Duration remaining) {
+String formatRemaining(Duration remaining, {int? units}) {
   final parts = [
     (remaining.inDays, 'd'),
     (remaining.inHours.remainder(24), 'h'),
@@ -30,7 +32,8 @@ String formatRemaining(Duration remaining) {
   final first = parts.indexWhere((part) => part.$1 > 0);
 
   return [
-    for (final (value, unit) in parts.skip(first < 0 ? 3 : first))
+    for (final (value, unit)
+        in parts.skip(first < 0 ? 3 : first).take(units ?? parts.length))
       '$value$unit',
   ].join(' ');
 }
