@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nerimobile/models/server.dart';
 
 import 'package:nerimobile/models/user.dart';
+import 'package:nerimobile/models/user_details.dart';
 import 'package:nerimobile/models/user_presence.dart';
 import 'package:nerimobile/stores/channel/channel_store.dart';
 import 'package:nerimobile/stores/server/server_member_store.dart';
@@ -79,58 +80,127 @@ class _UserSheet extends ConsumerWidget {
       null => null,
     };
 
-    return SheetActions(
-      header: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        spacing: sizing.space(NeriSpacingRole.sm),
-        children: [
-          SheetHeader(
-            title:
-                (member == null
-                    ? null
-                    : ref.watch(channelMemberNicknameProvider(member))) ??
-                user.username,
-            titleColor: member == null
-                ? null
-                : ref.watch(channelMemberColorProvider(member)),
-            caption: _Caption(user: user, custom: presence?.custom),
-            leading: PresenceAvatar(
-              user: user,
-              size: sizing.dimen(NeriDimen.avatarMd),
-              surface: context.neri[NeriToken.border],
-            ),
-            background: BannerImage(
-              path: user.banner,
-              fallback: hexToColor(user.hexColor),
+    final style = _ProfileStyle.from(context, details.value);
+    final radius = Radius.circular(sizing.radius(NeriRadiusRole.xl));
+
+    return ClipRRect(
+      borderRadius: BorderRadius.only(topLeft: radius, topRight: radius),
+      child: DecoratedBox(
+        decoration: BoxDecoration(gradient: style.background),
+        child: Theme(
+          data: style.apply(Theme.of(context)),
+          child: SheetActions(
+            header: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              spacing: sizing.space(NeriSpacingRole.sm),
+              children: [
+                SheetHeader(
+                  title:
+                      (member == null
+                          ? null
+                          : ref.watch(channelMemberNicknameProvider(member))) ??
+                      user.username,
+                  titleColor: member == null
+                      ? null
+                      : ref.watch(channelMemberColorProvider(member)),
+                  caption: _Caption(user: user, custom: presence?.custom),
+                  leading: PresenceAvatar(
+                    user: user,
+                    size: sizing.dimen(NeriDimen.avatarMd),
+                    surface: context.neri[NeriToken.border],
+                  ),
+                  background: BannerImage(
+                    path: user.banner,
+                    fallback: hexToColor(user.hexColor),
+                  ),
+                ),
+                if (activities.isNotEmpty) _Activities(activities: activities),
+                for (final card in [
+                  if (details.isLoading && !details.hasValue)
+                    const _Card(
+                      child: SkeletonScope(
+                        child: SkeletonBlock(height: _bioSkeletonHeight),
+                      ),
+                    )
+                  else if (bio != null && bio.isNotEmpty)
+                    _BioCard(bio: bio),
+                  if (joinedAt != null)
+                    _JoinedCard(
+                      joinedAt: joinedAt,
+                      server: server,
+                      memberJoinedAt: memberJoinedAt,
+                    ),
+                ])
+                  Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: sizing.space(NeriSpacingRole.md),
+                    ),
+                    child: card,
+                  ),
+              ],
             ),
           ),
-          if (activities.isNotEmpty) _Activities(activities: activities),
-          for (final card in [
-            if (details.isLoading && !details.hasValue)
-              const _Card(
-                child: SkeletonScope(
-                  child: SkeletonBlock(height: _bioSkeletonHeight),
-                ),
-              )
-            else if (bio != null && bio.isNotEmpty)
-              _BioCard(bio: bio),
-            if (joinedAt != null)
-              _JoinedCard(
-                joinedAt: joinedAt,
-                server: server,
-                memberJoinedAt: memberJoinedAt,
-              ),
-          ])
-            Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: sizing.space(NeriSpacingRole.md),
-              ),
-              child: card,
-            ),
-        ],
+        ),
       ),
     );
+  }
+}
+
+class _ProfileStyle {
+  const _ProfileStyle({
+    required this.background,
+    required this.panel,
+    required this.accent,
+  });
+
+  final Gradient background;
+  final Color panel;
+  final Color accent;
+
+  ThemeData apply(ThemeData theme) {
+    final colors = theme.extension<NeriColors>()!;
+    return theme.copyWith(
+      colorScheme: theme.colorScheme.copyWith(primary: accent),
+      extensions: [
+        ...theme.extensions.values.where((e) => e is! NeriColors),
+        colors.copyWith(
+          colors: {
+            ...colors.colors,
+            NeriToken.primary: accent,
+            NeriToken.cardBright: panel,
+          },
+        ),
+      ],
+    );
+  }
+
+  //single set == whole bg
+  factory _ProfileStyle.from(BuildContext context, UserDetails? details) {
+    final colors = context.neri;
+    final one = _parse(details?.bgColorOne);
+    final two = _parse(details?.bgColorTwo);
+    final top = one ?? two ?? colors[NeriToken.pane];
+    final bottom = two ?? one ?? colors[NeriToken.pane];
+
+    return _ProfileStyle(
+      background: LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [top, bottom],
+      ),
+      panel: profilePanelColor(top, bottom),
+      accent: _parse(details?.primaryColor) ?? colors[NeriToken.primary],
+    );
+  }
+}
+
+Color? _parse(String? hex) {
+  if (hex == null || hex.isEmpty) return null;
+  try {
+    return parseHexColor(hex);
+  } on FormatException {
+    return null;
   }
 }
 
@@ -294,7 +364,7 @@ class _ActivityCardState extends State<_ActivityCard> {
                 kind.icon,
                 fill: 1,
                 size: sizing.dimen(NeriDimen.iconSm) * 0.6,
-                color: colors[NeriToken.primary],
+                color: context.neri[NeriToken.primary],
               ),
               Flexible(
                 child: Text(
@@ -302,7 +372,7 @@ class _ActivityCardState extends State<_ActivityCard> {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: text[NeriTextRole.labelLarge].copyWith(
-                    color: colors[NeriToken.primary],
+                    color: context.neri[NeriToken.primary],
                   ),
                 ),
               ),
@@ -464,7 +534,7 @@ class _BioCard extends StatelessWidget {
         children: [
           DefaultTextStyle(
             style: text[NeriTextRole.bodyMedium].copyWith(
-              color: colors[NeriToken.text],
+              color: colors[NeriToken.textSecondary],
             ),
             child: MarkupView(rawText: bio),
           ),

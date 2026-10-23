@@ -146,6 +146,38 @@ LinearGradient _gradientFromDegree(
   );
 }
 
+//average of both
+Color profilePanelColor(Color one, Color two) {
+  double channel(double a, double b) => sqrt((a * a + b * b) / 2);
+  final average = Color.from(
+    alpha: 1,
+    red: channel(one.r, two.r),
+    green: channel(one.g, two.g),
+    blue: channel(one.b, two.b),
+  );
+  return _withLuminance(average, _panelLuminance).withValues(alpha: 0.9);
+}
+
+const _panelLuminance = 0.01;
+
+Color _withLuminance(Color color, double target) {
+  final darken = color.computeLuminance() > target;
+  final towards = darken ? Colors.black : Colors.white;
+  var low = 0.0;
+  var high = 1.0;
+  var result = color;
+  for (var i = 0; i < 20; i++) {
+    final mid = (low + high) / 2;
+    result = Color.lerp(color, towards, mid)!;
+    if ((result.computeLuminance() > target) == darken) {
+      low = mid;
+    } else {
+      high = mid;
+    }
+  }
+  return result;
+}
+
 Widget buildColoredName(
   String text, {
   String? hexColor,

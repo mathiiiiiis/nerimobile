@@ -59,7 +59,7 @@ class UserDetails {
       bio: profile?['bio'] as String?,
       bgColorOne: profile?['bgColorOne'] as String?,
       bgColorTwo: profile?['bgColorTwo'] as String?,
-      primaryColor: profile?['profile'] as String?,
+      primaryColor: profile?['primaryColor'] as String?,
       followerCount: (counts['followers'] ?? 0) as int,
       followingCount: (counts['following'] ?? 0) as int,
       likeCount: (counts['likedPosts'] ?? 0) as int,
